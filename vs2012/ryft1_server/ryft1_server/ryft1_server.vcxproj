@@ -1,0 +1,139 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9F6FBA14-42B8-419A-B596-81C4C8C1307F}</ProjectGuid>
+    <ProjectName>ryft1_odbcd</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Makefile</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <NMakeIncludeSearchPath>$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\x86_64-linux-gnu\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\c++\4.8\backward;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0001\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0003\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0002\include-fixed;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\x86_64-linux-gnu;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes>$(ProjectDir)\gcc_Debug.h;$(VISUALGDB_DIR)\gcc_compat.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakePreprocessorDefinitions>__VisualGDB_CFG_Debug;SERVERTARGET;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /build "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /clean "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /rebuild "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeReBuildCommandLine>
+    <NMakeOutput>$(ProjectDir)ryft1_server-Debug.vgdbsettings</NMakeOutput>
+    <IncludePath />
+    <ReferencePath />
+    <LibraryPath />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <NMakeIncludeSearchPath>$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\x86_64-linux-gnu\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\c++\4.8\backward;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0001\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0003\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0002\include-fixed;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include\x86_64-linux-gnu;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\192.168.56.101\0000\include;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeForcedIncludes>$(ProjectDir)\gcc_Release.h;$(VISUALGDB_DIR)\gcc_compat.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
+    <NMakePreprocessorDefinitions>__VisualGDB_CFG_Release;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
+    <NMakeBuildCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /build "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeBuildCommandLine>
+    <NMakeCleanCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /clean "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /rebuild "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeReBuildCommandLine>
+    <NMakeOutput>$(ProjectDir)ryft1_server-Release.vgdbsettings</NMakeOutput>
+    <IncludePath />
+    <ReferencePath />
+    <LibraryPath />
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\server\Source\Config\ConfigMessageSource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Config\ConfigSettings.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Config\ErrorHandling\ConfigDialogException.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Config\MainDialog.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Connection.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1ConnectionDialog.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Driver.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Environment.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Statement.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ColumnsMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TablesMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterHandler.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterResult.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1DataEngine.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1QueryExecutor.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1Table.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Resources\resource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Resources\VersionResource.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_library.h" />
+    <ClInclude Include="..\..\..\src\server\Source\RyftOne.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1BaseDialog.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1DialogConsts.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1DSNConfiguration.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1LoggingDialog.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1MainDialog.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1ResourceHelper.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1SetupException.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1TestResultDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\files\server\.ryftone.server.ini" />
+    <None Include="..\..\..\src\server\Makefiles\Makedepend\ryft1_odbcd.depend" />
+    <None Include="..\..\..\src\server\Makefiles\ryft1_odbcd.mak" />
+    <None Include="..\..\..\src\server\Source\Makefile" />
+    <None Include="..\..\..\src\server\Source\Makefile_FLAGS.mak" />
+    <None Include="..\..\..\src\server\Source\Makefile_SRCS.mak" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\server\Source\Config\ConfigMessageSource.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Config\ErrorHandling\ConfigDialogException.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Connection.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1ConnectionDialog.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Driver.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Environment.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Statement.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ColumnsMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TablesMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterHandler.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterResult.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1DataEngine.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1QueryExecutor.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1Table.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Main_Unix.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_library.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\ConfigDSN.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1BaseDialog.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1DSNConfiguration.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1LoggingDialog.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1MainDialog.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1ResourceHelper.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1SetupException.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1TestResultDialog.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

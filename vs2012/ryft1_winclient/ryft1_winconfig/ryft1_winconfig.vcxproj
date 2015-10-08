@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\winclient\config\Core\Driver.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Main_Windows.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\AboutDialog.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\BaseDialog.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\ConfigDSN.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\DSNConfiguration.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\LoggingDialog.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\MainDialog.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\ResourceHelper.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\SetupException.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\winclient\config\Core\Driver.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Resources\resource.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Resources\VersionResource.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Ryft.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\AboutDialog.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\BaseDialog.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\DialogConsts.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\DSNConfiguration.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\LoggingDialog.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\MainDialog.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\ResourceHelper.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\SetupException.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\src\winclient\config\Resources\icon.ico" />
+    <Image Include="..\..\..\src\winclient\config\Resources\ryft_logo%402x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\winclient\config\Resources\Ryft.rc" />
+    <ResourceCompile Include="..\..\..\src\winclient\config\Resources\RyftVersion.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\winclient\config\exports.def" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{793F0432-1F24-4CFB-89BA-C3E4AE1126D2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ryft1_winconfig</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <TargetName>ryft1_wconfig64</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <TargetName>ryft1_wconfig64</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <TargetName>ryft1_wconfig64</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;RYFT1_WINCONFIG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src\winclient\config\Core;..\..\..\src\winclient\config;..\..\..\src\winclient\config\Resources;..\..\..\src\winclient\config\Setup;$(SIMBAENGINE_DIR)\include;$(SIMBAENGINE_DIR)\include\DSI;$(SIMBAENGINE_DIR)\include\DSI\Client;$(SIMBAENGINE_DIR)\include\Support;$(SIMBAENGINE_DIR)\include\Support\Exceptions</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>user32.lib;gdi32.lib;odbccp32.lib;version.lib;gdiplus.lib;SimbaDSI_$(Configuration).lib;SimbaSupport_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SIMBAENGINE_DIR)\Lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;RYFT1_WINCONFIG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src\winclient\config\Core;..\..\..\src\winclient\config;..\..\..\src\winclient\config\Resources;..\..\..\src\winclient\config\Setup;$(SIMBAENGINE_DIR)\include;$(SIMBAENGINE_DIR)\include\DSI;$(SIMBAENGINE_DIR)\include\DSI\Client;$(SIMBAENGINE_DIR)\include\Support;$(SIMBAENGINE_DIR)\include\Support\Exceptions</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MinimalRebuild>false</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>user32.lib;gdi32.lib;odbccp32.lib;version.lib;gdiplus.lib;SimbaDSI_$(Configuration).lib;SimbaSupport_$(Configuration).lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SIMBAENGINE_DIR)\Lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>..\..\..\src\winclient\config\exports.def</ModuleDefinitionFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;RYFT1_WINCONFIG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src\winclient\config\Core;..\..\..\src\winclient\config;..\..\..\src\winclient\config\Resources;..\..\..\src\winclient\config\Setup;$(SIMBAENGINE_DIR)\include;$(SIMBAENGINE_DIR)\include\DSI;$(SIMBAENGINE_DIR)\include\DSI\Client;$(SIMBAENGINE_DIR)\include\Support;$(SIMBAENGINE_DIR)\include\Support\Exceptions</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>user32.lib;gdi32.lib;odbccp32.lib;version.lib;gdiplus.lib;SimbaDSI.lib;SimbaSupport.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SIMBAENGINE_DIR)\Lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;RYFT1_WINCONFIG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src\winclient\config\Core;..\..\..\src\winclient\config;..\..\..\src\winclient\config\Resources;..\..\..\src\winclient\config\Setup;$(SIMBAENGINE_DIR)\include;$(SIMBAENGINE_DIR)\include\DSI;$(SIMBAENGINE_DIR)\include\DSI\Client;$(SIMBAENGINE_DIR)\include\Support;$(SIMBAENGINE_DIR)\include\Support\Exceptions</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SIMBAENGINE_DIR)\Lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>..\..\..\src\winclient\config\exports.def</ModuleDefinitionFile>
+      <AdditionalDependencies>user32.lib;gdi32.lib;odbccp32.lib;version.lib;gdiplus.lib;SimbaDSI.lib;SimbaSupport.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

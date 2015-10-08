@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Setup">
+      <UniqueIdentifier>{57b1c062-269f-4f7c-9801-516afb4ec494}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{4dacc951-9e0b-4d4a-88f8-397b179c962f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core">
+      <UniqueIdentifier>{b997ef6a-c887-45ce-b620-d28117ef8f70}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\AboutDialog.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\BaseDialog.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\ConfigDSN.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\DSNConfiguration.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\LoggingDialog.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\MainDialog.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\ResourceHelper.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Setup\SetupException.cpp">
+      <Filter>Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\winclient\config\Main_Windows.cpp" />
+    <ClCompile Include="..\..\..\src\winclient\config\Core\Driver.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\AboutDialog.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\BaseDialog.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\DialogConsts.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\DSNConfiguration.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\LoggingDialog.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\MainDialog.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\ResourceHelper.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Setup\SetupException.h">
+      <Filter>Setup</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Resources\resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Resources\VersionResource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\winclient\config\Ryft.h" />
+    <ClInclude Include="..\..\..\src\winclient\config\Core\Driver.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\src\winclient\config\Resources\icon.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="..\..\..\src\winclient\config\Resources\ryft_logo%402x.png">
+      <Filter>Resources</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\winclient\config\Resources\Ryft.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+    <ResourceCompile Include="..\..\..\src\winclient\config\Resources\RyftVersion.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\winclient\config\exports.def" />
+  </ItemGroup>
+</Project>
