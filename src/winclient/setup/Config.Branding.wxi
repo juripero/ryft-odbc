@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Defines build variables used for branding the installer. -->
+<Include>
+
+  <?define MajorMinorVersion = "0.1"?>
+  <?define RevisionBuildVersion = "3.0"?>
+
+  <!-- The long manufacturer name. -->
+  <?define Manufacturer = "Ryft"?>
+
+  <!-- The short manufacturer name, used in the registry .-->
+  <?define ShortVendorName = "Ryft"?>
+
+  <!-- The name of registry keys associated with the driver. -->
+  <?define DriverRegistryName = "ODBC Driver"?>
+  <?define DriverName = "$(var.ShortVendorName) ODBC Driver"?>
+
+    <!-- The name of the entry in the Start Menu. This differs between 32-bit and 64-bit installations. -->
+  <?if $(var.Platform) = x64 ?>
+    <?define StartMenuName = "$(var.DriverName) $(var.MajorMinorVersion) (64-bit)"?>
+    <?define DriverInstallName = "$(var.DriverName) (64-bit)"?>
+  <?else ?>
+    <?define StartMenuName = "$(var.DriverName) $(var.MajorMinorVersion) (32-bit)"?>
+    <?define DriverInstallName = "$(var.DriverName) (32-bit)"?>
+  <?endif ?>
+
+  <!-- The name of the web url shortcut. -->
+  <?define WebLinkName = "Ryft on the Web"?>
+
+  <!-- The target of the web url shortcut. -->
+  <?define WebLinkTarget = "http://www.ryft.com"?>
+
+  <!-- The version of the software -->
+  <?define Version = "$(var.MajorMinorVersion).$(var.RevisionBuildVersion)"?>
+
+  <!-- The unique Product Code for the software. This differs between 32-bit and 64-bit installations. 
+       Each component in the package is given a GUID for both 32-bit and 64-bit installations.
+       When rebranding, a new set of GUIDs must be regenerated for your product. -->
+  <?if $(var.Platform) = x64 ?>
+    <?define ProductGuid = "7803C865-8645-4560-96E5-CB310F6AB659" ?>
+    <?define UpgradeGuid = "FE79BC75-3CB9-479D-A0C0-8ED5DFE47B7F" ?>
+    <?define DocsGUID = "74717C14-135A-4B42-BBAA-76B1996FE71B"?>
+    <?define StartMenuGUID = "922037A4-1D14-48CD-B0DD-C16F6DBF77FE"?>
+    <?define DriverLibGUID = "7A6FE246-148B-4593-BFBD-0464007C4DF6"?>
+    <?define ErrorMessagesGUID = "CF1D36AF-74E4-473F-8640-6DCD3628BFE1"?>
+    <?define RegistryEntriesGUID = "3945BC93-336B-4BB5-8D7F-86B39D688DB6"?>
+    <?define ThirdPartyLibGUID = "6FBFC3DC-22B2-43CA-AD53-A70C53EC2D06"?>
+    <?define DBFGUID = "2C6655FE-0667-41CE-9137-3F5E63DDADC5"?>
+  <?else ?>
+    <?define ProductGuid = "6030031F-A498-4A99-9FF6-9B226D9D0EBC" ?>
+    <?define UpgradeGuid = "ED7C81B0-D49C-4722-B867-D1F5B64FB21C" ?>
+    <?define DocsGUID = "57230D3A-4FDF-43B9-86FC-8B6A0165759E"?>
+    <?define StartMenuGUID = "336C5719-6CEB-4F84-988E-9731048CBB8B"?>
+    <?define DriverLibGUID = "74FAD1B6-09E3-462A-8602-CA023C3609FF"?>
+    <?define ErrorMessagesGUID = "96F05DBB-689C-4349-A9D4-8BA91E406AC9"?>
+    <?define RegistryEntriesGUID = "5A22175E-2EC2-44E0-9D0F-A508BAF4B546"?>
+    <?define ThirdPartyLibGUID = "739E0783-D641-48C9-B145-8189205C4A31"?>
+    <?define DBFGUID = "588497FF-66EC-4EB0-94D5-1DCAB04611D8"?>
+  <?endif ?>
+
+  <!-- The base name of the driver DLL. -->
+  <?define BaseDriverDLLName = "$(var.ShortVendorName)ODBC"?>
+  <?define BaseConfigDLLName = "$(var.ShortVendorName)ODBCConfig"?>
+
+    <!-- Description to add to the Drivers entry in ODBCINST.INI. -->
+  <?define DriverDescription = "$(var.ShortVendorName) ODBC Driver $(var.MajorMinorVersion)"?>
+
+  <!-- Sample DSN to add-->
+  <?if $(var.Platform) = x64 ?>
+    <?define SampleDSN = "$(var.ShortVendorName) DSN 64"?>
+    <?define DSNDescription = "$(var.ShortVendorName) DSN 64"?>
+  <?else ?>
+    <?define SampleDSN = "$(var.ShortVendorName) DSN 32"?>
+    <?define DSNDescription = "$(var.ShortVendorName) DSN 32"?>
+  <?endif ?>
+
+  <?define ProductDirectory = "$(sys.CURRENTDIR)..\..\..\src\winclient\setup" ?>
+  <?define FilesDirectory = "$(sys.CURRENTDIR)..\..\..\files\winclient" ?>
+
+  <!-- The path to branded installer images and the EULA. The EULA must be a RTF file. -->
+  <?define EULAPath = "$(var.ProductDirectory)\EULA\EULA.rtf" ?>
+  <?define TopBannerPath = "$(var.ProductDirectory)\Images\banner.bmp" ?>
+  <?define WelcomeBgPath = "$(var.ProductDirectory)\Images\left_bg.bmp" ?>
+
+  <!-- The path to the Tableau TDC file -->
+  <?define TableauTDC = "$(sys.CURRENTDIR)..\..\..\files\winclient\RyftOne.tdc"?>
+</Include>

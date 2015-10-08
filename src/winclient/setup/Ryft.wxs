@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+  <?include Config.Common.wxi?>
+  <?include Config.Branding.wxi?>
+  <Product Id="*" Name="$(var.DriverInstallName)" Language="1033" Version="$(var.Version)" Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeGuid)">
+
+    <!-- Note: InstallerVersion is 300 because VC10 is 300. 200 is the default value though -->
+    <Package InstallerVersion="405" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated"/>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <!-- Merge the .cab file with the .msi file and set the compression level to high. -->
+    <Media Id="1" Cabinet="cab1.cab" CompressionLevel="high" EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="SimbaDriverInstaller" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ProgramMenuDir" />
+    </Feature>
+
+    <Feature Id="TableauDesktopTDC" Title="Tableau Desktop TDC" AllowAdvertise="no" Display="hidden" Level="1">
+      <ComponentGroupRef Id="TableauDesktopTDC"/>
+      <Condition Level="1">TABLEAUDESKTOP</Condition>
+    </Feature>
+
+    <Feature Id="TableauServerTDC" Title="Tableau Server TDC" AllowAdvertise="no" Display="hidden" Level="1">
+      <ComponentGroupRef Id="TableauServerTDC"/>
+      <Condition Level="1">TABLEAUSERVER</Condition>
+    </Feature>
+
+    <Feature Id="VCRedist" Title="Visual C++ 10.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+      <MergeRef Id="VCRedist" />
+    </Feature>
+
+    <!-- Load a basic Wix UI dialog that lets you specify the Installation directory -->
+    <UIRef Id="CustomizedWixUI_InstallDir"/>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+    <!-- Override the EULA and installer images -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.EULAPath)" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.TopBannerPath)" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.WelcomeBgPath)" />
+      
+    <Property Id="USERFOLDER">
+        <DirectorySearch Id="userProfileSearch" Depth="0" Path="[%USERPROFILE]" />        
+    </Property>
+
+  </Product>
+
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Merge Id="VCRedist" SourceFile="$(var.ProductDirectory)\MergeModules\VC11\Microsoft_VC110_CRT_$(var.Platform).msm" DiskId="1" Language="0"/>
+
+      <!-- Installation Directory -->
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
+        <!-- Create the directory structure under the Program Files folder -->
+        <Directory Id="INSTALLFOLDER" Name="$(var.DriverName)">
+          <Directory Id="ErrorMessages" Name="ErrorMessages">
+            <Directory Id="en_US" Name="en-US" />
+          </Directory>
+        </Directory>
+      </Directory>
+
+      <!-- Start Menu -->
+      <Directory Id="ProgramMenuFolder" Name="Programs">
+        <Directory Id="ProgramMenuDir" Name="$(var.StartMenuName)">
+          <Component Id="ProgramMenuDir" Guid="$(var.StartMenuGUID)">
+            <RemoveFolder Id="ProgramMenuDir" On="uninstall" />
+            <RegistryValue Root="HKCU" Key="$(var.SoftwareSubKey)\$(var.ShortVendorName)\$(var.DriverRegistryName)" Type="string" Value="" KeyPath="yes" />
+              <Shortcut Id="ODBCAdminShortcut" Target="$(var.OdbcAdminPath)" Name="$(var.OdbcAdminBitness)" Description="Opens the $(var.OdbcAdminBitness)" WorkingDirectory="SystemFolder" >
+                 <Icon Id="MyODBCAdIcon" SourceFile="C:\Windows\System32\odbcad32.exe"/>
+              </Shortcut>
+              <?ifdef var.WebLinkTarget?>
+                <?ifdef var.WebLinkName?>
+                  <util:InternetShortcut Id="WebLink" Target="$(var.WebLinkTarget)" Name="$(var.WebLinkName)" Type="url"/>
+                <?endif?>
+              <?endif?>
+            <Shortcut Id="UninstallShortcut" Target="$(var.UninstallerPath)" Name="Uninstall $(var.DriverName)" Arguments="/x [ProductCode]" />
+          </Component>
+        </Directory>
+      </Directory>
+
+      <!-- System Directories -->
+      <Directory Id="$(var.PlatformSystemFolder)" />
+     </Directory>
+  </Fragment>
+
+  <Fragment>
+      <ComponentGroup Id="ProductComponents">
+      <!-- TODO: Insert files, registry keys, and other resources here. -->
+      <Component Id="ODBCDriver" Guid="$(var.DriverLibGUID)" Directory="INSTALLFOLDER">
+        <File Id="DriverDLL" Name="$(var.BaseDriverDLLName)$(var.DriverSuffix).dll" Source="$(env.SIMBAENGINE_DIR)\Bin\$(var.ProcessorFolder)\Release_MTDLL\SimbaClient_MTDLL.dll" KeyPath="yes"/>
+        <File Id="ConfigDLL" Name="$(var.BaseConfigDLLName)$(var.DriverSuffix).dll" Source="$(var.ryft1_winconfig.TargetPath)" />
+        <File Id="SimbaLicense" Source="..\..\..\files\winclient\SimbaEngineSDK.lic" />
+        <CopyFile Id="CopyToHome" FileId="SimbaLicense" DestinationProperty="USERFOLDER" />
+      </Component>
+
+      <Component Id="ThirdPartyLibraries" Guid="$(var.ThirdPartyLibGUID)" Directory="INSTALLFOLDER">
+          <File Id="ICUDT" Name="sbicudt53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicudt53_$(var.ICUSuffix).dll" KeyPath="yes"/>
+          <File Id="ICUIN" Name="sbicuin53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicuin53_$(var.ICUSuffix).dll"/>
+          <File Id="ICUUC" Name="sbicuuc53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicuuc53_$(var.ICUSuffix).dll"/>
+          <File Id="LIBEA" Name="libeay32.dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\openssl\1.0.1\w2012r2\vs2012\release$(var.ICUSuffix)md\bin\libeay32.dll"/>
+          <File Id="SSLEA" Name="ssleay32.dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\openssl\1.0.1\w2012r2\vs2012\release$(var.ICUSuffix)md\bin\ssleay32.dll"/>
+      </Component>
+
+      <Component Id="RegistryEntries" Guid="$(var.RegistryEntriesGUID)" Directory="INSTALLFOLDER">
+
+        <!-- Ryft INI -->
+        <RegistryKey Id="RyftKey" Root="HKLM" Key="Software\$(var.ShortVendorName)\$(var.DriverRegistryName)\Driver" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
+          <RegistryValue Id="EMPath" Name="ErrorMessagesPath" Value="[INSTALLFOLDER]ErrorMessages" Type="string" />
+          <RegistryValue Id="LogLevel" Name="LogLevel" Value="0" Type="string" />
+          <RegistryValue Id="LogNamespace" Name="LogNamespace" Value="" Type="string" />
+          <RegistryValue Id="LogPath" Name="LogPath" Value="" Type="string" />
+        </RegistryKey>
+
+        <!-- ODBCINST INI -->
+        <RegistryKey Id="OdbcInst" Root="HKLM" Key="Software\ODBC\ODBCINST.INI" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="no">
+          <RegistryKey Id="OdbcDrivers" Key="ODBC Drivers" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="no">
+            <RegistryValue Id="OdbcDriversEntry" Name="$(var.DriverName)" Value="Installed" Type="string" />
+          </RegistryKey>
+          <RegistryKey Id="DriversEntry" Key="$(var.DriverName)" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes" >
+            <RegistryValue Id="DriversDesc" Name="Description" Value="$(var.DriverDescription)" Type="string" />
+            <RegistryValue Id="DriverDriver" Name="Driver" Value="[INSTALLFOLDER]$(var.BaseDriverDLLName)$(var.DriverSuffix).dll" Type="string" />
+            <RegistryValue Id="DriverSetup" Name="Setup" Value="[INSTALLFOLDER]$(var.BaseConfigDLLName)$(var.DriverSuffix).dll" Type="string" />
+            <RegistryValue Id="ConnectionDialog" Name="ConnectionDialog" Value="[INSTALLFOLDER]$(var.BaseConfigDLLName)$(var.DriverSuffix).dll" Type="string" />
+            <RegistryValue Id="ConnectFunctions" Name="ConnectFunctions" Value="YYY" Type="string" />
+            <RegistryValue Id="DriverODBCVer" Name="DriverODBCVer" Value="03.80" Type="string" />
+            <RegistryValue Id="SQLLevel" Name="SQLLevel" Value="1" Type="string" />
+            <RegistryValue Id="APILevel" Name="APILevel" Value="1" Type="string" />
+          </RegistryKey>
+        </RegistryKey>
+      </Component>
+          
+      <!-- Tableau TDC File -->
+      <Component Id="TableauTDC" Guid="{08BA5B6A-1E73-4E69-AAB8-26993668688B}" Directory="INSTALLFOLDER">
+        <File Id="TableauTDC" Source="$(var.TableauTDC)" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+  <Fragment>
+    <Property Id="TABLEAUDESKTOP">
+      <DirectorySearch Id="My_Documents" Path="[PersonalFolder]">
+        <DirectorySearch Id="Tableau" Path="My Tableau Repository" >
+          <DirectorySearch Id="Datasources" Path="Datasources" AssignToProperty="yes"/>
+        </DirectorySearch>
+      </DirectorySearch>
+    </Property>
+    <ComponentGroup Id="TableauDesktopTDC">
+      <Component Guid="{C0B1C27C-6C03-46D0-A888-F63798C0F78A}" Id="TableauDesktopTDC" Directory="INSTALLFOLDER" KeyPath="yes">
+        <CopyFile Id="Copy_TableauDesktopTDC" DestinationProperty="TABLEAUDESKTOP" FileId="TableauTDC" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <Property Id="TABLEAUSERVER">
+      <DirectorySearch Id="ProgramData" Path="[CommonAppDataFolder]">
+        <DirectorySearch Id="Tableau" Path="Tableau" >
+          <DirectorySearch Id="Tableau_Server" Path="Tableau Server" >
+            <DirectorySearch Id="data" Path="data" >
+              <DirectorySearch Id="tabsvc" Path="tabsvc" >
+                <DirectorySearch Id="vizqlserver" Path="vizqlserver" >
+                  <DirectorySearch Id="Datasources" Path="Datasources" AssignToProperty="yes"/>
+                </DirectorySearch>
+              </DirectorySearch>
+            </DirectorySearch>
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+    </Property>
+    <ComponentGroup Id="TableauServerTDC">
+      <Component Guid="{0685BEF0-D531-4201-8AAD-00A31B241B35}" Id="TableauServerTDC" Directory="INSTALLFOLDER" KeyPath="yes">
+         <CopyFile Id="Copy_TableauServerTDC" DestinationProperty="TABLEAUSERVER" FileId="TableauTDC" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+</Wix>

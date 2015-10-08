@@ -1,0 +1,272 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{754ed7ac-633d-4b04-9eba-4187bc683720}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source files\Config">
+      <UniqueIdentifier>{5c85babe-a294-410e-b5ad-bda47e7dc210}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Config\ErrorHandling">
+      <UniqueIdentifier>{b2df655e-3590-43ec-bd13-9b7866a264be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Core">
+      <UniqueIdentifier>{7a36e2d3-f99d-4df8-b5e5-fca92ee97b27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine">
+      <UniqueIdentifier>{b1b20497-6c4b-4335-99e8-14bdb432fd99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Metadata">
+      <UniqueIdentifier>{41705d66-559d-4d31-9eb9-882ae78e998e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Resources">
+      <UniqueIdentifier>{6cb75f14-4a11-470c-a288-ff37da7ec155}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Setup">
+      <UniqueIdentifier>{011b6cd0-04bb-422a-ae4c-5d4efe3068d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Makefiles">
+      <UniqueIdentifier>{6df78f8b-603d-42b3-8b2a-435d2bd0f17b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Ryft1">
+      <UniqueIdentifier>{85245af5-cf8c-441d-8a41-aa14582c3fb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Config\Include">
+      <UniqueIdentifier>{54cd5fe0-20f4-4924-a7e3-ba02120cdfeb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Core\Include">
+      <UniqueIdentifier>{658bf765-8db2-428e-a461-fc765b96ce95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Include">
+      <UniqueIdentifier>{debabbad-2701-42bb-8e98-bebd869d97d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Metadata\Include">
+      <UniqueIdentifier>{de8f47ff-5866-4b62-9caa-de03d34e4e14}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Ryft1\Include">
+      <UniqueIdentifier>{e9b5965d-cf94-4e33-b697-f683becd68c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Setup\Include">
+      <UniqueIdentifier>{d487d15b-7ce0-4f73-8c18-4d43d65289d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Resources\Include">
+      <UniqueIdentifier>{3b951034-0d84-4c60-9e5c-4cb1dc149b55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Config\ErrorHandling\Include">
+      <UniqueIdentifier>{47f3e814-9cf0-49cb-a4b8-664ee768a655}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Makefiles\Makedepend">
+      <UniqueIdentifier>{1a919460-7b6f-4175-803c-0294224fd03a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Passdown">
+      <UniqueIdentifier>{7e1870c9-42ec-4126-aa36-d62261a96713}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Passdown\Include">
+      <UniqueIdentifier>{b0cefaba-0a24-4fad-b082-b19b87a7eed4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files">
+      <UniqueIdentifier>{0a0627aa-891c-4d83-8152-7965f2ff71f3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\server\Source\Config\ConfigMessageSource.h">
+      <Filter>Source files\Config\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Config\ConfigSettings.h">
+      <Filter>Source files\Config\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Config\MainDialog.h">
+      <Filter>Source files\Config\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Connection.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1ConnectionDialog.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Driver.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Environment.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Core\R1Statement.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ColumnsMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TablesMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_library.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1BaseDialog.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1DialogConsts.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1DSNConfiguration.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1LoggingDialog.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1MainDialog.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1ResourceHelper.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1SetupException.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Setup\R1TestResultDialog.h">
+      <Filter>Source files\Setup\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Resources\resource.h">
+      <Filter>Source files\Resources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Resources\VersionResource.h">
+      <Filter>Source files\Resources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1DataEngine.h">
+      <Filter>Source files\DataEngine\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1QueryExecutor.h">
+      <Filter>Source files\DataEngine\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Config\ErrorHandling\ConfigDialogException.h">
+      <Filter>Source files\Config\ErrorHandling\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1Table.h">
+      <Filter>Source files\DataEngine\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterHandler.h">
+      <Filter>Source files\DataEngine\Passdown\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterResult.h">
+      <Filter>Source files\DataEngine\Passdown\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.h">
+      <Filter>Source files\DataEngine\Passdown\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\RyftOne.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\server\Source\Makefile">
+      <Filter>Makefiles</Filter>
+    </None>
+    <None Include="..\..\..\src\server\Source\Makefile_FLAGS.mak">
+      <Filter>Makefiles</Filter>
+    </None>
+    <None Include="..\..\..\src\server\Source\Makefile_SRCS.mak">
+      <Filter>Makefiles</Filter>
+    </None>
+    <None Include="..\..\..\src\server\Makefiles\ryft1_odbcd.mak" />
+    <None Include="..\..\..\src\server\Makefiles\Makedepend\ryft1_odbcd.depend">
+      <Filter>Makefiles\Makedepend</Filter>
+    </None>
+    <None Include="..\..\..\files\server\.ryftone.server.ini">
+      <Filter>Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\server\Source\Config\ConfigMessageSource.cpp">
+      <Filter>Source files\Config</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Config\ErrorHandling\ConfigDialogException.cpp">
+      <Filter>Source files\Config\ErrorHandling</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Connection.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1ConnectionDialog.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Driver.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Environment.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Core\R1Statement.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1DataEngine.cpp">
+      <Filter>Source files\DataEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1QueryExecutor.cpp">
+      <Filter>Source files\DataEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ColumnsMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TablesMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\ConfigDSN.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1BaseDialog.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1DSNConfiguration.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1LoggingDialog.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1MainDialog.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1ResourceHelper.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1SetupException.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Setup\R1TestResultDialog.cpp">
+      <Filter>Source files\Setup</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_library.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1Table.cpp">
+      <Filter>Source files\DataEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Main_Unix.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterHandler.cpp">
+      <Filter>Source files\DataEngine\Passdown</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterResult.cpp">
+      <Filter>Source files\DataEngine\Passdown</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp">
+      <Filter>Source files\DataEngine\Passdown</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
