@@ -7,9 +7,10 @@
 #include <libconfig.h>
 
 static char s_R1Catalog[] = "/ryftone/ODBC";
+static char s_R1Results[] = "/ryftone/ODBC/.results";
 static char s_TableMeta[] = ".meta.table";
 
-RyftOne_Result::RyftOne_Result(RyftOne_Database *ryft1) : m_ryft1(ryft1)
+RyftOne_Result::RyftOne_Result(RyftOne_Database *ryft1) : m_ryft1(ryft1), m_hamming(0)
 {
     ;
 }
@@ -17,6 +18,7 @@ RyftOne_Result::RyftOne_Result(RyftOne_Database *ryft1) : m_ryft1(ryft1)
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
@@ -39,11 +41,14 @@ bool RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator i
     return true;
 }
 
-bool RyftOne_Result::appendFilter(string in_filter)
+bool RyftOne_Result::appendFilter(string in_filter, int in_hamming)
 {
     if(!m_query.empty())
         m_query += " AND ";
+
     m_query += in_filter;
+    if(in_hamming > m_hamming)
+        m_hamming = in_hamming;
     return true;
 }
 
@@ -185,22 +190,28 @@ bool RyftOne_Result::__execute()
     int fd;
     struct stat sb;
     const char *perr;
+    char results[PATH_MAX];
 
-    m_query = "(RECORD CONTAINS ?)";
-    string results_path = "my_results.db";
-    rol_data_set_t result = rol_ds_search_exact(m_loaded, results_path.c_str(), m_query.c_str(), 0, NULL, NULL, false, NULL);
+    mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    sprintf(results, "%s/results.%08x", s_R1Results, pthread_self());
+    if(m_query.empty())
+        m_query = "(RECORD CONTAINS ?)";
+    string results_path(results);
+    size_t idx = results_path.find("/", 1);
+    rol_data_set_t result = rol_ds_search_fuzzy_hamming(m_loaded, results_path.substr(idx+1, string::npos).c_str(), 
+        m_query.c_str(), 0, m_hamming, NULL, NULL, true, NULL);
     if( rol_ds_has_error_occurred(result)) {
         perr = rol_ds_get_error_string(result);
         return false;
     }
-    else
-        fd = ::open("/ryftone/my_results.db", O_RDONLY);
 
+    fd = ::open(results, O_RDONLY);
     fstat(fd, &sb);
     char *buffer = (char *)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     Parse(buffer, sb.st_size, m_delim);
     munmap(buffer, sb.st_size);
     close(fd);
+    unlink(results);
     return true;
 }
 

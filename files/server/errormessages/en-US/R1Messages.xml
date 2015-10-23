@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Messages [
+    <!ELEMENT Messages (Package*)>
+
+    <!ELEMENT Package (Error*)>
+    <!ATTLIST Package ID CDATA #REQUIRED>
+    <!ATTLIST Package DefaultComponent CDATA #REQUIRED>
+
+    <!ELEMENT Error (#PCDATA)>
+    <!ATTLIST Error Key ID #REQUIRED>
+    <!ATTLIST Error Component CDATA #IMPLIED>
+    <!ATTLIST Error NativeErrorCode CDATA #REQUIRED>
+    <!ATTLIST Error Params CDATA "0">
+]>
+
+<Messages>
+    <!-- Package ID corresponds to the R1_ERROR constant defined in RyftOne.h -->
+    <Package ID="101" DefaultComponent="RyftOne">
+        <!-- Error thrown when result set traversal direction is not supported. -->
+        <Error Key="R1ResultSetTraverseDirNotSupported" NativeErrorCode="3">Result set traversal direction is not supported.</Error>
+    </Package>
+</Messages>

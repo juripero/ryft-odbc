@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <VisualGDBProjectSettings2 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <ConfigurationName>Debug</ConfigurationName>
+  <ConfigurationName>Release</ConfigurationName>
   <Project xsi:type="com.visualgdb.project.linux">
     <CustomSourceDirectories>
       <Directories />
@@ -18,7 +18,7 @@
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
-      <LocalDirectory>$(ProjectDir)</LocalDirectory>
+      <LocalDirectory>D:\Ryft\ryft-odbc\src\roosctl</LocalDirectory>
       <RemoteDirectory>/home/ryftuser/development/ryft1_odbcctl</RemoteDirectory>
       <FileMasks>
         <string>*.cpp</string>
@@ -36,11 +36,11 @@
     <AllowChangingHostForMainCommands>false</AllowChangingHostForMainCommands>
     <SkipBuildIfNoSourceFilesChanged>false</SkipBuildIfNoSourceFilesChanged>
     <IgnoreFileTransferErrors>false</IgnoreFileTransferErrors>
-    <RemoveRemoteDirectoryOnClean>true</RemoveRemoteDirectoryOnClean>
+    <RemoveRemoteDirectoryOnClean>false</RemoveRemoteDirectoryOnClean>
   </Project>
   <Build xsi:type="com.visualgdb.build.make">
     <MakeFilePathRelativeToSourceDir>Makefile</MakeFilePathRelativeToSourceDir>
-    <MakeConfigurationName>Debug</MakeConfigurationName>
+    <MakeConfigurationName>Release</MakeConfigurationName>
     <AdditionalMakeArguments />
     <Toolchain>
       <Name>Default GCC toolchain on 192.168.56.101</Name>

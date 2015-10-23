@@ -1,0 +1,24 @@
+This directory contains the installation of the RyftOne ODBC Server.
+
+/bin - contains the binary and configuration files necessary to run the RyftOne ODBC server.
+
+	ryft1_odbcd 	  - contains the RyftOne ODBC server daemon.
+
+	ryft1_odbcctl 	  - contains the control applet used to start, stop and configure 
+			    the RyftOne ODBC server daemon, ex.
+
+				"./bin/ryft1_odbcctl -s" will start the server daemon
+
+			    Help is available for the ryft1_odbcctl applet via the "-h" switch.
+
+	.ryftone.server.ini - contains configuration information used by the RyftOne ODBC
+			      server.
+
+/lib - contains all of the libraries referenced by the RyftOne ODBC server components.
+
+/errormessages - contains the XML error message source for all error messages issued by
+		 the RyftOne ODBC server daemon.
+
+Refer to the "RyftOne_ODBC_Server_Installation_Guide" for more information on installing
+and configuring your RyftOne ODBC server.
+

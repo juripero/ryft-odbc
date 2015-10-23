@@ -270,7 +270,7 @@ public:
     RyftOne_Result(RyftOne_Database *in_ryft1);
 
     bool open(string& in_name, vector<__catalog_entry__>::iterator in_catentry);
-    bool appendFilter(string in_filter);
+    bool appendFilter(string in_filter, int in_hamming);
     
     bool appendRow();
     bool flush();
@@ -294,6 +294,7 @@ private:
     RyftOne_Database *m_ryft1;
     rol_data_set_t m_loaded;
 
+    int m_hamming;
     std::string m_query;
     bool m_queryFinished;
 

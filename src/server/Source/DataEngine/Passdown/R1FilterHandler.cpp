@@ -128,7 +128,8 @@ R1FilterHandler::R1FilterHandler(
     SharedPtr<R1Table> in_table) :
     m_table(in_table),
     m_isPassedDown(false),
-    m_negate(false)
+    m_negate(false),
+    m_hamming(0)
 {
     assert(!in_table.IsNull());
 }
@@ -155,7 +156,7 @@ SharedPtr<DSIExtResultSet> R1FilterHandler::TakeResult()
     }
 
     // Return filter result.
-    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter));
+    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter, m_hamming));
 }
 
 // Protected =======================================================================================
@@ -244,7 +245,7 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
     simba_int16 paramSqlType = rExpr->GetMetadata()->GetSqlType();
     SqlDataTypeUtilities* dataTypeUtils = SqlDataTypeUtilitiesSingleton::GetInstance();
     if(dataTypeUtils->IsIntegerType(paramSqlType) || dataTypeUtils->IsExactNumericType(paramSqlType) ||
-        dataTypeUtils->IsApproximateNumericType(paramSqlType) || dataTypeUtils->IsCharacterType(paramSqlType)) {
+        dataTypeUtils->IsApproximateNumericType(paramSqlType) || dataTypeUtils->IsAnyCharacterType(paramSqlType)) {
 
         simba_wstring literalVal = rExpr->GetAsLiteral()->GetLiteralValue();
         if(literalVal.IsNull())
@@ -361,6 +362,49 @@ void R1FilterHandler::ConstructComparisonFilter(
     const simba_wstring& in_exprValue,
     SEComparisonType in_compOp)
 {
+    wstring out_filter = L"\"";
+    const wchar_t *pfilter;
+    size_t idx1, idx2;
+    int hamming = 0;
+
+    wstring in_filter = in_exprValue.GetAsPlatformWString();
+scan:
+    for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
+        switch(*pfilter) {
+        case L'-':
+            pfilter++;
+            switch(*pfilter) {
+            case L'H': {
+                wstring num_hamming;
+                for(pfilter++; (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                    num_hamming += *pfilter;
+                swscanf(num_hamming.c_str(), L"%d", &hamming);
+
+                wstring inside = pfilter;
+                idx1 = inside.find_first_of(L"(");
+                idx2 = inside.find_last_of(L")");
+                if(idx1 != string::npos && idx2 != string::npos) {
+                    in_filter = inside.substr(idx1+1, idx2-idx1-1);
+                    goto scan;
+                }
+                break;
+                }
+            default:
+                out_filter += L"-";
+                break;
+            }
+            break;
+        case L'%':
+        case L'_':
+            out_filter += L"\"?\"";
+            break;
+        default:
+            out_filter += *pfilter;
+            break;
+        }
+    }
+    out_filter += L"\"";
+
     m_filter += "( RECORD." + in_columnName + " ";
 
     // Determine the math symbol for comparison type.
@@ -373,7 +417,9 @@ void R1FilterHandler::ConstructComparisonFilter(
         break;
     }
 
-    m_filter += " \"" + in_exprValue + "\" )";
+    m_filter += out_filter.c_str();
+    m_filter += " )";
+    m_hamming = hamming;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -383,12 +429,59 @@ void R1FilterHandler::ConstructLikeFilter(
     simba_int16 in_exprSqlType,
     const simba_wstring& in_exprValue)
 {
+    wstring out_filter = L"\"";
+    const wchar_t *pfilter;
+    size_t idx1, idx2;
+    int hamming = 0;
+
+    wstring in_filter = in_exprValue.GetAsPlatformWString();
+scan:
+    for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
+        switch(*pfilter) {
+        case L'-':
+            pfilter++;
+            switch(*pfilter) {
+            case L'H': {
+                wstring num_hamming;
+                for(pfilter++; (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                    num_hamming += *pfilter;
+                swscanf(num_hamming.c_str(), L"%d", &hamming);
+
+                wstring inside = pfilter;
+                idx1 = inside.find_first_of(L"(");
+                idx2 = inside.find_last_of(L")");
+                if(idx1 != string::npos && idx2 != string::npos) {
+                    in_filter = inside.substr(idx1+1, idx2-idx1-1);
+                    goto scan;
+                }
+                break;
+                }
+            default:
+                out_filter += L"-";
+                break;
+            }
+            break;
+        case L'%':
+        case L'_':
+            out_filter += L"\"?\"";
+            break;
+        default:
+            out_filter += *pfilter;
+            break;
+        }
+    }
+    out_filter += L"\"";
+
     m_filter += "( RECORD." + in_columnName;
+
     if(m_negate) {
         m_filter += " NOT_CONTAINS ";
     }
     else
         m_filter += " CONTAINS ";
 
-    m_filter += "\"" + in_exprValue + "\" )";
+
+    m_filter += out_filter.c_str();
+    m_filter += " )";
+    m_hamming = hamming;
 }

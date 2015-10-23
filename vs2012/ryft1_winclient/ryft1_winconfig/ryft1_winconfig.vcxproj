@@ -190,6 +190,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;RYFT1_WINCONFIG_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\src\winclient\config\Core;..\..\..\src\winclient\config;..\..\..\src\winclient\config\Resources;..\..\..\src\winclient\config\Setup;$(SIMBAENGINE_DIR)\include;$(SIMBAENGINE_DIR)\include\DSI;$(SIMBAENGINE_DIR)\include\DSI\Client;$(SIMBAENGINE_DIR)\include\Support;$(SIMBAENGINE_DIR)\include\Support\Exceptions</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
