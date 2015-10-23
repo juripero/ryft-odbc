@@ -18,7 +18,7 @@
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
-      <LocalDirectory>D:\Ryft\odbc\src\server</LocalDirectory>
+      <LocalDirectory>D:\Ryft\ryft-odbc\src\server</LocalDirectory>
       <RemoteDirectory>/home/ryftuser/development/ryft1_odbcd</RemoteDirectory>
       <FileMasks>
         <string>*</string>
@@ -112,7 +112,7 @@
       </RequiredLinuxPackages>
     </Toolchain>
     <MainBuildDirectory>$(RemoteSourceDir)/Makefiles</MainBuildDirectory>
-    <AbsoluteTargetPath>/home/ryftuser/development/ryft1_server/Bin/Linux_x8664/ryft1_odbcd</AbsoluteTargetPath>
+    <AbsoluteTargetPath>/home/ryftuser/development/ryft1_odbcd/Bin/Linux_x8664/ryft1_odbcd</AbsoluteTargetPath>
     <AutoUpdateMakefiles>true</AutoUpdateMakefiles>
   </Build>
   <Debug xsi:type="com.visualgdb.debug.remote">

@@ -41,6 +41,7 @@
 #define __UINTMAX_TYPE__ long unsigned int
 #define __linux 1
 #define __DEC32_EPSILON__ 1E-6DF
+#define __OPTIMIZE__ 1
 #define __unix 1
 #define __UINT32_MAX__ 4294967295U
 #define __LDBL_MAX_EXP__ 16384
@@ -50,8 +51,10 @@
 #define __WCHAR_MIN__ (-__WCHAR_MAX__ - 1)
 #define __DBL_DIG__ 15
 #define __GCC_ATOMIC_POINTER_LOCK_FREE 2
+#define _FORTIFY_SOURCE 2
 #define __SIZEOF_INT__ 4
 #define __SIZEOF_POINTER__ 8
+#define NDEBUG 1
 #define __GCC_ATOMIC_CHAR16_T_LOCK_FREE 2
 #define __USER_LABEL_PREFIX__ 
 #define __STDC_HOSTED__ 1
@@ -66,6 +69,7 @@
 #define __STDC_ISO_10646__ 201103L
 #define __DECIMAL_DIG__ 21
 #define __gnu_linux__ 1
+#define RELEASE 1
 #define __LDBL_HAS_QUIET_NAN__ 1
 #define __GNUC__ 4
 #define __GXX_RTTI 1
@@ -112,7 +116,6 @@
 #define __UINT16_MAX__ 65535
 #define __DBL_HAS_DENORM__ 1
 #define __UINT8_TYPE__ unsigned char
-#define __NO_INLINE__ 1
 #define __FLT_MANT_DIG__ 24
 #define __VERSION__ "4.8.4"
 #define _STDC_PREDEF_H 1
@@ -244,7 +247,6 @@
 #define _GNU_SOURCE 1
 #define __ATOMIC_ACQ_REL 4
 #define __ATOMIC_RELEASE 3
-#define DEBUG 
 #endif
 
 // --- Include directories begin --- //

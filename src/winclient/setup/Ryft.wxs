@@ -91,8 +91,6 @@
       <Component Id="ODBCDriver" Guid="$(var.DriverLibGUID)" Directory="INSTALLFOLDER">
         <File Id="DriverDLL" Name="$(var.BaseDriverDLLName)$(var.DriverSuffix).dll" Source="$(env.SIMBAENGINE_DIR)\Bin\$(var.ProcessorFolder)\Release_MTDLL\SimbaClient_MTDLL.dll" KeyPath="yes"/>
         <File Id="ConfigDLL" Name="$(var.BaseConfigDLLName)$(var.DriverSuffix).dll" Source="$(var.ryft1_winconfig.TargetPath)" />
-        <File Id="SimbaLicense" Source="..\..\..\files\winclient\SimbaEngineSDK.lic" />
-        <CopyFile Id="CopyToHome" FileId="SimbaLicense" DestinationProperty="USERFOLDER" />
       </Component>
 
       <Component Id="ThirdPartyLibraries" Guid="$(var.ThirdPartyLibGUID)" Directory="INSTALLFOLDER">

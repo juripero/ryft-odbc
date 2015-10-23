@@ -109,9 +109,6 @@
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1TablesMetadataSource.h">
       <Filter>Source files\DataEngine\Metadata\Include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_library.h">
-      <Filter>Source files\Ryft1\Include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\server\Source\Setup\R1BaseDialog.h">
       <Filter>Source files\Setup\Include</Filter>
     </ClInclude>
@@ -164,6 +161,9 @@
       <Filter>Source files\DataEngine\Passdown\Include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\server\Source\RyftOne.h" />
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_library.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\src\server\Source\Makefile">
@@ -250,9 +250,6 @@
     <ClCompile Include="..\..\..\src\server\Source\Setup\R1TestResultDialog.cpp">
       <Filter>Source files\Setup</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_library.cpp">
-      <Filter>Source files\Ryft1</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1Table.cpp">
       <Filter>Source files\DataEngine</Filter>
     </ClCompile>
@@ -267,6 +264,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp">
       <Filter>Source files\DataEngine\Passdown</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_library.cpp">
+      <Filter>Source files\Ryft1</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

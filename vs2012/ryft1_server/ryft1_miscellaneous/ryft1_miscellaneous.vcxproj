@@ -62,12 +62,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\..\..\files\server\.ryftone.server.ini" />
-    <None Include="debug.mak" />
-    <None Include="Makefile" />
-    <None Include="release.mak" />
+    <None Include="..\..\..\files\server\debug.mak" />
+    <None Include="..\..\..\files\server\Makefile" />
+    <None Include="..\..\..\files\server\README" />
+    <None Include="..\..\..\files\server\release.mak" />
+    <None Include="..\..\..\files\server\VERSION" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dummy.cpp" />
+    <Xml Include="..\..\..\files\server\errormessages\en-US\CSCommonMessages.xml" />
+    <Xml Include="..\..\..\files\server\errormessages\en-US\ODBCMessages.xml" />
+    <Xml Include="..\..\..\files\server\errormessages\en-US\R1Messages.xml" />
+    <Xml Include="..\..\..\files\server\errormessages\en-US\ServerMessages.xml" />
+    <Xml Include="..\..\..\files\server\errormessages\en-US\SQLEngineMessages.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\files\server\dummy.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

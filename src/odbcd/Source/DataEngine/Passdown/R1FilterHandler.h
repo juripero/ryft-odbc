@@ -238,6 +238,7 @@ namespace RyftOne
         Simba::Support::SharedPtr<R1Table> m_table;
 
         bool m_negate;
+        int m_hamming;
         simba_wstring m_filter;
 
         /// Flag for successful pass down.

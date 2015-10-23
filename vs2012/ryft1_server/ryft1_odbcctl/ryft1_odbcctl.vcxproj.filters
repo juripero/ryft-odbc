@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\..\src\roosctl\debug.mak">
+      <Filter>Make files</Filter>
+    </None>
+    <None Include="..\..\..\src\roosctl\release.mak">
+      <Filter>Make files</Filter>
+    </None>
+    <None Include="..\..\..\src\roosctl\Makefile" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Make files">
+      <UniqueIdentifier>{2e7db603-1e94-4225-9b0f-c77e5ec771cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{979abcf5-cf92-404a-aa06-8fd1405b336c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{7e3d6d1d-7d6c-493c-b0ad-8b34f3af40e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{ce23a5fa-7e9a-4bd3-998c-e17117f4e49b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\roosctl\ryft1_odbcctl.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

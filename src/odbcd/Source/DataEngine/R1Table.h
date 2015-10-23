@@ -54,7 +54,7 @@ namespace RyftOne
             IWarningListener* in_warningListener,
             bool in_isODBCV3);
 
-        void AppendFilter(simba_wstring &in_filter);
+        void AppendFilter(simba_wstring &in_filter, int in_hamming);
 
         /// @brief Append an empty row to the end of the result set.
         ///

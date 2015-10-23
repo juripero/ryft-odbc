@@ -29,7 +29,7 @@ namespace RyftOne
         /// @param in_filter        The string representing the dbase expression for the filter.
         R1FilterResult(
             Simba::Support::SharedPtr<R1Table> in_table, 
-            const simba_wstring& in_filter);
+            const simba_wstring& in_filter, int in_hamming);
 
         /// @brief Destructor.
         virtual ~R1FilterResult();

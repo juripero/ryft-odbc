@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Messages [
+    <!ELEMENT Messages (Package*)>
+
+    <!ELEMENT Package (Error*)>
+    <!ATTLIST Package ID CDATA #REQUIRED>
+    <!ATTLIST Package DefaultComponent CDATA #REQUIRED>
+
+    <!ELEMENT Error (#PCDATA)>
+    <!ATTLIST Error Key ID #REQUIRED>
+    <!ATTLIST Error Component CDATA #IMPLIED>
+    <!ATTLIST Error NativeErrorCode CDATA #REQUIRED>
+    <!ATTLIST Error Params CDATA "0">
+]>
+
+<Messages>
+    <!-- #################################################################################### -->
+    <Package ID="7" DefaultComponent="Server">      
+    <!-- The SERVER_ERRORs are subdivided into the following ranges (by functionality):      
+    GENERAL ERRORS       (80000 to 80099) - Errors commonly thrown across all functions.
+    CREATION ERRORS      (80200 to 80299) - Errors thrown during creation (RKPCreate)
+    CANCEL ERRORS        (80300 to 80399) - Errors thrown during cancellation (RKPCancel)
+    CURSOR ERRORS        (80400 to 80499) - Errors thrown during cursor movement (RKPCursor)
+    DESTRUCTION ERRORS   (80500 to 80599) - Errors thrown during destruction (RKPDestroy)
+    EXECUTION ERRORS     (80600 to 80699) - Errors thrown during execution (RKPExecute)
+    LOGIN ERRORS         (80700 to 80799) - Errors thrown during login (RKPLogin)
+    PREPARATION ERRORS   (80800 to 80899) - Errors thrown during preparation (RKPPrepare*)
+    READ DATA ERRORS     (80900 to 80999) - Errors thrown during read (RKPReadData)
+    SET ATTRIBUTE ERRORS (81000 to 81099) - Errors thrown during set attribute (RKPSetAttr)
+    TRANSLATION ERRORS   (81100 to 81199) - Errors thrown during translation (RKPTranslate)
+    WRITE DATA ERRORS    (81200 to 81299) - Errors thrown during write (RKPWrite)
+    -->
+
+      <!-- GENERAL ERRORS (80000 to 80099) -->
+      <!-- General error thrown. -->
+      <Error Key="UnknownError" NativeErrorCode="80001">Unknown error.</Error>
+
+      <!-- Error thrown when the end of the buffer is encountered while more data is expected. -->
+      <Error Key="UnexpectedBufferEnd" NativeErrorCode="80003">Unexpectedly reached the end of the buffer.</Error>
+
+      <!-- Error thrown when an argument is passed to an object that is invalid. -->
+      <Error Key="IllegalArgument" NativeErrorCode="80004">Invalid argument passed to function.</Error>
+
+      <!-- Error thrown when an client provides an invalid DSI object handle. -->
+      <Error Key="InvalidHandleType" NativeErrorCode="80005">Specified handle type not supported.</Error>
+
+      <!-- Error thrown when an client provides an invalid DSI object handle. -->
+      <Error Key="InvalidHandle" NativeErrorCode="80006">Handle does not correlate to a DSI object.</Error>
+
+      <!-- Error thrown when an client provides an invalid DSI parent object handle. -->
+      <Error Key="InvalidParentHandle" NativeErrorCode="80007">Parent handle does not correlate to a DSI connection object.</Error>
+
+      <!-- Error thrown when an client provides an invalid DSI connection object handle. -->
+      <Error Key="InvalidConnectionHandle" NativeErrorCode="80008">Connection handle does not correlate to a DSI connection object.</Error>
+
+      <!-- Error thrown when an client provides an invalid DSI statement object handle. -->
+      <Error Key="InvalidStatementHandle" NativeErrorCode="80009">Statement handle does not correlate to a DSI statement object.</Error>
+
+      <!-- Error thrown when an client provides an invalid DSI cellmark object handle. -->
+      <Error Key="InvalidCellmarkHandle" NativeErrorCode="80010">Cellmark handle does not correlate to a DSI cellmark object.</Error>
+
+      <!-- Error thrown when a client fails to provide a connection handle to an IConnection. -->
+      <Error Key="InvalidAssociatedDSIConnection" NativeErrorCode="80012">Associated IConnection does not correlate to the connection handle.</Error>
+
+      <!-- Error thrown when a client fails to provide a statement handle to a IStatement. -->
+      <Error Key="InvalidAssociatedDSIStatement" NativeErrorCode="80013">Associated IStatement does not correlate to the statement handle.</Error>
+
+      <!-- Error thrown when a client fails to provide a cellmark handle to a DSICellMark. -->
+      <Error Key="InvalidAssociatedDSICellmark" NativeErrorCode="80014">Associated DSICellmark does not correlate to the cellmark handle.</Error>
+
+      <!-- Error thrown when a message containing a (un)signed_native value from the client is out of the native range
+        for the server and can't be handled by truncating. -->
+      <Error Key="ClientNativeIntValueOutOfRange" NativeErrorCode="80015">Client native integer value out of server native range.</Error>
+
+      <!-- Warning posted when log file can't be opened -->
+      <Error Key="FailedToOpenLogFile" Params="1" NativeErrorCode="80016">Failed to open log file for writing: %1%.</Error>
+
+      <!-- Warning posted when a workspace can't be found. -->
+      <Error Key="InvalidWorkspaceId" NativeErrorCode="80017">Error retrieving workspace for socket. The workspace has not been created yet.</Error>
+
+      <!-- Error message used when an unknown error is caught during task execution. -->
+      <Error Key="UnknownTaskError" NativeErrorCode="80018">Unknown error caught during task execution.</Error>
+
+      <!-- Error message used when no payload is generated for an executed task. -->
+      <Error Key="NoPayloadGenerated" NativeErrorCode="80019">Executed task did not produce a response payload.</Error>
+
+      <!-- CREATION ERRORS (80200 to 80299) -->
+      <!-- General error thrown during creation. -->
+      <Error Key="UnknownCreationError" NativeErrorCode="80200">Unknown creation error.</Error>      
+
+      <!-- Error thrown when an RKP Cancel map's key or value is not recognized. -->
+      <Error Key="UnsupportedCreateAction" NativeErrorCode="80201">The creation action is not supported.</Error>
+
+      <!-- Error thrown when an DSI object can not be created. -->
+      <Error Key="DSIObjectCreationFailed" NativeErrorCode="80202">The DSI object creation failed.</Error>
+
+      <!-- Error thrown when an DSI statement object can not be created. -->
+      <Error Key="DSIStatementCreationFailed" NativeErrorCode="80204">The DSI Statement object creation failed.</Error>
+
+      <!-- Error thrown when an DSI statement object can not be created. -->
+      <Error Key="DSIDataEngineCreationFailed" NativeErrorCode="80205">The DSI DataEngine object creation failed.</Error>
+
+      <!-- Error thrown when an DSI result set object can not be created. -->
+      <Error Key="DSIMetadataCreationFailed" NativeErrorCode="80206">The DSI Metadata creation failed.</Error>
+
+      <!-- Error thrown when an DSI query engine object can not be created. -->
+      <Error Key="DSIQueryEngineCreationFailed" NativeErrorCode="80208">The DSI QueryEngine object creation failed.</Error>
+
+
+      <!-- CANCEL ERRORS (80300 to 80399) -->
+      <!-- General error thrown during cancellation. -->
+      <Error Key="UnknownCancelError" NativeErrorCode="80300">Unknown cancellation error.</Error>
+
+      <!-- Error thrown when an RKP Cancel map's key or value is not recognized. -->
+      <Error Key="UnsupportedCancelAction" NativeErrorCode="80301">The cancel action is not supported.</Error>
+
+
+      <!-- CURSOR ERRORS (80400 to 80499) -->
+      <!-- Error thrown when an RKP Cursor map's key or value or value is not recognized. -->
+      <Error Key="UnsupportedCursorAction" NativeErrorCode="80401">The cursor action is not supported.</Error>
+
+      <!-- Error thrown when an RKP Cursor position is after the result set. -->
+      <Error Key="CursorAfterResultSet" NativeErrorCode="80402">The cursor is positioned after the result set.</Error>
+
+      <!-- Error thrown when a BKPCancel is received for a task that is not processed yet. -->
+      <Error Key="OperationCanceled" NativeErrorCode="80403">Operation was canceled.</Error>
+
+      <!-- DESTRUCTION ERRORS (80500 to 80599) -->
+      <!-- General error thrown during detruction. -->
+      <Error Key="UnknownDestroyError" NativeErrorCode="80500">Unknown destruction error.</Error>
+
+      <!-- Error thrown when an RKP Destroy map's key or value is not recognized. -->
+      <Error Key="UnsupportedDestroyAction" NativeErrorCode="80501">The destroy action is not supported.</Error>
+
+
+      <!-- EXECUTION ERRORS (80600 to 80699) -->
+      <!-- General error thrown during execution. -->
+      <Error Key="UnknownExecutionError" NativeErrorCode="80600">Unknown execution error.</Error>
+
+      <!-- Error thrown when an RKP Execute map's key is not recognized. -->
+      <Error Key="UnsupportedExecuteAction" NativeErrorCode="80601">The execute action is not supported.</Error>
+
+      <!-- Error thrown during execution of an unprepared statement. -->
+      <Error Key="StatementNotPrepared" NativeErrorCode="80602">The statement must first be prepared before execution.</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="DirectExecutionUnsupported" NativeErrorCode="80603">A statement must first be prepared then executed; direct execution is not supported.</Error>
+
+      <!-- Error thrown when an DSI result set object can not be created. -->
+      <Error Key="DSIMetadataNotFound" NativeErrorCode="80604">The DSI metadata is empty.</Error>
+
+
+      <!-- LOGIN ERRORS (80700 to 80799) -->
+      <!-- General error thrown during login. -->
+      <Error Key="UnknownLoginError" NativeErrorCode="80700">Unknown login error.</Error>
+
+      <!-- The server requires integrated security authentication. -->
+      <Error Key="IntegratedSecurityAuthRequired" NativeErrorCode="80702">Integrated security authentication is required. Connection refused.</Error>
+
+      <!-- Error thrown if the client sends security token types out of order. -->
+      <Error Key="InvalidSecurityTokenState" NativeErrorCode="80707">Client sent an unexpected type of security token.</Error>
+
+      <!-- Error thrown if the credential factory doesn't return credentials or an output token. -->
+      <Error Key="NoCredReturnedFromCredFactory" NativeErrorCode="80708">The credential factory did not return either a response token or established credentials.</Error>
+
+      <!-- PREPARATION ERRORS (80800 to 80899) -->
+      <!-- General error thrown during preparation of a statement. -->
+      <Error Key="UnknownPreparationError" NativeErrorCode="80800">Unknown preparation error.</Error>
+
+
+      <!-- READ DATA ERRORS (80900 to 80999) -->
+      <!-- General error thrown during data retrieval of an executed statement. -->
+      <Error Key="UnknownReadError" NativeErrorCode="80900">Unknown preparation error.</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="UnsupportedReadType" NativeErrorCode="80901">The type of read is not supported.</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="DSIResultSetNotFound" NativeErrorCode="80902">The DSI result set is empty.</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="OutputParameterCacheNotFound" NativeErrorCode="80903">The output parameter cache is empty.</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="InvalidRowCount" NativeErrorCode="80905">The number of rows to read is invalid (must be greater than zero).</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="InvalidOffset" NativeErrorCode="80906">The read offset is invalid (must be greater or equal to zero).</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="InvalidMaxSize" NativeErrorCode="80907">The maximum read size is invalid (must be greater than zero).</Error>
+
+      <!-- Error thrown during data retrieval of a non-executed statement. -->
+      <Error Key="InvalidMaxSize" NativeErrorCode="80908">The maximum read size is invalid (must be greater than zero).</Error>
+
+
+      <!-- SET ATTRIBUTE ERRORS (81000 to 81099) -->
+      <!-- General error thrown during attribute setting. -->
+      <Error Key="UnknownSetAttributeError" NativeErrorCode="81000">Unknown set attribute error.</Error>
+
+      <!-- Error throw during set attribute -->
+      <Error Key="KeyOffsetMismatch" NativeErrorCode="81001">There must be an attribute location offset for every attribute key.</Error>
+
+
+      <!-- TRANSLATION ERRORS (81100 to 81199) -->
+      <!-- General error thrown during translation. -->
+      <Error Key="UnsupportedTranslationType" NativeErrorCode="81101">Unsupported translation type.</Error>
+
+
+      <!-- WRITE DATA ERRORS (81200 to 81299) -->
+      <!-- General error thrown during translation. -->
+      <Error Key="UnknownWriteError" NativeErrorCode="81200">Unknown translation error.</Error>
+
+      <!-- Error thrown during data writing of an executed statement. -->
+      <Error Key="UnsupportedWriteType" NativeErrorCode="81201">The type of write is not supported.</Error>
+
+
+      <!-- TRANSACT DATA ERRORS (81300 to 81399) -->
+      <!-- General error thrown during translation. -->
+      <Error Key="UnknownTransactError" NativeErrorCode="81300">Unknown transaction error.</Error>
+
+      <!-- Error thrown during data writing of an executed statement. -->
+      <Error Key="UnsupportedTransactionType" NativeErrorCode="81301">The type of transaction is not supported.</Error>
+
+    </Package>
+</Messages>

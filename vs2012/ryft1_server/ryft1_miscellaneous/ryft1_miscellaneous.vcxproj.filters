@@ -8,20 +8,49 @@
     <Filter Include="Files">
       <UniqueIdentifier>{f742e3bd-3669-4574-b608-61d31e2a16e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Files\errormessages">
+      <UniqueIdentifier>{8da0ea36-f655-488f-a107-e377b9323f9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Files\errormessages\en-US">
+      <UniqueIdentifier>{83267908-6f11-4bed-b587-0cc1df6101b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Makefile" />
-    <None Include="debug.mak">
-      <Filter>Make files</Filter>
-    </None>
-    <None Include="release.mak">
-      <Filter>Make files</Filter>
-    </None>
     <None Include="..\..\..\files\server\.ryftone.server.ini">
+      <Filter>Files</Filter>
+    </None>
+    <None Include="..\..\..\files\server\README">
+      <Filter>Files</Filter>
+    </None>
+    <None Include="..\..\..\files\server\Makefile" />
+    <None Include="..\..\..\files\server\debug.mak">
+      <Filter>Make files</Filter>
+    </None>
+    <None Include="..\..\..\files\server\release.mak">
+      <Filter>Make files</Filter>
+    </None>
+    <None Include="..\..\..\files\server\VERSION">
       <Filter>Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dummy.cpp" />
+    <Xml Include="..\..\..\files\server\errormessages\en-US\CSCommonMessages.xml">
+      <Filter>Files\errormessages\en-US</Filter>
+    </Xml>
+    <Xml Include="..\..\..\files\server\errormessages\en-US\ODBCMessages.xml">
+      <Filter>Files\errormessages\en-US</Filter>
+    </Xml>
+    <Xml Include="..\..\..\files\server\errormessages\en-US\R1Messages.xml">
+      <Filter>Files\errormessages\en-US</Filter>
+    </Xml>
+    <Xml Include="..\..\..\files\server\errormessages\en-US\ServerMessages.xml">
+      <Filter>Files\errormessages\en-US</Filter>
+    </Xml>
+    <Xml Include="..\..\..\files\server\errormessages\en-US\SQLEngineMessages.xml">
+      <Filter>Files\errormessages\en-US</Filter>
+    </Xml>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\files\server\dummy.cpp" />
   </ItemGroup>
 </Project>

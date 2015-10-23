@@ -51,9 +51,9 @@ R1Table::R1Table(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void R1Table::AppendFilter(simba_wstring& in_filter)
+void R1Table::AppendFilter(simba_wstring& in_filter, int in_hamming)
 {
-    m_result->appendFilter(in_filter.GetAsPlatformString());
+    m_result->appendFilter(in_filter.GetAsPlatformString(), in_hamming);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,8 +257,7 @@ bool R1Table::WriteData(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 R1Table::~R1Table()
 {
-    //if(m_result)
-    //    delete m_result;
+    delete m_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,6 +301,7 @@ void R1Table::InitializeColumns(bool in_isODBCV3)
     RyftOne_Columns::iterator ryft1col;
 
     AutoPtr<DSIResultSetColumns> columns(new DSIResultSetColumns());
+
     for (ryft1col = ryft1cols.begin(); ryft1col != ryft1cols.end(); ryft1col++) {
 
         AutoPtr<DSIColumnMetadata> columnMetadata(new DSIColumnMetadata());

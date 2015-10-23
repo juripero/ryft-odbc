@@ -18,7 +18,7 @@
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
-      <LocalDirectory>D:\Ryft\odbc\src\server</LocalDirectory>
+      <LocalDirectory>D:\Ryft\ryft-odbc\src\server</LocalDirectory>
       <RemoteDirectory>/home/ryftuser/development/ryft1_odbcd</RemoteDirectory>
       <FileMasks>
         <string>*</string>
