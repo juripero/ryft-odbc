@@ -1,0 +1,20 @@
+This directory contains the installation of the Ryft ODBC driver.
+
+/bin/x8664 - contains the binary.
+
+/lib/x8664 - contains all of the libraries referenced by the Ryft ODBC driver components.
+
+/errormessages - contains the XML error message source for all error messages issued by
+		 the Ryft ODBC driver.
+
+1. Run 'sudo ./install.sh' from the ryft1_odbc_client_64 directory.
+
+2. Modify the contents of the ~/.odbc.ini file to match your installation, particularly
+the 'Servers' variable in the [RyftODBC] section
+
+3. Run 'sudo apt-get install unixodbc-dev unixodbc-bin unixodbc' to install the unixODBC
+components if you have not already done so.
+
+4. To use Libre Office Base on Ubuntu, you must also run 
+'sudo apt-get install libreoffice-base' if you have not already done so.
+
