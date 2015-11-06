@@ -14,6 +14,7 @@
 #include "DSIFileLogger.h"
 #include "NumberConverter.h"
 #include "SimbaSettingReaderConstants.h"
+#include "ResourceHelper.h"
 #include "DialogConsts.h"
 #include "SetupException.h"
 
@@ -374,6 +375,11 @@ void DSNConfiguration::Save()
         wchar_t servers[512];
         _snwprintf(servers, 512, L"%s %s,", GetURL().GetAsPlatformWString().c_str(), GetPort().GetAsPlatformWString().c_str());
         SQLWritePrivateProfileStringW(dsn.c_str(), L"SERVERS", servers, L"ODBC.INI");
+
+        // Write the Servers registry key for Simba
+        wchar_t connectionDialog[MAX_PATH];
+        GetModuleFileName(ResourceHelper::GetModuleInstance(), connectionDialog, MAX_PATH);
+        SQLWritePrivateProfileStringW(dsn.c_str(), L"CONNECTIONDIALOG", connectionDialog, L"ODBC.INI");
 
         // Write out the logging settings.
         SetDriverRegistryValue(SETTING_LOGLEVEL, GetLogLevel());

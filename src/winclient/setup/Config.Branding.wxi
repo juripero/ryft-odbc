@@ -2,8 +2,8 @@
 <!-- Defines build variables used for branding the installer. -->
 <Include>
 
-  <?define MajorMinorVersion = "0.1"?>
-  <?define RevisionBuildVersion = "3.0"?>
+  <?define MajorMinorVersion = "1.0"?>
+  <?define RevisionBuildVersion = "6.0"?>
 
   <!-- The long manufacturer name. -->
   <?define Manufacturer = "Ryft"?>
