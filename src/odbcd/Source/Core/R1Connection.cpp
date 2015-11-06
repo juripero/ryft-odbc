@@ -68,9 +68,12 @@ void R1Connection::Connect(const DSIConnSettingRequestMap& in_connectionSettings
     string uid = uidVar.GetStringValue();
     string pwd = pwdVar.GetStringValue();
 
-    m_isConnected = m_ryft1.logon(uid, pwd);
+    if(!m_ryft1.logon(uid, pwd))
+        R1THROW(Simba::Support::DIAG_INVALID_AUTH_SPEC, L"AuthorizationFailed");
 
     SetProperty(DSI_CONN_USER_NAME, AttributeData::MakeNewWStringAttributeData(uidVar.GetWStringValue()));
+
+    m_isConnected = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
