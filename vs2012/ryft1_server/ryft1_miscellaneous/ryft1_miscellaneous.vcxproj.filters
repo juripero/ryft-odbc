@@ -32,6 +32,12 @@
     <None Include="..\..\..\files\server\VERSION">
       <Filter>Files</Filter>
     </None>
+    <None Include="..\..\..\files\server\install.sh">
+      <Filter>Files</Filter>
+    </None>
+    <None Include="..\..\..\files\server\r.ld.so.conf">
+      <Filter>Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="..\..\..\files\server\errormessages\en-US\CSCommonMessages.xml">

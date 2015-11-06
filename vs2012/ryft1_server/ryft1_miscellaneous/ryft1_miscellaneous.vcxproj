@@ -63,7 +63,9 @@
   <ItemGroup>
     <None Include="..\..\..\files\server\.ryftone.server.ini" />
     <None Include="..\..\..\files\server\debug.mak" />
+    <None Include="..\..\..\files\server\install.sh" />
     <None Include="..\..\..\files\server\Makefile" />
+    <None Include="..\..\..\files\server\r.ld.so.conf" />
     <None Include="..\..\..\files\server\README" />
     <None Include="..\..\..\files\server\release.mak" />
     <None Include="..\..\..\files\server\VERSION" />
