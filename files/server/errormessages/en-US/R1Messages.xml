@@ -17,6 +17,7 @@
     <!-- Package ID corresponds to the R1_ERROR constant defined in RyftOne.h -->
     <Package ID="101" DefaultComponent="RyftOne">
         <!-- Error thrown when result set traversal direction is not supported. -->
-        <Error Key="R1ResultSetTraverseDirNotSupported" NativeErrorCode="3">Result set traversal direction is not supported.</Error>
+        <Error Key="R1ResultSetTraverseDirNotSupported" NativeErrorCode="1">Result set traversal direction is not supported.</Error>
+        <Error Key="AuthorizationFailed" NativeErrorCode="2">Could not establish a connection. Authorization failed.</Error>
     </Package>
 </Messages>

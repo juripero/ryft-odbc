@@ -257,8 +257,24 @@ RyftOne_Database::RyftOne_Database()
     __loadCatalog();
 }
 
+#include <shadow.h>
+#include <pwd.h>
 bool RyftOne_Database::logon(string& in_user, string& in_password)
 {
+    struct passwd *pwd = getpwnam(in_user.c_str());
+
+    spwd *pw = getspnam(in_user.c_str());
+
+    if(pw == NULL)
+        return false;
+
+    if(pw->sp_pwdp == '\0')
+        return true;
+
+    char *epasswd = crypt(in_password.c_str(), pw->sp_pwdp);
+    if(strcmp(epasswd, pw->sp_pwdp))
+        return false;
+    
     return true;
 }
 

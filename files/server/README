@@ -1,23 +1,30 @@
 This directory contains the installation of the RyftOne ODBC Server.
 
-/bin - contains the binary and configuration files necessary to run the RyftOne ODBC server.
+/bin/x8664 - contains the binary and configuration files necessary to run the RyftOne ODBC server.
 
 	ryft1_odbcd 	  - contains the RyftOne ODBC server daemon.
 
 	ryft1_odbcctl 	  - contains the control applet used to start, stop and configure 
 			    the RyftOne ODBC server daemon, ex.
 
-				"./bin/ryft1_odbcctl -s" will start the server daemon
+				"./bin/x8664/ryft1_odbcctl -s" will start the server daemon
 
 			    Help is available for the ryft1_odbcctl applet via the "-h" switch.
 
 	.ryftone.server.ini - contains configuration information used by the RyftOne ODBC
 			      server.
 
-/lib - contains all of the libraries referenced by the RyftOne ODBC server components.
+/lib/x8664 - contains all of the libraries referenced by the RyftOne ODBC server components.
 
 /errormessages - contains the XML error message source for all error messages issued by
 		 the RyftOne ODBC server daemon.
+
+1. Run 'sudo ./install.sh' from the ryft1_odbc_server_64 directory.
+
+2. Modify the contents of the /usr/local/ryft/bin/x8664/.ryftone.server.ini file to match 
+your installation.
+
+3. Start the server process ('/usr/local/ryft/bin/x8664/ryft1_odbcctl -s').
 
 Refer to the "RyftOne_ODBC_Server_Installation_Guide" for more information on installing
 and configuring your RyftOne ODBC server.
