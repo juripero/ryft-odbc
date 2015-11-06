@@ -637,7 +637,7 @@ void start(string path)
         stop(path);
     }
 
-    cout << "starting ryft1_odbcd...\n";
+    cout << "starting ryft1_odbcd..." + path + "\n";
 
     background();
 
@@ -656,7 +656,7 @@ void start(string path)
 
     // make directory containing bin current directory
     chdir(epath.c_str());
-    putenv("LD_LIBRARY_PATH=../lib");
+    putenv("LD_LIBRARY_PATH=../lib/x8664");
     if(execl(path.c_str(), _exenam, (char *)NULL)) {
         cerr << "error starting ryft1_odbcd daemon \"" << path << "\" (" << errno << ")\n";
     }
@@ -884,10 +884,12 @@ void usage(string name)
 int main(int argc, char *argv[])
 {
     char exepath[PATH_MAX];
-    getcwd(exepath, PATH_MAX);
-    strcat(exepath, "/");
-    strcat(exepath, argv[0]);
-
+    char szlink[PATH_MAX];
+    sprintf(szlink, "/proc/%d/exe", getpid());
+    int bytes = readlink(szlink, exepath, PATH_MAX);
+    if(bytes > 0)
+        exepath[bytes] = '\0';
+    
     if(argc < 2) {
         usage(argv[0]);
         return 1;
