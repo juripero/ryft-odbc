@@ -183,56 +183,57 @@ void MainDialog::DoTestDialogAction(HWND in_dialogHandle)
     DSNConfiguration* config = GET_CONFIG(in_dialogHandle, DSNConfiguration);
     assert(config);
 
-    string uid = GetEditText(in_dialogHandle, IDC_EDIT_USER).GetAsAnsiString(ENC_UTF8);
-    string pwd = GetEditText(in_dialogHandle, IDC_EDIT_PWD).GetAsAnsiString(ENC_UTF8);
-    string url = GetEditText(in_dialogHandle, IDC_EDIT_URL).GetAsAnsiString(ENC_UTF8);
-    string port = GetEditText(in_dialogHandle, IDC_EDIT_PORT).GetAsAnsiString(ENC_UTF8);
+    simba_wstring Driver = config->GetDriver();
+    simba_wstring URL = GetEditText(in_dialogHandle, IDC_EDIT_URL);
+    simba_wstring Port = GetEditText(in_dialogHandle, IDC_EDIT_PORT);
+    simba_wstring UID = GetEditText(in_dialogHandle, IDC_EDIT_USER);
+    simba_wstring PWD = GetEditText(in_dialogHandle, IDC_EDIT_PWD);
 
-    try
-    {
-        SetCursor(LoadCursor(NULL, IDC_WAIT));
-        CString header;
-        CString message;
-#if 0
-        DRDA_Interface drda;
+    WCHAR ConnStr[512];
+    wsprintf(ConnStr, L"Driver=%s;SERVERS=%s %s;UID=%s;PWD=%s;", Driver.GetAsPlatformWString().c_str(), URL.GetAsPlatformWString().c_str(),
+        Port.GetAsPlatformWString().c_str(), UID.GetAsPlatformWString().c_str(), PWD.GetAsPlatformWString().c_str());
+    
+    CString header;
+    CString message;
 
-        url += ":";
-        url += port;
-        if(!drda.connect((char *)url.c_str())) {
-            SetCursor(LoadCursor(NULL, IDC_ARROW));
-            header.LoadString(IDS_ERROR_CAPTION);
-            message.LoadString(IDS_ERROR_NOCONNECT);
-            MessageBox(in_dialogHandle, message, header, MB_OK | MB_ICONERROR);
-            SetFocus(GetDlgItem(in_dialogHandle, IDC_EDIT_URL));
-            return;
-        }
+    SQLHENV hEnv = NULL;
+    SQLHDBC hDbc = NULL;
 
-        if(!drda.login((char *)uid.c_str(), (char *)pwd.c_str())) {
-            SetCursor(LoadCursor(NULL, IDC_ARROW));
-            header.LoadString(IDS_ERROR_CAPTION);
-            message.LoadString(IDS_ERROR_BADAUTH);
-            MessageBox(in_dialogHandle, message, header, MB_OK | MB_ICONERROR);
-            SetEditText(in_dialogHandle, IDC_EDIT_PWD, L"");
-            SetFocus(GetDlgItem(in_dialogHandle, IDC_EDIT_PWD));
-            return;
-        }
-#endif
+    SetCursor(LoadCursor(NULL, IDC_WAIT));
+
+    if(SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &hEnv) == SQL_ERROR)
+        ShowErrorDialog(in_dialogHandle, L"Unable to establish connection with ODBC driver.");
+
+    SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0);
+    SQLAllocHandle(SQL_HANDLE_DBC, hEnv, &hDbc);
+    if(SQLDriverConnectW(hDbc, in_dialogHandle, (SQLWCHAR *)ConnStr, SQL_NTS, NULL, 0, NULL, SQL_DRIVER_NOPROMPT) != SQL_SUCCESS) {
+        SQLSMALLINT iRec = 0; 
+        SQLINTEGER  iError; 
+        SQLWCHAR    szMessage[1000]; 
+        SQLWCHAR    szState[SQL_SQLSTATE_SIZE+1]; 
+
+        SetCursor(LoadCursor(NULL, IDC_ARROW));
+        if(SQLGetDiagRecW(SQL_HANDLE_DBC, hDbc, ++iRec, szState, &iError, szMessage, 
+            (SQLSMALLINT)(sizeof(szMessage) / sizeof(SQLCHAR)), (SQLSMALLINT *)NULL) == SQL_SUCCESS) {
+                ShowErrorDialog(in_dialogHandle, szMessage);
+        } 
+        else
+            ShowErrorDialog(in_dialogHandle, L"Unable to establish connection with ODBC driver.");
+    }
+    else {
         SetCursor(LoadCursor(NULL, IDC_ARROW));
         header.LoadString(IDS_CONNECT_TEST);
         message.LoadString(IDS_CONNECT_SUCCESS);
         MessageBox(in_dialogHandle, message, header, MB_OK | MB_ICONEXCLAMATION);
     }
-    catch (SetupException& e)
-    {
-        const simba_wstring wErrMsg = e.GetErrorMsg();
-        const simba_string errMsg = wErrMsg.GetAsUTF8();
 
-        ShowErrorDialog(in_dialogHandle, wErrMsg);
-    }
-    catch (ErrorException& e)
-    {
-        ShowErrorDialog(in_dialogHandle, e);
-    }
+    if (hDbc) { 
+        SQLDisconnect(hDbc); 
+        SQLFreeHandle(SQL_HANDLE_DBC, hDbc); 
+    } 
+ 
+    if (hEnv) 
+        SQLFreeHandle(SQL_HANDLE_ENV, hEnv); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,48 +246,6 @@ void MainDialog::DoOkAction(HWND in_dialogHandle)
         try
         {
             SaveSettings(in_dialogHandle, true);
-            SetCursor(LoadCursor(NULL, IDC_WAIT));
-#if 0
-            DRDA_Interface drda;
-            CString header;
-            CString message;
-
-            string url = config->GetURL().GetAsAnsiString(ENC_UTF8);
-            string port = config->GetPort().GetAsAnsiString(ENC_UTF8);
-            url += ":";
-            url += port;
-            if(!drda.connect((char *)url.c_str())) {
-                SetCursor(LoadCursor(NULL, IDC_ARROW));
-                header.LoadString(IDS_ERROR_CAPTION);
-                message.LoadString(IDS_ERROR_NOCONNECT);
-                if(MessageBox(in_dialogHandle, message, header, MB_RETRYCANCEL) == IDCANCEL) {
-                    EndDialog(in_dialogHandle, false);
-                    return;
-                }
-                else {
-                    SetFocus(GetDlgItem(in_dialogHandle, IDC_EDIT_URL));
-                    return;
-                }
-            }
-
-            string uid = config->GetUser().GetAsAnsiString(ENC_UTF8);
-            string pwd = config->GetPassword().GetAsAnsiString(ENC_UTF8);
-            if(!drda.login((char *)uid.c_str(), (char *)pwd.c_str())) {
-                SetCursor(LoadCursor(NULL, IDC_ARROW));
-                header.LoadString(IDS_ERROR_CAPTION);
-                message.LoadString(IDS_ERROR_BADAUTH);
-                if(MessageBox(in_dialogHandle, message, header, MB_RETRYCANCEL) == IDCANCEL) {
-                    EndDialog(in_dialogHandle, false);
-                    return;
-                }
-                else {
-                    SetEditText(in_dialogHandle, IDC_EDIT_PWD, L"");
-                    SetFocus(GetDlgItem(in_dialogHandle, IDC_EDIT_PWD));
-                    return;
-                }
-            }
-#endif
-            SetCursor(LoadCursor(NULL, IDC_ARROW));
             EndDialog(in_dialogHandle, true);
         }
         catch (SetupException& e)
@@ -392,7 +351,8 @@ void MainDialog::SaveSettings(HWND in_dialogHandle, bool in_savePassword)
     config->SetDSN(GetEditText(in_dialogHandle, IDC_EDIT_DSN));
     config->SetDescription(GetEditText(in_dialogHandle, IDC_EDIT_DESC));
     config->SetUser(GetEditText(in_dialogHandle, IDC_EDIT_USER));
-    config->SetPassword(GetEditText(in_dialogHandle, IDC_EDIT_PWD));
+    if(in_savePassword)
+        config->SetPassword(GetEditText(in_dialogHandle, IDC_EDIT_PWD));
     config->SetURL(GetEditText(in_dialogHandle, IDC_EDIT_URL));
     config->SetPort(GetEditText(in_dialogHandle, IDC_EDIT_PORT));
 }

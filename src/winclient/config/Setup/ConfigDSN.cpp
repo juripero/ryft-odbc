@@ -46,28 +46,24 @@ std::pair<bool, bool> INSTAPI ShowDialog(
     AddRequestMapCallback in_addCallback,
     HWND in_parentWindow)
 {
-#ifdef _DEBUG
-    //MessageBox(in_parentWindow, L"Debug Me!", L"Debug", MB_OK);
-#endif
+    DSIConnSettingRequestMap requestMap(*out_connSettingRequestMap);
+
     // Set the appropriate dialog properties.
     MainDialog dialog;
     DSNConfiguration dsnConfig("");
-#if 0
-    size_t siz = (*in_connSettingResponseMap).size();
-    DSIConnSettingResponseMap::iterator itr;
-    for(itr = in_connSettingResponseMap->begin(); itr != in_connSettingResponseMap->end(); itr++) {
-        wstring first = itr->first.GetAsPlatformWString();
-    }
 
-    //dsnConfig.LoadConnectionSettings(*in_connSettingResponseMap);
+    dsnConfig.LoadConnectionSettings(requestMap);
 
     // Pop the dialog. False return code indicates the dialog was canceled.
-    if (dialog.Show(in_parentWindow, dsnConfig, true))
-    {
-        dsnConfig.RetrieveConnectionSettings(*out_connSettingRequestMap);
+    if (dialog.Show(in_parentWindow, dsnConfig, true)) {
+        dsnConfig.RetrieveConnectionSettings(requestMap);
+        for(DSIConnSettingRequestMap::iterator itr = requestMap.begin(); itr != requestMap.end(); itr++) {
+            in_addCallback(out_connSettingRequestMap, itr->first, itr->second.GetWStringValue());
+        }
         return std::pair<bool, bool> (true, false);
     }
-#endif
+    else
+        return std::pair<bool,bool>(false, false);
 
     return std::pair<bool, bool> (true, false);
 }
