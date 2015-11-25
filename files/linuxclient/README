@@ -18,3 +18,5 @@ components if you have not already done so.
 4. To use Libre Office Base on Ubuntu, you must also run 
 'sudo apt-get install libreoffice-base' if you have not already done so.
 
+Refer to the "Ryft Connector for ODBC Installation and User Guide" for more information on installing
+and configuring your RyftOne ODBC driver.

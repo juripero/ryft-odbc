@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Messages [
+    <!ELEMENT Messages (Package*)>
+
+    <!ELEMENT Package (Error*)>
+    <!ATTLIST Package ID CDATA #REQUIRED>
+    <!ATTLIST Package DefaultComponent CDATA #REQUIRED>
+
+    <!ELEMENT Error (#PCDATA)>
+    <!ATTLIST Error Key ID #REQUIRED>
+    <!ATTLIST Error Component CDATA #IMPLIED>
+    <!ATTLIST Error NativeErrorCode CDATA #REQUIRED>
+    <!ATTLIST Error Params CDATA "0">
+]>
+
+<Messages>    
+    <!-- #################################################################################### -->
+    <Package ID="5" DefaultComponent="Messages">
+
+      <!-- Error thrown when the end of the message buffer is encountered while more data is expected. -->
+      <Error Key="UnexpectedBufferEnd" NativeErrorCode="70001">Unexpectedly reached the end of message buffer.</Error>
+
+      <!-- Error thrown when a deserialized enum value is out of the range of the desired enum type. -->
+      <Error Key="EnumOutOfRange" NativeErrorCode="70003">Enum value is out of the valid range.</Error>
+
+      <!-- Error thrown when the message serializer does not contain a serializer capable of serializing a specific request. -->
+      <Error Key="NoRequestSerializer" NativeErrorCode="70004">No serializer found to serialize request payload.</Error>
+
+      <!-- Error thrown when the message serializer does not contain a serializer capable of serializing a specific response. -->
+      <Error Key="NoResponseSerializer" NativeErrorCode="70005">No serializer found to serialize response payload.</Error>
+
+      <!-- Error thrown when the serializer encounters an unknown BKP type Id. -->
+      <Error Key="UnknownBKPTypeId" NativeErrorCode="70006">Unknown BKP payload type identifier.</Error>
+
+      <!-- Error thrown when a request deserializer fails to deserialize a request. -->
+      <Error Key="RequestNotDeserialized" NativeErrorCode="70007">Request was not deserialized.</Error>
+
+      <!-- Error thrown when a BKPAction payload contains a request with an unknown Id. -->
+      <Error Key="UnknownRequestTypeId" NativeErrorCode="70008">Unknown request type identifier.</Error>
+
+      <!-- Error thrown when no request deserializer is capable of deserializing a specific request type. -->
+      <Error Key="NoRequestDeserializer" NativeErrorCode="70009">No request deserializer was available for the request type Id.</Error>
+
+      <!-- Error thrown when a response deserializer fails to deserialize a response. -->
+      <Error Key="ResponseNotDeserialized" NativeErrorCode="70010">Response was not deserialized.</Error>
+
+      <!-- Error thrown when a BKPDone payload contains a response with an unknown Id. -->
+      <Error Key="UnknownResponseTypeId" NativeErrorCode="70011">Unknown response type Id.</Error>
+
+      <!-- Error thrown when no response deserializer is capable of deserializing a specific response type. -->
+      <Error Key="NoResponseDeserializer" NativeErrorCode="70012">No response deserializer was available for the response type Id.</Error>
+
+      <!-- Error thrown when the compression type requested by a message is not implemented. -->
+      <Error Key="CompressionNotImplemented" NativeErrorCode="70013">Requested compression method is not implemented.</Error>
+
+      <!-- Error thrown if the serializer runs out of memory to serialize into. -->
+      <Error Key="OutOfMemToSerialize" NativeErrorCode="70014">Ran out of memory to serialize message into.</Error>
+
+      <!-- Error thrown if the requested messages version isn't supported. -->
+      <Error Key="UnsupportedVersion" Params="3" NativeErrorCode="70015">Unsupported version: (%1%, %2%, %3%).</Error>
+
+      <!-- Error thrown when a server DSII tries to use transaction callbacks. -->
+      <Error Key="UnsupportedTxnCallback" NativeErrorCode="70016">Transaction callbacks are not available for server DSIIs.</Error>
+
+    </Package>
+
+
+    <!-- #################################################################################### -->
+	<!-- Package COMMUNICATIONS_ERROR. ID corresponds to the COMMUNICATIONS_ERROR constant defined in SimbaErrorCodes.h -->
+    <Package ID="6" DefaultComponent="Communications">
+
+      <!-- Error thrown when an incoming connection that was accepted return an invalid socket. -->
+      <Error Key="InvalidAcceptedSocket" NativeErrorCode="90002">The accepted socket connection is invalid.</Error>
+
+      <!-- Error thrown when an argument is passed to an object that is invalid. -->
+      <Error Key="IllegalArgument" NativeErrorCode="90002">Invalid argument passed to function.</Error>
+
+      <!-- Error thrown when a socket is, or has become, invalid. -->
+      <Error Key="InvalidSocket" NativeErrorCode="90003">Invalid socket.</Error>
+
+      <!-- Error thrown when a connection acception failed. -->
+      <Error Key="ConnAcceptFailed" NativeErrorCode="90005">Error attempting to accept connection.</Error>
+
+      <!-- Error thrown when binding to a port failed. -->
+      <Error Key="PortBindingFailed" NativeErrorCode="90006">Error binding to port.</Error>
+
+      <!-- Error thrown when an error occurred while attempting to convert a socket to a listener. -->
+      <Error Key="ListenConvertFailed" NativeErrorCode="90007">Error converting socket to a listener.</Error>
+
+      <!-- Error thrown when an error occurred while creating a new socket. -->
+      <Error Key="SocketCreationFailed" NativeErrorCode="90008">Error creating new socket.</Error>
+
+      <!-- Error thrown when an error occurred while creating a new socket. -->
+      <Error Key="ContextCreationFailed" NativeErrorCode="90009">Error creating new socket context.</Error>
+
+      <!-- Error thrown when an unsupported function is called. -->
+      <Error Key="UnsupportedFunction" NativeErrorCode="90010">Function is not supported.</Error>
+
+      <!-- Error thrown when a socket protocol has already been built, and another is then built. -->
+      <Error Key="ProtocolExists" NativeErrorCode="90011">Cannot build socket protocol, one already exists.</Error>
+
+      <!-- Error thrown when an error occurs while shutting down an SSL connection. -->
+      <Error Key="SSLDisconnectFailure" NativeErrorCode="90012">Error occurred while shutting down SSL connection.</Error>
+
+      <!-- Error thrown when an error occurs while peeking on a socket. -->
+      <Error Key="PeekFailed" NativeErrorCode="90013">Error occurred while peeking from socket.</Error>
+
+      <!-- Error thrown when an error occurs while reading from a socket. -->
+      <Error Key="ReadFailed" NativeErrorCode="90014">Error occurred while reading from socket.</Error>
+
+      <!-- Error thrown when an error occurs while writing to a socket. -->
+      <Error Key="WriteFailed" NativeErrorCode="90015">Error occurred while writing to socket.</Error>
+
+      <!-- Error thrown when an error occurs while attempting to set the protocol to reuse addresses. -->
+      <Error Key="ProtocolReuseAddrFailure" NativeErrorCode="90018">Error occurred while attempting to set addresses to reusable.</Error>
+
+      <!-- Error thrown when an error occurs while attempting to set the protocol to nonblocking. -->
+      <Error Key="ProtocolNonblockingFailure" NativeErrorCode="90019">Error occurred while attempting to set to nonblocking.</Error>
+
+      <!-- Error thrown when a bad certificate is used for SSL. -->
+      <Error Key="SSLBadCert" NativeErrorCode="90021">Bad SSL Certificate.</Error>
+
+      <!-- Error thrown when a bad private key is used for SSL. -->
+      <Error Key="SSLBadPrivateKey" NativeErrorCode="90022">Bad SSL Private Key.</Error>
+
+      <!-- Error thrown when there is an error creating a new SSL object. -->
+      <Error Key="SSLCreationFailure" NativeErrorCode="90023">Error occurred while creating new SSL.</Error>
+
+      <!-- Error thrown when the CTX object is invalid. -->
+      <Error Key="SSLInvalidCTX" NativeErrorCode="90024">Invalid SSL context object.</Error>
+
+      <!-- Error thrown when there is an error creating a new BIO structure for a socket. -->
+      <Error Key="SSLBioCreationFailure" NativeErrorCode="90025">Error occurred while attempting to create BIO structure for socket.</Error>
+
+      <!-- Error thrown when an error occurs while peeking on an SSL socket. -->
+      <Error Key="SSLPeekFailed" NativeErrorCode="90026">Error occurred while peeking from SSLsocket.</Error>
+
+      <!-- Error thrown when an error occurs while reading from an SSL socket. -->
+      <Error Key="SSLReadFailed" NativeErrorCode="90027">Error occurred while reading from SSLsocket.</Error>
+
+      <!-- Error thrown when an error occurs while writing to an SSL socket. -->
+      <Error Key="SSLWriteFailed" NativeErrorCode="90028">Error occurred while to an SSLsocket.</Error>
+
+      <!-- Error thrown when attempting to use an SSL object. -->
+      <Error Key="SSLInvalidSSL" NativeErrorCode="90029">Invalid or no SSL object found.</Error>
+
+      <!-- Error thrown when a connection failed. -->
+      <Error Key="ConnFailed" NativeErrorCode="90030">Error attempting to establish a connection.</Error>
+
+      <!-- Error thrown when a socket is in an invalid state. -->
+      <Error Key="InvalidState" NativeErrorCode="90031">Socket is in an invalid state for the socket operation.</Error>
+
+      <!-- Error thrown when adding a socket to a full Selector. -->
+      <Error Key="SelectorMaxSockets" NativeErrorCode="90032">Error adding socket to Selector. Maximum number of sockets exceeded.</Error>
+      
+      <!-- Error thrown when the SSL certificate file is null. -->
+      <Error Key="NullSSLCertFile" NativeErrorCode="90033">The SSLCertFile value is missing in the configuration options.</Error>
+      
+      <!-- Error thrown when the SSL key file is null. -->
+      <Error Key="NullSSLKeyFile" NativeErrorCode="90034">The SSLKeyFile value is missing in the configuration options.</Error>
+      
+      <!-- Error thrown when an error occurs from SSLConnect. -->
+      <Error Key="SSLConnFailed" NativeErrorCode="90035">Error occurred while attempting to SSL connect.  Check that UseSsl on your client matches that of your server.  If UseSsl is disabled on the server, then it must also be disabled on the client.</Error>
+      
+      <!-- Error thrown when the SSL verification failed. -->
+      <Error Key="SSLVerificationErr" NativeErrorCode="90036">SSL verification failed.  Verify your SSLCertFile.</Error>
+      
+      <!-- Error thrown when the issuer certificate could not be found. -->
+      <Error Key="CannotFindIssuerCert" NativeErrorCode="90037">The issuer certificate of the SSLCertFile could not be found.</Error>
+   
+      <!-- Error thrown when the certificate CRL could not be found. -->
+      <Error Key="CannotFindCRL" NativeErrorCode="90038">The CRL of the certificate file could not be found.</Error>
+      
+      <!-- Error thrown when the the certificate's signature could not be decrypted. -->
+      <Error Key="CertCannotDecryptSig" NativeErrorCode="90039">The certificate's signature could not be decrypted.</Error>
+      
+      <!-- Error thrown when the public key cannot be decoded. -->
+      <Error Key="CannotDecodePubKey" NativeErrorCode="90040">The public key could not be decoded.</Error>
+      
+      <!-- Error thrown when the certificate's signature is invalid. -->
+      <Error Key="CertInvalidSig" NativeErrorCode="90041">The certificate's signature is invalid.</Error>
+      
+      <!-- Error thrown when the certificate is not yet valid. -->
+      <Error Key="CertNotYetValid" NativeErrorCode="90042">The certificate is not valid yet.</Error>
+      
+      <!-- Error thrown when the certificate has expired. -->
+      <Error Key="CertExpired" NativeErrorCode="90043">The certificate has expired.</Error>
+      
+      <!-- Error thrown when the CRL is not yet valid. -->
+      <Error Key="CRLNotYetValid" NativeErrorCode="90044">The CRL is not valid yet.</Error>
+      
+      <!-- Error thrown when the CRL has expired. -->
+      <Error Key="CRLExpired" NativeErrorCode="90045">The CRL has expired.</Error>
+      
+      <!-- Error thrown when the certificate's notBefore field is invalid. -->
+      <Error Key="CertInvalidNotBeforeTime" NativeErrorCode="90046">The notBefore field in the certificate contains an invalid time.</Error>
+
+      <!-- Error thrown when the certificate's notAfter field is invalid. -->
+      <Error Key="CertInvalidNotAfterTime" NativeErrorCode="90047">The notAfter field in the certificate contains an invalid time.</Error>
+      
+      <!-- Error thrown when the CRL's last update field is invalid. -->
+      <Error Key="CRLInvalidLastUpdateTime" NativeErrorCode="90050">The lastUpdate field in the CRL contains an invalid time.</Error>
+      
+      <!-- Error thrown when the CRL's nextUpdate field is invalid. -->
+      <Error Key="CRLInvalidNextUpdateTime" NativeErrorCode="90051">The nextUpdate field in the CRL contains an invalid time.</Error>
+      
+      <!-- Error thrown when the certificate cannot be verified. -->
+      <Error Key="CertCannotVerify" NativeErrorCode="90052">The certificate could not be verified.</Error>
+      
+      <!-- Error thrown when the certificate has been revoked. -->
+      <Error Key="CertRevoked" NativeErrorCode="90053">The certificate has been revoked.</Error>
+      
+      <!-- Error thrown when the CA certificate is invalid. -->
+      <Error Key="CACertInvalid" NativeErrorCode="90054">The CA certificate is invalid.</Error>
+      
+      <!-- Error thrown when the path to the certificate is too long. -->
+      <Error Key="CertPathTooLong" NativeErrorCode="90055">The path to the certificate is too long.</Error>
+      
+      <!-- Error thrown when the certificate is invalid for the specified purpose. -->
+      <Error Key="CertInvalidPurpose" NativeErrorCode="90056">The certificate cannot be used for this action.</Error>
+
+      <!-- Error thrown when the root CA certificate is not trusted. -->
+      <Error Key="CARootNotTrusted" NativeErrorCode="90057">The root CA is not marked as trusted for this action.</Error>
+      
+      <!-- Error thrown when the certificate is rejected. -->
+      <Error Key="CARootRejectedCert" NativeErrorCode="90058">The root CA is marked to reject this action.</Error>
+
+      <!-- Error thrown when the issuer cetrificate was rejected. -->
+      <Error Key="CertRejected" NativeErrorCode="90059">The issuer certificate was rejected.</Error>
+
+      <!-- Error thrown when there is an issue closing a socket. -->
+      <Error Key="CloseSocketFailure" NativeErrorCode="90061">An error occurred while closing a socket.</Error>
+
+      <!-- Error thrown when getaddrinfo fails to resolve the hostname or IP. -->
+      <Error Key="GetAddrInfoUnknownHost" NativeErrorCode="90062" Params="1">Unknown hostname or IP. (%1%)</Error>
+
+      <!-- Error thrown when getaddrinfo fails due to unsupported address family. -->
+      <Error Key="GetAddrInfoFamilyNotSupported" NativeErrorCode="90063" Params="1">Failed to resolve hostname or IP. Address family %1% not recognized or supported.</Error>
+
+      <!-- Error thrown when getaddrinfo fails for any other error. -->
+      <Error Key="GetAddrInfoError" NativeErrorCode="90064" Params="1">Failed to resolve hostname or IP. (Error: %1%)</Error>
+      
+      <!-- Error thrown when Server hostname doesn't match up with the CN of the certificate. -->
+      <Error Key="SSLInvalidHost" NativeErrorCode="90065" Params="2">Hostname mismatch: %1%, %2%.</Error>
+
+    </Package>
+</Messages>
