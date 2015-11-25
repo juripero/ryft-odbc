@@ -26,6 +26,6 @@ your installation.
 
 3. Start the server process ('/usr/local/ryft/bin/x8664/ryft1_odbcctl -s').
 
-Refer to the "RyftOne_ODBC_Server_Installation_Guide" for more information on installing
+Refer to the "Ryft Connector for ODBC Installation and User Guide" for more information on installing
 and configuring your RyftOne ODBC server.
 

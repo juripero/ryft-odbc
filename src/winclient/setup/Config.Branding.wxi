@@ -3,7 +3,7 @@
 <Include>
 
   <?define MajorMinorVersion = "1.0"?>
-  <?define RevisionBuildVersion = "6.0"?>
+  <?define RevisionBuildVersion = "6.1"?>
 
   <!-- The long manufacturer name. -->
   <?define Manufacturer = "Ryft"?>

@@ -898,7 +898,7 @@ int main(int argc, char *argv[])
         string arg = argv[i];
         if((arg == "-a") || (arg == "--add")) {
             string name, filespec, delim;
-            int chunk = 1;
+            int chunk = 64;
             if(i + 3 < argc) {
                 name = argv[++i];
                 filespec = argv[++i];

@@ -93,7 +93,13 @@
         <File Id="ConfigDLL" Name="$(var.BaseConfigDLLName)$(var.DriverSuffix).dll" Source="$(var.ryft1_winconfig.TargetPath)" />
       </Component>
 
-      <Component Id="ThirdPartyLibraries" Guid="$(var.ThirdPartyLibGUID)" Directory="INSTALLFOLDER">
+        <Component Id="ErrorMessages" Guid="$(var.ErrorMessagesGUID)" Directory="en_US">
+            <File Id="ClientMessages" Name="ClientMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\ClientMessages.xml" KeyPath="yes"/>
+            <File Id="CSCommonMessages" Name="CSCommonMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\CSCommonMessages.xml" />
+            <File Id="ODBCMessages" Name="ODBCMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\ODBCMessages.xml"/>
+        </Component>
+
+          <Component Id="ThirdPartyLibraries" Guid="$(var.ThirdPartyLibGUID)" Directory="INSTALLFOLDER">
           <File Id="ICUDT" Name="sbicudt53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicudt53_$(var.ICUSuffix).dll" KeyPath="yes"/>
           <File Id="ICUIN" Name="sbicuin53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicuin53_$(var.ICUSuffix).dll"/>
           <File Id="ICUUC" Name="sbicuuc53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicuuc53_$(var.ICUSuffix).dll"/>
@@ -104,7 +110,7 @@
       <Component Id="RegistryEntries" Guid="$(var.RegistryEntriesGUID)" Directory="INSTALLFOLDER">
 
         <!-- Ryft INI -->
-        <RegistryKey Id="RyftKey" Root="HKLM" Key="Software\$(var.ShortVendorName)\$(var.DriverRegistryName)\Driver" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
+        <RegistryKey Id="RyftKey" Root="HKLM" Key="Software\Simba\SimbaClient\Driver" ForceCreateOnInstall="yes" ForceDeleteOnUninstall="yes">
           <RegistryValue Id="EMPath" Name="ErrorMessagesPath" Value="[INSTALLFOLDER]ErrorMessages" Type="string" />
           <RegistryValue Id="LogLevel" Name="LogLevel" Value="0" Type="string" />
           <RegistryValue Id="LogNamespace" Name="LogNamespace" Value="" Type="string" />

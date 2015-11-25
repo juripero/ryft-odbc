@@ -19,13 +19,13 @@
 namespace Ryft
 {
     /// Component identifier for Ryft errors.
-    static const simba_int32 RYFT_ERROR = 101;
+    static const simba_int32 RYFT_ERROR = 8;
 
     // The error messages file to use.
-    #define ERROR_MESSAGES_FILE "RyftMessages"
+    #define ERROR_MESSAGES_FILE "ClientMessages"
 
     // The Windows branding for the driver.
-    #define DRIVER_WINDOWS_BRANDING "Ryft\\ODBC Driver"
+    #define DRIVER_WINDOWS_BRANDING "Simba\\SimbaClient"
 
     // The Linux branding for the driver.
     #define DRIVER_LINUX_BRANDING "ryft.odbcdriver.ini"
