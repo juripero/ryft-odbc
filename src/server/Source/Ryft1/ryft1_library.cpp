@@ -407,12 +407,12 @@ void RyftOne_Database::createTable(string& in_table, RyftOne_Columns& in_columns
     config_setting_set_string(record_start, "<record>");
     config_setting_t *record_end = config_setting_add(root, "record_end", CONFIG_TYPE_STRING);
     config_setting_set_string(record_end, "</record>");
-    config_setting_t *field_type = config_setting_add(root, "field_type", CONFIG_TYPE_STRING);
-    config_setting_set_string(field_type, "tagged");
+    config_setting_t *data_type = config_setting_add(root, "data_type", CONFIG_TYPE_STRING);
+    config_setting_set_string(data_type, "XML");
 
     char tagEntry[PATH_MAX];
     config_setting_t *tagListEntry;
-    config_setting_t *tagList = config_setting_add(root, "tags", CONFIG_TYPE_GROUP);
+    config_setting_t *tagList = config_setting_add(root, "fields", CONFIG_TYPE_GROUP);
     for(itr = in_columns.begin(); itr != in_columns.end(); itr++) {
         tagListEntry = config_setting_add(tagList, itr->m_colName.c_str(), CONFIG_TYPE_LIST);
         config_setting_t *tagElem = config_setting_add(tagListEntry, "", CONFIG_TYPE_STRING);
@@ -595,8 +595,11 @@ __rdf_config__::__rdf_config__(string& in_path)
         if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "record_end", &result))
             record_end = result;
 
-        tagList = config_lookup(&rdfConfig, "tags");
-        for(idx=0; tag = config_setting_get_elem(tagList, idx); idx++) {
+        tagList = config_lookup(&rdfConfig, "fields");
+        // timwells - leave in for backward compatibility with older RDFs
+        if(!tagList)
+            tagList = config_lookup(&rdfConfig, "tags");
+        for(idx=0; tagList && (tag = config_setting_get_elem(tagList, idx)); idx++) {
             rdftag.name = tag->name;
             rdftag.start_tag = config_setting_get_string_elem(tag, 0);
             rdftag.end_tag = config_setting_get_string_elem(tag, 1);
