@@ -101,4 +101,8 @@ void R1Driver::SetDriverPropertyValues()
         DSI_DRIVER_WIDE_STRING_DATA_ENCODING, 
         AttributeData::MakeNewInt16AttributeData(ENC_UTF16_BE));
 #endif
+
+    SetProperty(
+        DSI_FILTER_METADATA_SOURCE, 
+        AttributeData::MakeNewUInt32AttributeData(DSI_FMS_FALSE));
 }

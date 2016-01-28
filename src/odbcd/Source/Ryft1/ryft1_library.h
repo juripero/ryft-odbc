@@ -334,7 +334,7 @@ public:
     bool logon(string& in_user, string& in_password);
     void logoff();
 
-    RyftOne_Tables getTables();
+    RyftOne_Tables getTables(string in_search, string in_type);
     RyftOne_Columns getColumns(string& in_table);
 
     RyftOne_Result *openTable(string& in_table);
