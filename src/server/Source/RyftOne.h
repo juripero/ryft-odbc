@@ -51,10 +51,7 @@ namespace RyftOne
     static const simba_wstring R1_CATALOG(L"RyftOne");
 
     /// The faked schema for the hardcoded data.
-    static const simba_wstring R1_SCHEMA(L"FakeSchema");
-
-    /// The faked table for the hardcoded data.
-    static const simba_wstring R1_TABLE(L"Person");
+    static const simba_wstring R1_SCHEMA(L"RyftOne");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

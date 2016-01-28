@@ -283,23 +283,92 @@ void RyftOne_Database::logoff()
     ;
 }
 
-RyftOne_Tables RyftOne_Database::getTables()
+bool matches(string& in_search, string& in_name)
+{
+    int idx1 = 0;
+    int idx2;
+    string term;
+    int req_distance;
+    bool match = true;
+    const char *search = in_search.c_str();
+    // empty search term matches all
+    if(*search == '\0')
+        return true;
+    while(*search && match) {
+        switch (*search) {
+        case '%':
+            term.clear();
+            req_distance = 0;
+            idx2 = 0;
+            for(search++; *search; search++) {
+                if(*search == '%' || *search == '_') { 
+                    if(!term.empty()) {
+                        break;
+                    }
+                    else if(*search == '_') {
+                        req_distance++;
+                    }
+                }
+                else
+                    term += *search;
+            }
+            if(term.length()) {
+                idx2 = in_name.find(term, idx1);
+                if(idx2 == string::npos || (idx2 - idx1) < req_distance) {
+                    match = false;
+                }
+                else
+                    idx1 = idx2 + term.length();
+            }
+            else if(*search == '\0') {
+                // if wildcard came at the end of the search term, consume remaining name
+                idx1 = in_name.length();
+            }
+            break;
+        case '_':
+            if(idx1 >= in_name.length())
+                match = false;
+            search++;
+            idx1++;
+            break;
+        default:
+            if((idx1 >= in_name.length()) || *search != in_name[idx1])
+                match = false;
+            search++;
+            idx1++;
+            break;
+        }
+    }
+    // did we consume the entire table name string
+    if(idx1 < in_name.length())
+        match = false;
+    return match;
+}
+
+RyftOne_Tables RyftOne_Database::getTables(string in_search, string in_type)
 {
     RyftOne_Table table;
     RyftOne_Tables tables;
 
     vector<__catalog_entry__>::iterator itr;
     for(itr = __catalog.begin(); itr != __catalog.end(); itr++) {
-        table.m_tableName = itr->meta_config.table_name;
-        table.m_description = itr->meta_config.table_remarks;
-        table.m_type = "TABLE";
-        tables.push_back(table);
-        vector<__meta_config__::__meta_view__>::iterator viewItr;
-        for(viewItr = itr->meta_config.views.begin(); viewItr != itr->meta_config.views.end(); viewItr++) {
-            table.m_tableName = viewItr->view_name;
-            table.m_description = viewItr->description;
-            table.m_type = "VIEW";
+        if((in_type == "TABLE" || in_type == "%") && matches(in_search, itr->meta_config.table_name)) {
+            table.m_tableName = itr->meta_config.table_name;
+            table.m_description = itr->meta_config.table_remarks;
+            table.m_type = "TABLE";
             tables.push_back(table);
+        }
+
+        if(in_type == "VIEW" || in_type == "%") {
+            vector<__meta_config__::__meta_view__>::iterator viewItr;
+            for(viewItr = itr->meta_config.views.begin(); viewItr != itr->meta_config.views.end(); viewItr++) {
+                if(matches(in_search, viewItr->view_name)) {
+                    table.m_tableName = viewItr->view_name;
+                    table.m_description = viewItr->description;
+                    table.m_type = "VIEW";
+                    tables.push_back(table);
+                }
+            }
         }
     }
     return tables;

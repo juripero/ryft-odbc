@@ -19,10 +19,25 @@ using namespace Simba::DSI;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 R1TablesMetadataSource::R1TablesMetadataSource(DSIMetadataRestrictions& in_restrictions, RyftOne_Database *in_ryft1) :
     DSIMetadataSource(in_restrictions),
-    m_tables(in_ryft1->getTables()),
     m_hasStartedFetch(false)
 {
-    ; // Do nothing.
+    simba_wstring table;
+    DSIMetadataRestrictions::const_iterator itr = in_restrictions.find(DSI_TABLE_NAME_COLUMN_TAG);
+    if (itr != in_restrictions.end()) {
+        table = itr->second;
+    }
+    else
+        table = "%";
+
+    simba_wstring type;
+    itr = in_restrictions.find(DSI_TABLE_TYPE_COLUMN_TAG);
+    if (itr != in_restrictions.end()) {
+        type = itr->second; 
+    }
+    else
+        type = "%";
+
+    m_tables = in_ryft1->getTables(table.GetAsPlatformString(), type.GetAsPlatformString());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +130,6 @@ bool R1TablesMetadataSource::Move(DSIDirection in_direction, simba_signed_native
     if (!m_hasStartedFetch) {
         m_hasStartedFetch = true;
         m_tablesItr = m_tables.begin();
-        return true;
     }
     else
         m_tablesItr++;
