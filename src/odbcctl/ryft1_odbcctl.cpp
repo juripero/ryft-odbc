@@ -865,7 +865,7 @@ void version(string exepath)
     char cat[PATH_MAX];
     size_t idx1 = exepath.rfind("/");
     string version(exepath.substr(0, idx1));
-    version.append("/../VERSION");
+    version.append("/../../VERSION");
     sprintf(cat, "cat %s", version.c_str());
     system(cat);
 }

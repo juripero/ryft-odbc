@@ -10,7 +10,7 @@ static char s_R1Catalog[] = "/ryftone/ODBC";
 static char s_R1Results[] = "/ryftone/ODBC/.results";
 static char s_TableMeta[] = ".meta.table";
 
-RyftOne_Result::RyftOne_Result(RyftOne_Database *ryft1) : m_ryft1(ryft1), m_hamming(0)
+RyftOne_Result::RyftOne_Result(RyftOne_Database *ryft1) : m_ryft1(ryft1), m_hamming(0), m_edit(0), m_caseSensitive(true)
 {
     ;
 }
@@ -37,18 +37,20 @@ bool RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator i
         }
     }
 
+    m_cols = m_ryft1->getColumns(in_name);
     m_queryFinished = false;
     return true;
 }
 
-bool RyftOne_Result::appendFilter(string in_filter, int in_hamming)
+bool RyftOne_Result::appendFilter(string in_filter, int in_hamming, int in_edit, bool in_caseSensitive)
 {
     if(!m_query.empty())
         m_query += " AND ";
 
     m_query += in_filter;
-    if(in_hamming > m_hamming)
-        m_hamming = in_hamming;
+    m_hamming = in_hamming;
+    m_edit = in_edit;
+    m_caseSensitive = in_caseSensitive;
     return true;
 }
 
@@ -61,7 +63,7 @@ bool RyftOne_Result::appendRow()
 
 bool RyftOne_Result::flush()
 {
-    time_t now = time(NULL);
+    time_t now = ::time(NULL);
     tm *lt = localtime(&now);
     char file_path[PATH_MAX];
     
@@ -123,6 +125,96 @@ int RyftOne_Result::getColumnNum(string colTag)
 string& RyftOne_Result::getStringValue(int colIdx)
 {
     return (*m_rowItr).__row[colIdx].colResult;
+}
+
+void RyftOne_Result::date(int colIdx, struct tm *date)
+{
+    switch(m_cols[colIdx].m_dtType) {
+    case DATE_YYMMDD:
+    case DATE_YYYYMMDD:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(date->tm_year), &(date->tm_mon), &(date->tm_mday));
+        break;
+    case DATE_DDMMYY:
+    case DATE_DDMMYYYY:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(date->tm_mday), &(date->tm_mon), &(date->tm_year));
+        break;
+    case DATE_MMDDYY:
+    case DATE_MMDDYYYY:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(date->tm_mon), &(date->tm_mday), &(date->tm_year));
+        break;
+    }
+}
+
+void RyftOne_Result::time(int colIdx, struct tm *time)
+{
+    char ampm[16];
+    char *pampm;
+    switch(m_cols[colIdx].m_dtType) {
+    case TIME_12MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(time->tm_hour), &(time->tm_min), &(time->tm_sec), ampm);
+        pampm = ampm;
+        while (isspace(*pampm))
+            pampm++;
+        if(!strcasecmp(pampm, "pm"))
+            time->tm_hour += 12;
+        break;
+    case TIME_24MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(time->tm_hour), &(time->tm_min), &(time->tm_sec));
+        break;
+    }
+}
+
+void RyftOne_Result::datetime(int colIdx, struct tm *datetime)
+{
+    char ampm[16];
+    char *pampm;
+    switch(m_cols[colIdx].m_dtType) {
+    case DATETIME_YYYYMMDD_12MMSS:
+    case DATETIME_YYMMDD_12MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(datetime->tm_year), &(datetime->tm_mon), &(datetime->tm_mday),
+            &(datetime->tm_hour), &(datetime->tm_min), &(datetime->tm_sec), ampm);
+        pampm = ampm;
+        while (isspace(*pampm))
+            pampm++;
+        if(!strcasecmp(pampm, "pm"))
+            datetime->tm_hour += 12;
+        break;
+    case DATETIME_DDMMYYYY_12MMSS:
+    case DATETIME_DDMMYY_12MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(datetime->tm_mday), &(datetime->tm_mon), &(datetime->tm_year),
+            &(datetime->tm_hour), &(datetime->tm_min), &(datetime->tm_sec), ampm);
+        pampm = ampm;
+        while (isspace(*pampm))
+            pampm++;
+        if(!strcasecmp(pampm, "pm"))
+            datetime->tm_hour += 12;
+        break;
+    case DATETIME_MMDDYYYY_12MMSS:
+    case DATETIME_MMDDYY_12MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(datetime->tm_mon), &(datetime->tm_mday), &(datetime->tm_year),
+            &(datetime->tm_hour), &(datetime->tm_min), &(datetime->tm_sec), ampm);
+        pampm = ampm;
+        while (isspace(*pampm))
+            pampm++;
+        if(!strcasecmp(pampm, "pm"))
+            datetime->tm_hour += 12;
+        break;
+    case DATETIME_YYYYMMDD_24MMSS:
+    case DATETIME_YYMMDD_24MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(datetime->tm_year), &(datetime->tm_mon), &(datetime->tm_mday),
+            &(datetime->tm_hour), &(datetime->tm_min), &(datetime->tm_sec));
+        break;
+    case DATETIME_DDMMYYYY_24MMSS:
+    case DATETIME_DDMMYY_24MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(datetime->tm_mday), &(datetime->tm_mon), &(datetime->tm_year),
+            &(datetime->tm_hour), &(datetime->tm_min), &(datetime->tm_sec));
+        break;
+    case DATETIME_MMDDYYYY_24MMSS:
+    case DATETIME_MMDDYY_24MMSS:
+        sscanf((*m_rowItr).__row[colIdx].colResult.c_str(), m_cols[colIdx].m_formatSpec.c_str(), &(datetime->tm_mon), &(datetime->tm_mday), &(datetime->tm_year),
+            &(datetime->tm_hour), &(datetime->tm_min), &(datetime->tm_sec));
+        break;
+    }
 }
 
 bool RyftOne_Result::putStringValue(int colIdx, string colValue)
@@ -199,7 +291,7 @@ bool RyftOne_Result::__execute()
     string results_path(results);
     size_t idx = results_path.find("/", 1);
     rol_data_set_t result = rol_ds_search_fuzzy_hamming(m_loaded, results_path.substr(idx+1, string::npos).c_str(), 
-        m_query.c_str(), 0, m_hamming, NULL, NULL, true, NULL);
+        m_query.c_str(), 0, m_hamming, NULL, NULL, m_caseSensitive, NULL);
     if( rol_ds_has_error_occurred(result)) {
         perr = rol_ds_get_error_string(result);
         return false;
@@ -251,31 +343,101 @@ void RyftOne_Result::AddText(std::string sText)
 }
 
 //////////////////////////////////////////////////////////////
+#include <shadow.h>
+#include <pwd.h>
+#define LDAP_DEPRECATED 1
+#include <ldap.h>
+#include <glib.h>
+#include "RyftOne.h"
+using namespace RyftOne;
 
-RyftOne_Database::RyftOne_Database() 
+RyftOne_Database::RyftOne_Database() : __authType( AUTH_NONE )
 {
+    GKeyFile *keyfile = g_key_file_new( );
+    GKeyFileFlags flags;
+    GError *error = NULL;
+    gchar *authType = NULL;
+
+    if(g_key_file_load_from_file(keyfile, SERVER_LINUX_BRANDING, flags, &error)) {
+        authType = g_key_file_get_string(keyfile, "Auth", "Type", &error);
+        if(authType && !strcmp(authType, "ldap")) {
+            __authType = AUTH_LDAP;
+            __ldapServer = g_key_file_get_string(keyfile, "Auth", "LDAPServer", &error);
+            __ldapUser = g_key_file_get_string(keyfile, "Auth", "LDAPUser", &error);
+            __ldapPassword = g_key_file_get_string(keyfile, "Auth", "LDAPPassword", &error);
+            __ldapBaseDN = g_key_file_get_string(keyfile, "Auth", "LDAPBaseDN", &error);
+            free(authType);
+        }
+        else if(!strcmp(authType, "system")) 
+            __authType = AUTH_SYSTEM;
+    }
+    g_key_file_free(keyfile);
+
     __loadCatalog();
 }
 
-#include <shadow.h>
-#include <pwd.h>
+bool RyftOne_Database::getAuthRequired() 
+{
+    return (__authType != AUTH_NONE);
+}
+
 bool RyftOne_Database::logon(string& in_user, string& in_password)
 {
-    struct passwd *pwd = getpwnam(in_user.c_str());
-
-    spwd *pw = getspnam(in_user.c_str());
-
-    if(pw == NULL)
-        return false;
-
-    if(pw->sp_pwdp == '\0')
+    switch(__authType) {
+    default:
+    case AUTH_NONE:
         return true;
-
-    char *epasswd = crypt(in_password.c_str(), pw->sp_pwdp);
-    if(strcmp(epasswd, pw->sp_pwdp))
-        return false;
+    case AUTH_SYSTEM: {
+        spwd *pw = getspnam(in_user.c_str());
+        if(pw == NULL)
+            return false;
+        if(pw->sp_pwdp == '\0')
+            return true;
+        char *epasswd = crypt(in_password.c_str(), pw->sp_pwdp);
+        if(!strcmp(epasswd, pw->sp_pwdp))
+            return true;
     
-    return true;
+        return false;
+        }
+    case AUTH_LDAP: {
+        LDAP *ld;
+        LDAP *ld2;
+        int  result;
+        int  auth_method = LDAP_AUTH_SIMPLE;
+        int  desired_version = LDAP_VERSION3;
+        LDAPMessage *msg;
+        LDAPMessage *entry;
+        char *dn;
+        char bind_dn[512];
+            
+        ldap_initialize(&ld, __ldapServer.c_str());
+        ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &desired_version);
+
+        sprintf(bind_dn, "cn=%s,%s", __ldapUser.c_str(), __ldapBaseDN.c_str());
+        result = ldap_simple_bind_s(ld, bind_dn, __ldapPassword.c_str());
+        if(result != LDAP_SUCCESS) {
+            ldap_unbind(ld);
+            return false;
+        }
+
+        sprintf(bind_dn, "(uid=%s)", in_user.c_str());
+        result = ldap_search_s(ld, __ldapBaseDN.c_str(), LDAP_SCOPE_SUBTREE, bind_dn, NULL, 0, &msg);
+        int num_entries_returned = ldap_count_entries(ld, msg);
+        for( entry = ldap_first_entry(ld, msg); entry != NULL; entry = ldap_next_entry( ld, entry )) {
+            dn = ldap_get_dn(ld, entry);
+            ldap_initialize(&ld2, __ldapServer.c_str());
+            ldap_set_option(ld2, LDAP_OPT_PROTOCOL_VERSION, &desired_version);
+            result = ldap_simple_bind_s(ld2, dn, in_password.c_str());
+            ldap_unbind(ld2);
+            ldap_memfree(dn);
+            if(!result) 
+                break;
+        }
+        ldap_msgfree(msg);
+        ldap_unbind(ld);
+        return (result == LDAP_SUCCESS);
+        }
+    }
 }
 
 void RyftOne_Database::logoff()
@@ -283,7 +445,7 @@ void RyftOne_Database::logoff()
     ;
 }
 
-bool matches(string& in_search, string& in_name)
+bool RyftOne_Database::__matches(string& in_search, string& in_name)
 {
     int idx1 = 0;
     int idx2;
@@ -352,7 +514,7 @@ RyftOne_Tables RyftOne_Database::getTables(string in_search, string in_type)
 
     vector<__catalog_entry__>::iterator itr;
     for(itr = __catalog.begin(); itr != __catalog.end(); itr++) {
-        if((in_type == "TABLE" || in_type == "%") && matches(in_search, itr->meta_config.table_name)) {
+        if((in_type == "TABLE" || in_type == "%") && __matches(in_search, itr->meta_config.table_name)) {
             table.m_tableName = itr->meta_config.table_name;
             table.m_description = itr->meta_config.table_remarks;
             table.m_type = "TABLE";
@@ -362,7 +524,7 @@ RyftOne_Tables RyftOne_Database::getTables(string in_search, string in_type)
         if(in_type == "VIEW" || in_type == "%") {
             vector<__meta_config__::__meta_view__>::iterator viewItr;
             for(viewItr = itr->meta_config.views.begin(); viewItr != itr->meta_config.views.end(); viewItr++) {
-                if(matches(in_search, viewItr->view_name)) {
+                if(__matches(in_search, viewItr->view_name)) {
                     table.m_tableName = viewItr->view_name;
                     table.m_description = viewItr->description;
                     table.m_type = "VIEW";
@@ -389,7 +551,7 @@ RyftOne_Columns RyftOne_Database::getColumns(string& in_table)
             col.m_colTag = colItr->rdf_name;
             col.m_colName = colItr->name;
             col.m_typeName = colItr->type_def;
-            RyftOne_Util::RyftToSqlType(col.m_typeName, &col.m_dataType, &col.m_bufferLen);
+            RyftOne_Util::RyftToSqlType(col.m_typeName, &col.m_dataType, &col.m_bufferLen, col.m_formatSpec, &col.m_dtType);
             col.m_description = colItr->description;
             cols.push_back(col);
         }
@@ -503,7 +665,7 @@ void RyftOne_Database::createTable(string& in_table, RyftOne_Columns& in_columns
     __loadCatalog();
 }
 
-int remove_directory(const char *path)
+int RyftOne_Database::__remove_directory(const char *path)
 {
    DIR *d = opendir(path);
    size_t path_len = strlen(path);
@@ -532,7 +694,7 @@ int remove_directory(const char *path)
              snprintf(buf, len, "%s/%s", path, p->d_name);
              if (!stat(buf, &statbuf)) {
                 if (S_ISDIR(statbuf.st_mode)) {
-                   r2 = remove_directory(buf);
+                   r2 = __remove_directory(buf);
                 }
                 else
                    r2 = unlink(buf);
@@ -557,7 +719,7 @@ void RyftOne_Database::dropTable(string& in_table)
     strcpy(path, s_R1Catalog);
     strcat(path, "/");
     strcat(path, in_table.c_str());
-    remove_directory(path);
+    __remove_directory(path);
     __loadCatalog();
 }
 
@@ -572,7 +734,7 @@ void RyftOne_Database::__loadCatalog()
         while((dir = readdir(d)) != NULL) {
             if((dir->d_type == DT_DIR) && (strcmp(dir->d_name, ".") != 0)) {
                 __catalog_entry__ cat_ent(dir->d_name);
-                if(!cat_ent.meta_config.table_name.empty())
+                if(cat_ent._is_valid())
                     __catalog.push_back(cat_ent);
             }
         }
@@ -665,9 +827,6 @@ __rdf_config__::__rdf_config__(string& in_path)
             record_end = result;
 
         tagList = config_lookup(&rdfConfig, "fields");
-        // timwells - leave in for backward compatibility with older RDFs
-        if(!tagList)
-            tagList = config_lookup(&rdfConfig, "tags");
         for(idx=0; tagList && (tag = config_setting_get_elem(tagList, idx)); idx++) {
             rdftag.name = tag->name;
             rdftag.start_tag = config_setting_get_string_elem(tag, 0);
@@ -678,18 +837,39 @@ __rdf_config__::__rdf_config__(string& in_path)
     config_destroy(&rdfConfig);
 }
 
-__catalog_entry__::__catalog_entry__(string in_table) : meta_config(in_table) 
+__catalog_entry__::__catalog_entry__(string in_table) : meta_config(in_table), rdf_config(meta_config.rdf_path) 
 {
     path = s_R1Catalog;
     path += "/";
     path += in_table;
 }
 
+bool __catalog_entry__::_is_valid()
+{
+    if(meta_config.table_name.empty())
+        return false;
+    if(rdf_config.file_glob.empty())
+        return false;
+    vector<__meta_config__::__meta_col__>::iterator colitr;
+    vector<__rdf_config__::__rdf_tag__>::iterator tagitr;
+    for(colitr = meta_config.columns.begin(); colitr != meta_config.columns.end(); colitr++) {
+        for(tagitr = rdf_config.tags.begin(); tagitr != rdf_config.tags.end(); tagitr++) {
+            if(!colitr->rdf_name.compare(tagitr->name))
+                break;
+        }
+        if(tagitr == rdf_config.tags.end())
+            return false;
+    }
+    return true;
+}
+
 //////////////////////////////////////////////////////////////
 
-void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_bufferLen)
+void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_bufferLen, string& out_format, unsigned *out_dtType)
 {
     unsigned length = 0;
+    char format[80];
+    char formatSpec[80];
     if(!strcasecmp(in_typeName.c_str(), "integer")) {
         *out_sqlType = SQL_INTEGER;
         length = 4;
@@ -706,17 +886,134 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         *out_sqlType = SQL_DOUBLE;
         length = 8;
     }
-    else if(!strcasecmp(in_typeName.c_str(), "date")) {
-        *out_sqlType = SQL_DATE;
-        length = 6;
-    }
-    else if(!strcasecmp(in_typeName.c_str(), "time")) {
-        *out_sqlType = SQL_TIME;
-        length = 6;
-    }
-    else if(!strcasecmp(in_typeName.c_str(), "datetime")) {
-        *out_sqlType = SQL_TIMESTAMP;
+    else if(!strncasecmp(in_typeName.c_str(), "datetime", strlen("datetime"))) {
+        *out_sqlType = SQL_TYPE_TIMESTAMP;
+        const char *paren = strchr(in_typeName.c_str(), '(');
+        strcpy(format, "MM-DD-YYYY-24:MM:SS");
+        if(paren) {
+            strcpy(format, paren+1);
+            format[strlen(format)-1] = '\0';
+        }
+        if(format[0] == 'Y' && format[2] == 'Y') { // YYYY/MM/DD-HH:MM:SS
+            if(format[11] == '1') {
+                *out_dtType = DATETIME_YYYYMMDD_12MMSS;
+                sprintf(formatSpec, "%%04d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[4], format[7], format[10], format[13], format[16]);
+            }
+            else {
+                *out_dtType = DATETIME_YYYYMMDD_24MMSS;
+                sprintf(formatSpec, "%%04d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[4], format[7], format[10], format[13], format[16]);
+            }
+        }
+        else if(format[0] == 'Y') { // YY/MM/DD-HH:MM:SS
+            if(format[11] == '1') {
+                *out_dtType = DATETIME_YYMMDD_12MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
+            }
+            else {
+                *out_dtType = DATETIME_YYMMDD_24MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
+            }
+        }
+        else if (format[0] == 'D' && format[8] == 'Y') { // DD/MM/YYYY-HH:MM:SS
+            if(format[11] == '1') {
+                *out_dtType = DATETIME_DDMMYYYY_12MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[10], format[13], format[16]);
+            }
+            else {
+                *out_dtType = DATETIME_DDMMYYYY_24MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
+            }
+        }
+        else if (format[0] == 'D') { // DD/MM/YY-HH:MM:SS
+            if(format[11] == '1') {
+                *out_dtType = DATETIME_DDMMYY_12MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
+            }
+            else {
+                *out_dtType = DATETIME_DDMMYY_24MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
+            }
+        }
+        else if (format[0] == 'M' && format[8] == 'Y') { // MM/DD/YYYY-HH:MM:SS
+            if(format[11] == '1') {
+                *out_dtType = DATETIME_MMDDYYYY_12MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[10], format[13], format[16]);
+            }
+            else {
+                *out_dtType = DATETIME_MMDDYYYY_24MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
+            }
+        }
+        else if (format[0] == 'M') { // MM/DD/YY-HH:MM:SS
+            if(format[11] == '1') {
+                *out_dtType = DATETIME_MMDDYY_12MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
+            }
+            else {
+                *out_dtType = DATETIME_MMDDYY_24MMSS;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
+            }
+        }
+        out_format = formatSpec;
         length = 16;
+    }
+    else if(!strncasecmp(in_typeName.c_str(), "date", strlen("date"))) {
+        *out_sqlType = SQL_TYPE_DATE;
+        const char *paren = strchr(in_typeName.c_str(), '(');
+        strcpy(format, "YYYY/MM/DD");
+        if(paren) {
+            sscanf(paren, "(%s)", format);
+            format[strlen(format)-1] = '\0';
+        }
+        if(strlen(format) == 10) {
+            if(format[0] == 'Y') { // YYYY/MM/DD
+                *out_dtType = DATE_YYYYMMDD;
+                sprintf(formatSpec, "%%04d%c%%02d%c%%02d", format[4], format[7]);
+            }
+            else if (format[0] == 'D') { // DD/MM/YYYY
+                *out_dtType = DATE_DDMMYYYY;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%04d", format[2], format[5]);
+            }
+            else { // MM/DD/YYYY
+                *out_dtType = DATE_MMDDYYYY;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%04d", format[2], format[5]);
+            }
+        }
+        else if(strlen(format) == 8) {
+            if(format[0] == 'Y') { // YY/MM/DD
+                *out_dtType = DATE_YYMMDD;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d", format[2], format[5]);
+            }
+            else if(format[0] == 'D') { // DD/MM/YY
+                *out_dtType = DATE_DDMMYY;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d", format[2], format[5]);
+            }
+            else { // MM/DD/YY
+                *out_dtType = DATE_MMDDYY;
+                sprintf(formatSpec, "%%02d%c%%02d%c%%02d", format[2], format[5]);
+            }
+        }
+        out_format = formatSpec;
+        length = 6;
+    }
+    else if(!strncasecmp(in_typeName.c_str(), "time", strlen("time"))) {
+        *out_sqlType = SQL_TYPE_TIME;
+        const char *paren = strchr(in_typeName.c_str(), '(');
+        strcpy(format, "24:MM:SS");
+        if(paren) {
+            sscanf(paren, "(%s)", format);
+            format[strlen(format)-1] = '\0';
+        }
+        if(!strcmp(format, "24:MM:SS")) {
+            *out_dtType = TIME_24MMSS;
+            strcpy(formatSpec, "%02d:%02d:02d");
+        }
+        else {
+            *out_dtType = TIME_12MMSS;
+            strcpy(formatSpec, "%02d:%02d:02d %s");
+        }
+        out_format = formatSpec;
+        length = 6;
     }
     else if(!strncasecmp(in_typeName.c_str(), "varchar", strlen("varchar"))) {
         *out_sqlType = SQL_VARCHAR;

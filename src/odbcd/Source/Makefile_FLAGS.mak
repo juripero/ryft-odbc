@@ -26,8 +26,9 @@ COMMON_CFLAGS = $(DMFLAGS) \
 -I$(SIMBAENGINE_DIR)/Include/SQLEngine/DSIExt \
 -I$(SIMBAENGINE_DIR)/Include/Server \
 -I$(SIMBAENGINE_THIRDPARTY_DIR)/Expat/2.0.1 \
+-I/usr/include/glib-2.0 \
+-I/usr/lib/x86_64-linux-gnu/glib-2.0/include \
 -DHAVE_MEMMOVE
-
 
 ifeq ($(BUILDSERVER),exe)
 CFLAGS = $(COMMON_CFLAGS) -I$(SIMBAENGINE_DIR)/Include/Server -DSERVERTARGET
@@ -158,7 +159,7 @@ SIMBA_LIBS_RELEASE = $(subst _<TARGET>,,$(SIMBA_LIBS))
 SONAME_RELEASE=$(notdir $(TARGET_SO_RELEASE))
 SONAME_DEBUG=$(notdir $(TARGET_SO_DEBUG))
 
-COMMON_LDFLAGS = -L$(ICULIB_PATH) $(ICU_LIBS) $(EXPORT_DEF) -ldl -lconfig -lryftone -lcrypt
+COMMON_LDFLAGS = -L$(ICULIB_PATH) $(ICU_LIBS) $(EXPORT_DEF) -ldl -lconfig -lglib-2.0 -lldap -lryftone -lcrypt
 
 ifeq ($(BUILDSERVER),exe)
 COMMON_LDFLAGS := -L$(OPENSSLLIB_PATH) $(OPENSSL_LIBS) $(COMMON_LDFLAGS)
