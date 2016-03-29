@@ -129,7 +129,9 @@ R1FilterHandler::R1FilterHandler(
     m_table(in_table),
     m_isPassedDown(false),
     m_negate(false),
-    m_hamming(0)
+    m_hamming(0),
+    m_edit(0),
+    m_caseSensitive(true)
 {
     assert(!in_table.IsNull());
 }
@@ -156,7 +158,7 @@ SharedPtr<DSIExtResultSet> R1FilterHandler::TakeResult()
     }
 
     // Return filter result.
-    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter, m_hamming));
+    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter, m_hamming, m_edit, m_caseSensitive));
 }
 
 // Protected =======================================================================================
@@ -355,6 +357,11 @@ bool R1FilterHandler::PassdownSimpleNullPredicate(
 
 // Private =========================================================================================
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+static const wchar_t whitespace_chars[] = L" \f\n\r\t\v";
+
+#define iswhitespace(c) \
+    ((c) && wcschr(whitespace_chars, (c)))
+
 void R1FilterHandler::ConstructComparisonFilter(
     simba_wstring in_columnName,
     simba_int16 in_columnSqlType,
@@ -366,17 +373,19 @@ void R1FilterHandler::ConstructComparisonFilter(
     const wchar_t *pfilter;
     size_t idx1, idx2;
     int hamming = 0;
+    int edit = 0;
+    bool case_sensitive = true;
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();
-scan:
     for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
         switch(*pfilter) {
         case L'-':
             pfilter++;
             switch(*pfilter) {
+            case L'h':
             case L'H': {
                 wstring num_hamming;
-                for(pfilter++; (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
                     num_hamming += *pfilter;
                 swscanf(num_hamming.c_str(), L"%d", &hamming);
 
@@ -384,15 +393,64 @@ scan:
                 idx1 = inside.find_first_of(L"(");
                 idx2 = inside.find_last_of(L")");
                 if(idx1 != string::npos && idx2 != string::npos) {
-                    in_filter = inside.substr(idx1+1, idx2-idx1-1);
-                    goto scan;
+                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                    const wchar_t *psearch = search_string.c_str();
+                    for( ; *psearch; psearch++) {
+                        switch(*psearch) {
+                        case L'%':
+                        case L'_':
+                            out_filter += L"\"?\"";
+                            break;
+                        default:
+                            out_filter += *psearch;
+                            break;
+                        }
+                    }
+                    pfilter += idx2;
                 }
                 break;
                 }
-            default:
+            case L'e':
+            case L'E': {
+                wstring num_edit;
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                    num_edit += *pfilter;
+                swscanf(num_edit.c_str(), L"%d", &edit);
+
+                wstring inside = pfilter;
+                idx1 = inside.find_first_of(L"(");
+                idx2 = inside.find_last_of(L")");
+                if(idx1 != string::npos && idx2 != string::npos) {
+                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                    const wchar_t *psearch = search_string.c_str();
+                    for( ; *psearch; psearch++) {
+                        switch(*psearch) {
+                        case L'%':
+                        case L'_':
+                            out_filter += L"\"?\"";
+                            break;
+                        default:
+                            out_filter += *psearch;
+                            break;
+                        }
+                    }
+                    pfilter += idx2;
+                }
+                break;
+                }
+            case L'i':
+            case L'I':
+                case_sensitive = false;
+                break;
+            case L'-':
                 out_filter += L"-";
                 break;
+            default:
+                // ignore any other switches
+                break;
             }
+            // skip whitespace after the filter
+            for ( ; iswhitespace(*(pfilter+1)); pfilter++) ;
             break;
         case L'%':
         case L'_':
@@ -420,6 +478,8 @@ scan:
     m_filter += out_filter.c_str();
     m_filter += " )";
     m_hamming = hamming;
+    m_edit = edit;
+    m_caseSensitive = case_sensitive;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -433,17 +493,19 @@ void R1FilterHandler::ConstructLikeFilter(
     const wchar_t *pfilter;
     size_t idx1, idx2;
     int hamming = 0;
+    int edit = 0;
+    bool case_sensitive = true;
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();
-scan:
     for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
         switch(*pfilter) {
         case L'-':
             pfilter++;
             switch(*pfilter) {
+            case L'h':
             case L'H': {
                 wstring num_hamming;
-                for(pfilter++; (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
                     num_hamming += *pfilter;
                 swscanf(num_hamming.c_str(), L"%d", &hamming);
 
@@ -451,15 +513,64 @@ scan:
                 idx1 = inside.find_first_of(L"(");
                 idx2 = inside.find_last_of(L")");
                 if(idx1 != string::npos && idx2 != string::npos) {
-                    in_filter = inside.substr(idx1+1, idx2-idx1-1);
-                    goto scan;
+                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                    const wchar_t *psearch = search_string.c_str();
+                    for( ; *psearch; psearch++) {
+                        switch(*psearch) {
+                        case L'%':
+                        case L'_':
+                            out_filter += L"\"?\"";
+                            break;
+                        default:
+                            out_filter += *psearch;
+                            break;
+                        }
+                    }
+                    pfilter += idx2;
                 }
                 break;
                 }
-            default:
+            case L'e':
+            case L'E': {
+                wstring num_edit;
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                    num_edit += *pfilter;
+                swscanf(num_edit.c_str(), L"%d", &edit);
+
+                wstring inside = pfilter;
+                idx1 = inside.find_first_of(L"(");
+                idx2 = inside.find_last_of(L")");
+                if(idx1 != string::npos && idx2 != string::npos) {
+                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                    const wchar_t *psearch = search_string.c_str();
+                    for( ; *psearch; psearch++) {
+                        switch(*psearch) {
+                        case L'%':
+                        case L'_':
+                            out_filter += L"\"?\"";
+                            break;
+                        default:
+                            out_filter += *psearch;
+                            break;
+                        }
+                    }
+                    pfilter += idx2;
+                }
+                break;
+                }
+            case L'i':
+            case L'I':
+                case_sensitive = false;
+                break;
+            case '-':
                 out_filter += L"-";
                 break;
+            default:
+                // ignore any other switches
+                break;
             }
+            // skip whitespace after the filter
+            for ( ; iswhitespace(*(pfilter+1)); pfilter++) ;
             break;
         case L'%':
         case L'_':
@@ -480,8 +591,9 @@ scan:
     else
         m_filter += " CONTAINS ";
 
-
     m_filter += out_filter.c_str();
     m_filter += " )";
     m_hamming = hamming;
+    m_edit = edit;
+    m_caseSensitive = case_sensitive;
 }

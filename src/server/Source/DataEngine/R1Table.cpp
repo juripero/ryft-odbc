@@ -51,9 +51,9 @@ R1Table::R1Table(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void R1Table::AppendFilter(simba_wstring& in_filter, int in_hamming)
+void R1Table::AppendFilter(simba_wstring& in_filter, int in_hamming, int in_edit, bool in_caseSensitive)
 {
-    m_result->appendFilter(in_filter.GetAsPlatformString(), in_hamming);
+    m_result->appendFilter(in_filter.GetAsPlatformString(), in_hamming, in_edit, in_caseSensitive);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,25 +157,24 @@ bool R1Table::RetrieveData(
 		    memcpy(in_data->GetBuffer(), &myDouble, sizeof(simba_double64));
             return false;
 		    }
-        case SQL_DATE: {
-            int month, day, year;
-            sscanf(colResult.c_str(), "%d-%d-%d", &year, &month, &day);
-            TDWDate sqlDate(year, month, day);
+        case SQL_TYPE_DATE: {
+            struct tm date;
+            m_result->date(colIdx, &date);
+            TDWDate sqlDate(date.tm_year, date.tm_mon, date.tm_mday);
             memcpy(in_data->GetBuffer(), &sqlDate, sizeof(TDWDate));
             return false;
             }
-        case SQL_TIME: {
-            int hour = 0, min = 0, sec = 0;
-            int converted = sscanf(colResult.c_str(), "%d:%d:%d", &hour, &min, &sec);
-            TDWTime sqlTime(hour, min, sec);
+        case SQL_TYPE_TIME: {
+            struct tm time;
+            m_result->time(colIdx, &time);
+            TDWTime sqlTime(time.tm_hour, time.tm_min, time.tm_sec);
             memcpy(in_data->GetBuffer(), &sqlTime, sizeof(TDWTime));
             return false;
             }
-        case SQL_TIMESTAMP: {
-            int month = 0, day = 0, year = 0;
-            int hour = 0, min = 0, sec = 0;
-            int converted = sscanf(colResult.c_str(), "%d-%d-%d %d.%d.%d", &year, &month, &day, &hour, &min, &sec);
-            TDWTimestamp sqlTimestamp(year, month, day, hour, min, sec, 0);
+        case SQL_TYPE_TIMESTAMP: {
+            struct tm datetime;
+            m_result->datetime(colIdx, &datetime);
+            TDWTimestamp sqlTimestamp(datetime.tm_year, datetime.tm_mon, datetime.tm_mday, datetime.tm_hour, datetime.tm_min, datetime.tm_sec, 0);
             memcpy(in_data->GetBuffer(), &sqlTimestamp, sizeof(TDWTimestamp));
             return false;
             }

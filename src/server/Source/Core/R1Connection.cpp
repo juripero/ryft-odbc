@@ -64,9 +64,12 @@ void R1Connection::Connect(const DSIConnSettingRequestMap& in_connectionSettings
     m_connectionSettingsMap = in_connectionSettings;
 
     const Variant& uidVar = GetRequiredSetting(R1_UID_KEY, in_connectionSettings);
-    const Variant& pwdVar = GetRequiredSetting(R1_PWD_KEY, in_connectionSettings);
     string uid = uidVar.GetStringValue();
-    string pwd = pwdVar.GetStringValue();
+
+    string pwd;
+    const Variant* pwdVar;
+    if(GetOptionalSetting(R1_PWD_KEY, in_connectionSettings, &pwdVar))
+        pwd = pwdVar->GetStringValue();
 
     if(!m_ryft1.logon(uid, pwd))
         R1THROW(Simba::Support::DIAG_INVALID_AUTH_SPEC, L"AuthorizationFailed");
@@ -161,11 +164,12 @@ void R1Connection::UpdateConnectionSettings(
     // This driver has the following settings:
     //      Required Key: UID - represents a name of a user, could be anything.
     //      Required Key: PWD - represents the password, could be anything.
-    //      Optional Key: LNG - represents the language. (NOT USED)
     VerifyRequiredSetting(R1_UID_KEY, in_connectionSettings, out_connectionSettings);
-    VerifyRequiredSetting(R1_PWD_KEY, in_connectionSettings, out_connectionSettings);
-    VerifyOptionalSetting(R1_LNG_KEY, in_connectionSettings, out_connectionSettings);
-
+    if(m_ryft1.getAuthRequired()) {
+        VerifyRequiredSetting(R1_PWD_KEY, in_connectionSettings, out_connectionSettings);
+    }
+    else 
+        VerifyOptionalSetting(R1_PWD_KEY, in_connectionSettings, out_connectionSettings);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

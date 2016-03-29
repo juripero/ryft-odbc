@@ -20,13 +20,13 @@ using namespace Simba::Support;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 R1FilterResult::R1FilterResult(
     SharedPtr<R1Table> in_table, 
-    const simba_wstring& in_filter, int in_hamming) : 
+    const simba_wstring& in_filter, int in_hamming, int in_edit, bool in_caseSensitive) : 
         m_table(in_table),
         m_filter(in_filter),
         m_hasStartedFetch(false)
 {
     assert(!in_table.IsNull());
-    m_table->AppendFilter(m_filter, in_hamming);
+    m_table->AppendFilter(m_filter, in_hamming, in_edit, in_caseSensitive);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

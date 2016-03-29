@@ -2,6 +2,7 @@
 
 #include <libryftone.h>
 
+#include <string.h>
 #include <string>
 #include <vector>
 #include <deque>
@@ -241,7 +242,10 @@ class __catalog_entry__ {
 public:
     __catalog_entry__(string in_table);
     __meta_config__ meta_config;
+    __rdf_config__ rdf_config;
     string path;
+
+    bool _is_valid( );
 };
 
 typedef struct _RyftOne_Table {
@@ -261,8 +265,33 @@ typedef struct _RyftOne_Column {
     string m_typeName;
     unsigned m_bufferLen;
     unsigned m_colSize;
+    unsigned m_dtType;
+    string m_formatSpec;
 } RyftOne_Column;
 typedef vector<RyftOne_Column> RyftOne_Columns;
+
+#define DATE_YYYYMMDD               1
+#define DATE_YYMMDD                 2
+#define DATE_DDMMYYYY               3
+#define DATE_DDMMYY                 4
+#define DATE_MMDDYYYY               5
+#define DATE_MMDDYY                 6
+
+#define TIME_12MMSS                 7
+#define TIME_24MMSS                 8
+
+#define DATETIME_YYYYMMDD_12MMSS    9
+#define DATETIME_YYYYMMDD_24MMSS    10
+#define DATETIME_YYMMDD_12MMSS      11
+#define DATETIME_YYMMDD_24MMSS      12
+#define DATETIME_DDMMYYYY_12MMSS    13
+#define DATETIME_DDMMYYYY_24MMSS    14
+#define DATETIME_DDMMYY_12MMSS      15
+#define DATETIME_DDMMYY_24MMSS      16
+#define DATETIME_MMDDYYYY_12MMSS    17
+#define DATETIME_MMDDYYYY_24MMSS    18
+#define DATETIME_MMDDYY_12MMSS      19
+#define DATETIME_MMDDYY_24MMSS      20
 
 class RyftOne_Database;
 class RyftOne_Result : public IParser {
@@ -270,7 +299,7 @@ public:
     RyftOne_Result(RyftOne_Database *in_ryft1);
 
     bool open(string& in_name, vector<__catalog_entry__>::iterator in_catentry);
-    bool appendFilter(string in_filter, int in_hamming);
+    bool appendFilter(string in_filter, int in_hamming, int in_edit, bool in_caseSensitive);
     
     bool appendRow();
     bool flush();
@@ -284,6 +313,10 @@ public:
     string& getStringValue(int colIdx);
     bool putStringValue(int colIdx, string colValue);
 
+    void date(int colIdx, struct tm *date);
+    void time(int colIdx, struct tm *time);
+    void datetime(int colIdx, struct tm*time);
+
     // XML Parse
     virtual NodeAction AddRow( );
     virtual NodeAction AddElement( std::string sName, const char **psAttribs, IElement **ppElement );
@@ -292,9 +325,12 @@ public:
 private:
 
     RyftOne_Database *m_ryft1;
+    RyftOne_Columns m_cols;
     rol_data_set_t m_loaded;
 
     int m_hamming;
+    int m_edit;
+    bool m_caseSensitive;
     std::string m_query;
     bool m_queryFinished;
 
@@ -327,9 +363,15 @@ private:
     bool __writeRow(FILE *f, vector<Row>::iterator in_itr);
 };
 
+#define AUTH_NONE   0
+#define AUTH_SYSTEM 1
+#define AUTH_LDAP   2
+
 class RyftOne_Database {
 public:
     RyftOne_Database();
+
+    bool getAuthRequired();
 
     bool logon(string& in_user, string& in_password);
     void logoff();
@@ -344,14 +386,23 @@ public:
 
 private:
     void __loadCatalog();
+    bool __matches(string& in_search, string& in_name);
+    int __remove_directory(const char *path);
+
     vector<__catalog_entry__>::iterator __findTable(string& in_table);
 
     vector<__catalog_entry__> __catalog;
+
+    int __authType;
+    string __ldapServer;
+    string __ldapUser;
+    string __ldapPassword;
+    string __ldapBaseDN;
 };
 
 class RyftOne_Util {
 public:
-    static void RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_bufferLen);
+    static void RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_bufferLen, string& out_format, unsigned *out_dtType);
     static string SqlToRyftType(unsigned in_type, unsigned in_bufLen);
 };
 

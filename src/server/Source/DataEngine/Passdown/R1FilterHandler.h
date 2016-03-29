@@ -239,6 +239,8 @@ namespace RyftOne
 
         bool m_negate;
         int m_hamming;
+        int m_edit;
+        bool m_caseSensitive;
         simba_wstring m_filter;
 
         /// Flag for successful pass down.
