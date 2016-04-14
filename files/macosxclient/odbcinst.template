@@ -1,0 +1,11 @@
+[ODBC Drivers]
+RyftODBCDriver = Installed
+
+[RyftODBCDriver]
+APILevel 	 = 1
+ConnectFunctions = YYY
+Description	 = Ryft ODBC Mac OS X Client Driver
+Driver		 = _INSTALLDIR_/lib/libSimbaClient.sdylib
+DriverODBCVer	 = 03.80
+SQLLevel	 = 1
+

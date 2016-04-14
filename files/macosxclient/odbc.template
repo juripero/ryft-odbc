@@ -1,0 +1,10 @@
+[ODBC Data Sources]
+RyftODBC = RyftODBCDriver
+
+[RyftODBC]
+Description = Ryft Mac OS X ODBC Driver
+Driver	    = _INSTALLDIR_/lib/libSimbaClient.dylib
+Locale	    = en-US
+SSLCertFile =
+UseSsl	    = 0
+Servers	    = _IPADDR_ _PORT_

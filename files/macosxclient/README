@@ -1,0 +1,30 @@
+This directory contains the installation of the Ryft ODBC driver.
+
+/lib - contains all of the libraries referenced by the Ryft ODBC driver 
+components.
+
+/errormessages - contains the XML error message source for all error messages
+issued by the Ryft ODBC driver.
+
+1. Download and install the iODBC Driver Manager for Mac OS X (www.iodbc.org).
+
+2. Untar the Ryft ODBC Mac OS X Client tarball using 'tar -xzf 
+ryft1_odbc_client_macosx-x.x-x.x.tar.gz'.
+
+3. Navigate to the ryft1_odbc_client_macosx directory and run './install.sh' 
+or optionally 'sudo ./install.sh'. If install is run as root, the Ryft ODBC 
+Mac OS X Client files will be installed in the /usr/local/lib and 
+/usr/local/ryft directories. If you are not running as root at the time of the 
+install, the Ryft ODBC Mac OS X Client files will instead be installed in 
+~/lib and ~/ryft. 
+
+4. During the installation the odbc.ini and odbcinst.ini files were created for
+you. These files are iODBC configuration files. If you preiously had ODBC 
+drivers and DSNs installed, you must merge the contents of the odbc.ini and 
+odbcinst.ini files with the ~/.odbc.ini and ~/.odbcinst.ini files. If no 
+~/.odbc.ini or ~/.odbcinst.ini file were located at the time of installation, 
+these files were created for you.
+
+Refer to the "Ryft Connector for ODBC Installation and User Guide" for more 
+information on installing and configuring your RyftOne ODBC driver.
+

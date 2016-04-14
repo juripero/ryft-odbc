@@ -1,0 +1,15 @@
+# To use this INI file, replace [INSTALLDIR] with the 
+# directory the tarball was extracted to.
+
+[Driver]
+DriverManagerEncoding = UTF-32
+DriverLocale	      = en-US
+ErrorMessagesPath     = _INSTALLDIR_/ryft/errormessages
+LogLevel	      = 0
+LogNamespace	      =
+LogPath		      =
+
+# Darwin specific ODBCInstLib
+#    iODBC
+ODBCInstLib = libiodbcinst.dylib
+
