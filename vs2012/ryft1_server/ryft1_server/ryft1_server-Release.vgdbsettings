@@ -38,12 +38,12 @@
     <BuildCommand>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>192.168.56.101</HostName>
+        <HostName>172.16.13.3</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
       <Command>make</Command>
-      <Arguments>-f ryft1_odbcd.mak BUILDSERVER=exe ARCH=x8664</Arguments>
+      <Arguments>-f ryft1_odbcd.mak BUILDSERVER=exe ARCH=x8664 release</Arguments>
       <WorkingDirectory>$(BuildDir)</WorkingDirectory>
       <Environment>
         <Records>
@@ -65,7 +65,7 @@
     <CleanCommand>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>192.168.56.101</HostName>
+        <HostName>172.16.13.3</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
@@ -126,7 +126,9 @@
   <Debug xsi:type="com.visualgdb.debug.remote">
     <AdditionalStartupCommands>
       <GDBPreStartupCommands />
-      <GDBStartupCommands />
+      <GDBStartupCommands>
+        <string>set follow-fork-mode parent</string>
+      </GDBStartupCommands>
     </AdditionalStartupCommands>
     <AdditionalGDBSettings>
       <FilterSpuriousStoppedNotifications>false</FilterSpuriousStoppedNotifications>

@@ -10,7 +10,7 @@
 #define _RYFTONE_R1DATAENGINE_H_
 
 #include "RyftOne.h"
-#include "ryft1_library.h"
+#include "ryft1_catalog.h"
 #include "DSIExtSqlDataEngine.h"
 
 namespace Simba

@@ -161,7 +161,13 @@
       <Filter>Source files\DataEngine\Passdown\Include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\server\Source\RyftOne.h" />
-    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_library.h">
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_util.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_result.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_catalog.h">
       <Filter>Source files\Ryft1\Include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -265,7 +271,13 @@
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp">
       <Filter>Source files\DataEngine\Passdown</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_library.cpp">
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_util.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_result.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_catalog.cpp">
       <Filter>Source files\Ryft1</Filter>
     </ClCompile>
   </ItemGroup>

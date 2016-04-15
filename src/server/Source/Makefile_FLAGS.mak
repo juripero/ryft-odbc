@@ -15,6 +15,8 @@ COMMON_CFLAGS = $(DMFLAGS) \
 -I./DataEngine/Metadata \
 -I./DataEngine/Passdown \
 -I./Ryft1 \
+-I../../libmeta \
+-I../../libsqlite \
 -I$(SIMBAENGINE_DIR)/Include/DSI \
 -I$(SIMBAENGINE_DIR)/Include/DSI/Client \
 -I$(SIMBAENGINE_DIR)/Include/Support \
@@ -170,10 +172,12 @@ COMMON_LDFLAGS += -L$(OPENSSLLIB_PATH) $(OPENSSL_LIBS)
 endif
 
 ifeq ($(BUILDSERVER),exe)
-BIN_LDFLAGS = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive \
-            $(COMMON_LDFLAGS) 
-BIN_LDFLAGS_DEBUG = -Wl,--whole-archive,$(SIMBA_LIBS_DEBUG) -Wl,--no-whole-archive \
-                  $(COMMON_LDFLAGS) 
+BIN_LDFLAGS = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive $(COMMON_LDFLAGS) \
+              -Wl,--no-whole-archive,../../libmeta/Release/libmeta.a \
+              -Wl,--no-whole-archive,../../libsqlite/Release/libsqlite.a
+BIN_LDFLAGS_DEBUG = -Wl,--whole-archive,$(SIMBA_LIBS_DEBUG) -Wl,--no-whole-archive $(COMMON_LDFLAGS) \
+                    -Wl,--no-whole-archive,../../libmeta/Debug/libmeta.a \
+                    -Wl,--no-whole-archive,../../libsqlite/Debug/libsqlite.a
 else
 SO_LDFLAGS       = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive \
                  -Wl,--soname=$(SONAME_RELEASE) \

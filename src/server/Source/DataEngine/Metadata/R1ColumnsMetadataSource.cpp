@@ -147,7 +147,7 @@ bool R1ColumnsMetadataSource::GetMetadata(
         {
             if (SqlDataTypeUtilitiesSingleton::GetInstance()->IsCharacterOrBinaryType(m_colItr->m_dataType))
             {
-                *reinterpret_cast<simba_int32*>(in_data->GetBuffer()) = m_colItr->m_bufferLen;
+                *reinterpret_cast<simba_int32*>(in_data->GetBuffer()) = m_colItr->m_charCols;
             }
             else
             {
@@ -158,7 +158,7 @@ bool R1ColumnsMetadataSource::GetMetadata(
 
         case DSI_BUFFER_LENGTH_COLUMN_TAG:
         {
-            *reinterpret_cast<simba_int32*>(in_data->GetBuffer()) = m_colItr->m_bufferLen;
+            *reinterpret_cast<simba_int32*>(in_data->GetBuffer()) = m_colItr->m_bufLength;
             return false;
         }
 
@@ -206,32 +206,7 @@ bool R1ColumnsMetadataSource::GetMetadata(
 
         case DSI_COLUMN_SIZE_COLUMN_TAG:
         {
-            switch(m_colItr->m_dataType) {
-            case SQL_INTEGER:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = 10;
-                break;
-            case SQL_SMALLINT:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = 5;
-                break;
-            case SQL_BIGINT:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = 20;
-                break;
-            case SQL_DOUBLE:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = 15;
-                break;
-            case SQL_DATE:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = 10;
-                break;
-            case SQL_TIME:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = 8;
-                break;
-            case SQL_TIMESTAMP:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = 19;
-                break;
-            case SQL_VARCHAR:
-                *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = m_colItr->m_bufferLen;
-                break;
-            }
+            *reinterpret_cast<simba_int16*>(in_data->GetBuffer()) = m_colItr->m_charCols;
             return false;
         }
 

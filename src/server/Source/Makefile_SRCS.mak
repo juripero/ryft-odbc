@@ -23,7 +23,9 @@ DataEngine/Passdown/R1FilterHandler.cpp \
 DataEngine/Passdown/R1FilterResult.cpp \
 DataEngine/R1DataEngine.cpp \
 DataEngine/R1Table.cpp \
-Ryft1/ryft1_library.cpp \
+Ryft1/ryft1_catalog.cpp \
+Ryft1/ryft1_result.cpp \
+Ryft1/ryft1_util.cpp \
 
 ##--------------------------------------------------------------------------------------------------
 ## There are no platform specific sources.
