@@ -463,15 +463,15 @@ void R1FilterHandler::ConstructComparisonFilter(
     }
     out_filter += L"\"";
 
-    m_filter += "( RECORD." + in_columnName + " ";
+    m_filter += "( RECORD." + in_columnName;
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
     case SE_COMP_EQ:
-        m_filter += "EQUALS";
+        m_filter += " EQUALS ";
         break;
     case SE_COMP_NE:
-        m_filter += "NOT_EQUALS";
+        m_filter += " NOT_EQUALS ";
         break;
     }
 

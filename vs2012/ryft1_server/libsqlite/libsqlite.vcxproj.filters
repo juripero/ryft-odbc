@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{b29d1034-bd73-4884-9347-31e57073bd25}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{0d174e50-710f-44fb-8fbc-b0c6b95e9510}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{46e0d6dc-e37c-4543-bc6c-310ff47fdf60}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Make files">
+      <UniqueIdentifier>{4c32659c-7761-4736-9785-6e115c5b9a91}</UniqueIdentifier>
+      <Extensions>*.mak</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\libsqlite\sqlite3.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\libsqlite\sqlite3.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\libsqlite\sqlite3ext.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\libsqlite\Makefile" />
+    <None Include="..\..\..\src\libsqlite\debug.mak">
+      <Filter>Make files</Filter>
+    </None>
+    <None Include="..\..\..\src\libsqlite\release.mak">
+      <Filter>Make files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

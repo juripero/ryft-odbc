@@ -538,7 +538,7 @@ void put_lock_file(__pid_t pid, string& exepath)
         path = exepath.substr(0, idx);
     
     sprintf(pidfile, "%s/%s", path.c_str(), _pidfile);
-    int lfp = open(pidfile, O_RDWR|O_CREAT, 0640);
+    int lfp = open(pidfile, O_RDWR|O_CREAT|O_TRUNC, 0640);
     if(lfp < 0) 
         exit(1);
     char str[10];

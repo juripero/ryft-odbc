@@ -183,6 +183,7 @@ void R1Connection::ToNativeSQL(const simba_wstring& in_string, simba_wstring& ou
 void R1Connection::SetConnectionPropertyValues()
 {
 	DSIPropertyUtilities::SetReadOnly(this, false);
+    DSIPropertyUtilities::SetSchemaSupport(this, false);
 
     // Note that DSI_CONN_SERVER_NAME and DSI_CONN_USER_NAME should be updated after connection to 
     // reflect the server that was connected to and the user that connected.

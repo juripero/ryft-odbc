@@ -47,11 +47,8 @@ bool R1SchemaOnlyMetadataSource::GetMetadata(
     {
         case DSI_SCHEMA_NAME_COLUMN_TAG:
         {
-            return DSITypeUtilities::OutputWVarCharStringData(
-                &R1_SCHEMA, 
-                in_data, 
-                in_offset, 
-                in_maxSize);
+            in_data->SetNull(true);
+            return false;
         }
 
         default:
@@ -72,12 +69,6 @@ bool R1SchemaOnlyMetadataSource::Move(DSIDirection in_direction, simba_signed_na
     if (DSI_DIR_NEXT != in_direction)
     {
         R1THROWGEN(L"R1ResultSetTraverseDirNotSupported");
-    }
-
-    if (!m_hasStartedFetch)
-    {
-        m_hasStartedFetch = true;
-        return true;
     }
 
     return false;

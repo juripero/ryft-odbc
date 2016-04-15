@@ -162,8 +162,23 @@ void R1DataEngine::CreateTable(const SharedPtr<TableSpecification> in_specificat
         colSqlMeta = simba_column->GetMetadata();
         ryft_column.m_typeName = colSqlMeta->GetTypeName().GetAsPlatformString();
         ryft_column.m_dataType = colSqlMeta->GetSqlType();
-        ryft_column.m_bufferLen = colSqlMeta->GetLengthOrIntervalPrecision();
-        ryft_column.m_colSize = colSqlMeta->GetColumnSize(ryft_column.m_bufferLen);
+        ryft_column.m_bufLength = colSqlMeta->GetLengthOrIntervalPrecision();
+        ryft_column.m_charCols = colSqlMeta->GetColumnSize(ryft_column.m_bufLength);
+
+        switch(ryft_column.m_dataType) {
+        case SQL_TYPE_DATE:
+            ryft_column.m_dtType = DATE_YYYYMMDD;
+            ryft_column.m_formatSpec = "%04d-%02d-%02d";
+            break;
+        case SQL_TYPE_TIME:
+            ryft_column.m_dtType = TIME_24MMSS;
+            ryft_column.m_formatSpec = "%02d:%02d:%02d";
+            break;
+        case SQL_TYPE_TIMESTAMP:
+            ryft_column.m_dtType = DATETIME_YYYYMMDD_24MMSS;
+            ryft_column.m_formatSpec = "%04d-%02d-%02d %02d:%02d:%02d";
+            break;
+        }
         ryft_columns.push_back(ryft_column);
     }
 
