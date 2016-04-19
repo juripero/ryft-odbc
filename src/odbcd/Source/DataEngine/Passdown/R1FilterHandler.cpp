@@ -167,15 +167,19 @@ bool R1FilterHandler::PassdownAnd(AEAnd *in_node)
 {
     AEBooleanExpr *lExpr = (AEBooleanExpr *)in_node->GetChild(0);
     AEBooleanExpr *rExpr = (AEBooleanExpr *)in_node->GetChild(1);
+    simba_wstring pushFilter = m_filter;
+    m_filter.Clear();
     m_filter += "( ";
     if(DSIExtAbstractBooleanExprHandler::Passdown(lExpr)) {
         m_filter += " AND ";
         if(DSIExtAbstractBooleanExprHandler::Passdown(rExpr)) {
             m_filter += " )";
+            m_filter = pushFilter + m_filter;
             m_isPassedDown = true;
             return true;
         }
     }
+    m_filter = pushFilter;
     return false;
 }
 
@@ -198,15 +202,19 @@ bool R1FilterHandler::PassdownOr(AEOr* in_node)
 {
     AEBooleanExpr *lExpr = (AEBooleanExpr *)in_node->GetChild(0);
     AEBooleanExpr *rExpr = (AEBooleanExpr *)in_node->GetChild(1);
+    simba_wstring pushFilter = m_filter;
+    m_filter.Clear();
     m_filter += "( ";
     if(DSIExtAbstractBooleanExprHandler::Passdown(lExpr)) {
         m_filter += " OR ";
         if(DSIExtAbstractBooleanExprHandler::Passdown(rExpr)) {
             m_filter += " )";
+            m_filter = pushFilter + m_filter;
             m_isPassedDown = true;
             return true;
         }
     }
+    m_filter = pushFilter;
     return false;
 }
 

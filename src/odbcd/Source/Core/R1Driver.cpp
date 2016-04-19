@@ -102,6 +102,11 @@ void R1Driver::SetDriverPropertyValues()
         AttributeData::MakeNewInt16AttributeData(ENC_UTF16_BE));
 #endif
 
+    // Turn on calling ToNativeSQL()
+    SetProperty(
+        DSI_DRIVER_NATIVE_SQL_BEFORE_PREPARE,
+        AttributeData::MakeNewInt32AttributeData(DSI_PROP_TRUE));
+
     SetProperty(
         DSI_FILTER_METADATA_SOURCE, 
         AttributeData::MakeNewUInt32AttributeData(DSI_FMS_FALSE));

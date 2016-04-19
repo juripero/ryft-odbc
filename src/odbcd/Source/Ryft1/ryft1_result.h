@@ -1,5 +1,16 @@
 #pragma once
 
+#include "RyftOne.h"
+using namespace RyftOne;
+
+namespace Simba
+{
+namespace Support
+{
+    class ILogger;
+}
+}
+
 #include <libryftone.h>
 
 #include <string.h>
@@ -238,6 +249,22 @@ __inline void CopyEscapedIdentifier(string& dest, string& src)
     }
 }
 
+__inline void CopyEscapedLiteral(string& dest, string& src)
+{
+    string::iterator itr; 
+    try {
+        for(itr = src.begin(); itr != src.end(); ++itr) {
+            if(*itr == '\'') {
+                dest += "''";
+            }
+            else
+                dest += *itr;
+        }
+    }
+    catch(exception& e) {
+        ;
+    }
+}
 #define SC_NUMERIC  0
 #define SC_TEXT     1
 #define SC_REAL     2
@@ -283,7 +310,7 @@ typedef vector<RyftOne_Column> RyftOne_Columns;
 
 class RyftOne_Result : public IParser {
 public:
-    RyftOne_Result( );
+    RyftOne_Result(ILogger *);
    ~RyftOne_Result( );
 
     void open(string& in_name, vector<__catalog_entry__>::iterator in_catentry);
@@ -337,15 +364,20 @@ private:
 
     Cursor __cursor;
 
+    // Reference to the ILogger. (NOT OWN)
+    ILogger* __log;
+
     void __loadTable(string& in_name, vector<__catalog_entry__>::iterator in_itr);
     bool __execute();
 
     int __getColumnNum(string colTag);
     bool __writeRow(FILE *f);
 
-    bool __initTable(string &table);
+    bool __initTable(string &query, string& table);
+    void __dropTable(string &query);
+
     bool __storeToSqlite(string& table, const char *file, bool no_top);
-    bool __loadFromSqlite(string &table);
+    bool __loadFromSqlite(string &query);
 
     void __date(const char *dateStr, int colIdx, struct tm *date);
     void __time(const char *timeStr, int colIdx, struct tm *time);

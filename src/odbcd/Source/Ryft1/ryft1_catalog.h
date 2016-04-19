@@ -1,5 +1,15 @@
 #pragma once
 
+#include "RyftOne.h"
+
+namespace Simba
+{
+namespace Support
+{
+    class ILogger;
+}
+}
+
 #include <libryftone.h>
 
 #include <string.h>
@@ -25,7 +35,7 @@ typedef vector<RyftOne_Table> RyftOne_Tables;
 
 class RyftOne_Database {
 public:
-    RyftOne_Database();
+    RyftOne_Database(ILogger *);
 
     bool getAuthRequired();
     bool logon(string& in_user, string& in_password);
@@ -53,6 +63,9 @@ private:
     string __ldapUser;
     string __ldapPassword;
     string __ldapBaseDN;
+
+    // Reference to the ILogger. (NOT OWN)
+    ILogger* __log;
 };
 
 

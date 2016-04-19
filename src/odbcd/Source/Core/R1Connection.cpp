@@ -26,7 +26,8 @@ using namespace Simba::DSI;
 R1Connection::R1Connection(IEnvironment* in_environment) :
     DSIConnection(in_environment),
     m_log(in_environment->GetLog()),
-    m_isConnected(false)
+    m_isConnected(false),
+    m_ryft1(m_log)
 {
     ENTRANCE_LOG(m_log, "Simba::RyftOne", "R1Connection", "R1Connection");
 
@@ -175,6 +176,7 @@ void R1Connection::UpdateConnectionSettings(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void R1Connection::ToNativeSQL(const simba_wstring& in_string, simba_wstring& out_string)
 {
+    INFO_LOG(m_log, "Simba::RyftOne", "R1Connection", "ToNativeSQL", "Execute SQL=%s", in_string.GetAsPlatformString().c_str());
     out_string = in_string;
 }
 

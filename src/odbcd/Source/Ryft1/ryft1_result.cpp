@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <uuid/uuid.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
@@ -17,7 +18,7 @@
 
 static char s_R1Results[] = "/ryftone/ODBC/.results";
 
-RyftOne_Result::RyftOne_Result( ) : __hamming(0), __edit(0), __caseSensitive(true), __sqlite(0), __stmt(0) { ; }
+RyftOne_Result::RyftOne_Result( ILogger *log ) : __hamming(0), __edit(0), __caseSensitive(true), __sqlite(0), __stmt(0), __log(log) { ; }
 RyftOne_Result::~RyftOne_Result( ) 
 {
     if(__stmt) 
@@ -88,6 +89,11 @@ void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator i
     dbpath += "/";
     dbpath += ".caches.db";
     int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
+
+    char *errp;
+    sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT)", NULL, NULL, &errp);
+    if(errp)
+        sqlite3_free(errp);
 
     __queryFinished = false;
 }
@@ -374,6 +380,7 @@ bool RyftOne_Result::__execute()
     char results[PATH_MAX];
     string query(__query);
     bool ret = false;
+    string tableName;
 
     if(query.empty()) {
         query = "( RECORD CONTAINS ? )";
@@ -381,21 +388,27 @@ bool RyftOne_Result::__execute()
     else {
         // edit distance, hamming distance and case sensitivity need to be stored with query results
         char attribs[32];
-        snprintf(attribs, sizeof(attribs), " = E:%d H:%d I:%d", __edit, __hamming, __caseSensitive);
+        snprintf(attribs, sizeof(attribs), ";parms = ED:%d HD:%d CS:%s", __edit, __hamming, __caseSensitive ? "T" : "F");
         query += attribs;
     }
 
+    INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Executing query = %s", query.c_str());
+
     if(!(ret = __loadFromSqlite(query))) {
 
-        if (!__initTable(query))
+        if (!__initTable(query, tableName)) {
+            __dropTable(query);
             return false;
+        }
 
         if(__query.empty()) {
             vector<string>::iterator globItr;
             for(globItr = __glob.begin(); globItr != __glob.end(); globItr++) {
-                ret = __storeToSqlite(query, (*globItr).c_str(), false);
-                if(!ret)
+                ret = __storeToSqlite(tableName, (*globItr).c_str(), false);
+                if(!ret) {
+                    __dropTable(query);
                     return false;
+                }
             }
             return __loadFromSqlite(query);
         }
@@ -406,20 +419,29 @@ bool RyftOne_Result::__execute()
             size_t idx = results_path.find("/", 1);
             rol_data_set_t result;
             if(__edit) {
+                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Issuing rol_ds_search_fuzzy_edit_distance");
                 result = rol_ds_search_fuzzy_edit_distance(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
                     __query.c_str(), 0, __edit, NULL, NULL, __caseSensitive, true, NULL);
             }
-            else 
+            else {
+                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Issuing rol_ds_search_fuzzy_hamming");
                 result = rol_ds_search_fuzzy_hamming(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
                     __query.c_str(), 0, __hamming, NULL, NULL, __caseSensitive, NULL);
+            }
             if( rol_ds_has_error_occurred(result)) {
                 perr = rol_ds_get_error_string(result);
+                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "rol_ds_has_error_occurred perr = %s", perr);
+                __dropTable(query);
+                simba_wstring errorMsg = simba_wstring::CreateFromUTF8(perr);
+                R1THROWGEN1(L"RolException", errorMsg.GetAsPlatformWString());
                 return false;
             }
-            ret = __storeToSqlite(query, results, true);
+            ret = __storeToSqlite(tableName, results, true);
             unlink(results);
-            if(!ret)
+            if(!ret) {
+                __dropTable(query);
                 return false;
+            }
             return __loadFromSqlite(query);
         }
     }
@@ -447,14 +469,17 @@ bool RyftOne_Result::__writeRow(FILE *f)
     fprintf(f, "</%s>\n", m_delim.c_str());
 }
 
-bool RyftOne_Result::__initTable(string& table)
+bool RyftOne_Result::__initTable(string& query, string& tableName)
 {
     char * errp;
-    string tableName;
-    CopyEscapedIdentifier(tableName, table);
-    char * sql = sqlite3_mprintf("DROP TABLE \"%s\"", tableName.c_str());
-    sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
-    sqlite3_free(sql);
+
+    uuid_t id;
+    uuid_generate(id);
+    char stringId[100];
+    uuid_unparse(id, stringId);
+    for(char *pstr = stringId; *pstr; pstr++)
+        *pstr = toupper(*pstr);
+    tableName = stringId;
 
     int idx;
     string coldefs;
@@ -480,7 +505,7 @@ bool RyftOne_Result::__initTable(string& table)
         }
     }
 
-    sql = sqlite3_mprintf("CREATE TABLE \"%s\" (%s)", tableName.c_str(), coldefs.c_str());
+    char *sql = sqlite3_mprintf("CREATE TABLE \"%s\" (%s)", tableName.c_str(), coldefs.c_str());
     int sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
     sqlite3_free(sql);
     if(errp)
@@ -488,7 +513,7 @@ bool RyftOne_Result::__initTable(string& table)
     if(sqlret != SQLITE_OK) 
         return false;
 
-    sql = sqlite3_mprintf("CREATE TABLE \"_FGLOB_STAT_%s\" (\"__ST_DEV\" INTEGER, \"__ST_INO\" INTEGER, \"__ST_MTIME\" INTEGER)", 
+    sql = sqlite3_mprintf("CREATE TABLE \"__FGLOB_STAT_%s__\" (\"__ST_DEV\" INTEGER, \"__ST_INO\" INTEGER, \"__ST_MTIME\" INTEGER)", 
         tableName.c_str());
     sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
     sqlite3_free(sql);
@@ -506,7 +531,7 @@ bool RyftOne_Result::__initTable(string& table)
             return false;
         fstat(fd, &sb);
         close(fd);
-        sql = sqlite3_mprintf("INSERT INTO \"_FGLOB_STAT_%s\" VALUES (%d,%d,%d)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
+        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%d,%d,%d)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -514,10 +539,63 @@ bool RyftOne_Result::__initTable(string& table)
         if(sqlret != SQLITE_OK) 
             return false;
     }
+
+    string escapedQuery;
+    CopyEscapedLiteral(escapedQuery, query);
+    sql = sqlite3_mprintf("INSERT INTO __DIRECTORY__ VALUES ('%s','%s')", tableName.c_str(), escapedQuery.c_str());
+    sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
+    sqlite3_free(sql);
+    if(errp)
+        sqlite3_free(errp);
+    if(sqlret != SQLITE_OK) 
+        return false;
+
     return true;
 }
 
-bool RyftOne_Result::__storeToSqlite(string& table, const char *file, bool no_top)
+void RyftOne_Result::__dropTable(string& query)
+{
+    char *sql;
+    int sqlret;
+    char *errp;
+    char **prows;
+    int nrows, ncols;
+
+    string escapedQuery;
+    CopyEscapedLiteral(escapedQuery, query);
+    sql = sqlite3_mprintf("SELECT * FROM \"__DIRECTORY__\" WHERE QUERY = '%s'", escapedQuery.c_str());
+    sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
+    sqlite3_free(sql);
+    if(errp)
+        sqlite3_free(errp);
+    if(sqlret != SQLITE_OK) 
+        return;
+    if(nrows == 0) 
+        return;
+
+    string tableName = prows[ncols+0];
+    sqlite3_free_table(prows);
+    sql = sqlite3_mprintf("DROP TABLE \"__FGLOB_STAT_%s__\"", tableName.c_str());
+    sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
+    sqlite3_free(sql);
+    if(errp)
+        sqlite3_free(errp);
+
+    sql = sqlite3_mprintf("DROP TABLE \"%s\"", tableName.c_str());
+    sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
+    sqlite3_free(sql);
+    if(errp)
+        sqlite3_free(errp);
+
+    sql = sqlite3_mprintf("DELETE FROM \"__DIRECTORY__\" WHERE QUERY = '%s'", escapedQuery.c_str());
+    sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
+    sqlite3_free(sql);
+    if(errp)
+        sqlite3_free(errp);
+
+}
+
+bool RyftOne_Result::__storeToSqlite(string& tableName, const char *file, bool no_top)
 {
     int fd;
     struct stat sb;
@@ -536,8 +614,6 @@ bool RyftOne_Result::__storeToSqlite(string& table, const char *file, bool no_to
     }
 
     char * errp;
-    string tableName;
-    CopyEscapedIdentifier(tableName, table);
     char * sql = sqlite3_mprintf("INSERT INTO \"%s\" VALUES (%s)", tableName.c_str(), values.c_str() );
     int sqlret = sqlite3_prepare_v2(__sqlite, sql, -1, &__stmt, NULL);
     sqlite3_free(sql);
@@ -570,11 +646,10 @@ bool RyftOne_Result::__storeToSqlite(string& table, const char *file, bool no_to
     return true;
 }
 
-bool RyftOne_Result::__loadFromSqlite(string& table)
+bool RyftOne_Result::__loadFromSqlite(string& query)
 {
     char *sql;
     int sqlret;
-    string tableName;
     char **prows;
     int nrows, ncols;
     char *errp;
@@ -583,25 +658,41 @@ bool RyftOne_Result::__loadFromSqlite(string& table)
     struct stat sb;
     vector<string>::iterator globItr;
 
-    CopyEscapedIdentifier(tableName, table);
-
-    sql = sqlite3_mprintf("SELECT * FROM \"_FGLOB_STAT_%s\"", tableName.c_str());
+    string escapedQuery;
+    CopyEscapedLiteral(escapedQuery, query);
+    sql = sqlite3_mprintf("SELECT * FROM \"__DIRECTORY__\" WHERE QUERY = '%s'", escapedQuery.c_str());
     sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
     sqlite3_free(sql);
     if(errp)
         sqlite3_free(errp);
-    if(sqlret != SQLITE_OK)
-        goto __destroy_cache;
+    if(sqlret != SQLITE_OK) 
+        return false;
+    if(nrows == 0) 
+        return false;
+
+    string tableName = prows[ncols+0];
+    sqlite3_free_table(prows);
+    sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\"", tableName.c_str());
+    sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
+    sqlite3_free(sql);
+    if(errp)
+        sqlite3_free(errp);
+    if(sqlret != SQLITE_OK) {
+        __dropTable(query);
+        return false;
+    }
     if((nrows) != __glob.size()) {
         sqlite3_free_table(prows);
-        goto __destroy_cache;
+        __dropTable(query);
+        return false;
     }
 
     for(globItr = __glob.begin(); globItr != __glob.end(); globItr++) {
         fd = ::open((*globItr).c_str(), O_RDONLY);
         if(fd == -1) {
             sqlite3_free_table(prows);
-            goto __destroy_cache;
+            __dropTable(query);
+            return false;
         }
         fstat(fd, &sb);
         close(fd);
@@ -614,7 +705,8 @@ bool RyftOne_Result::__loadFromSqlite(string& table)
         }
         if(idx == nrows + 1) {
             sqlite3_free_table(prows);
-            goto __destroy_cache;
+            __dropTable(query);
+            return false;
         }
     }
 
@@ -623,21 +715,12 @@ bool RyftOne_Result::__loadFromSqlite(string& table)
     sql = sqlite3_mprintf("SELECT * FROM \"%s\"", tableName.c_str());
     sqlret = sqlite3_prepare_v2(__sqlite, sql, -1, &__stmt, NULL);
     sqlite3_free(sql);
-    if(sqlret == SQLITE_OK) 
+    if(sqlret == SQLITE_OK) {
+        INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "Query \"%s\" satisfied by cached table %s", 
+            query.c_str(), tableName.c_str());
         return true;
+    }
 
-__destroy_cache:
-    sql = sqlite3_mprintf("DROP TABLE \"_FGLOB_STAT_%s\"", tableName.c_str());
-    sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
-    sqlite3_free(sql);
-    if(errp)
-        sqlite3_free(errp);
-
-    sql = sqlite3_mprintf("DROP TABLE \"%s\"", tableName.c_str());
-    sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
-    sqlite3_free(sql);
-    if(errp)
-        sqlite3_free(errp);
     return false;
 }
 
