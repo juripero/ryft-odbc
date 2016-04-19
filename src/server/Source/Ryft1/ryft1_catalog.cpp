@@ -14,7 +14,7 @@ using namespace RyftOne;
 static char s_R1Catalog[] = "/ryftone/ODBC";
 static char s_TableMeta[] = ".meta.table";
 
-RyftOne_Database::RyftOne_Database() : __authType( AUTH_NONE )
+RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __log(log)
 {
     GKeyFile *keyfile = g_key_file_new( );
     GKeyFileFlags flags;
@@ -31,7 +31,7 @@ RyftOne_Database::RyftOne_Database() : __authType( AUTH_NONE )
             __ldapBaseDN = g_key_file_get_string(keyfile, "Auth", "LDAPBaseDN", &error);
             free(authType);
         }
-        else if(!strcmp(authType, "system")) 
+        else if(authType && !strcmp(authType, "system")) 
             __authType = AUTH_SYSTEM;
     }
     g_key_file_free(keyfile);
@@ -224,7 +224,7 @@ RyftOne_Columns RyftOne_Database::getColumns(string& in_table)
 
 RyftOne_Result *RyftOne_Database::openTable(string& in_table)
 {
-    RyftOne_Result *result = new RyftOne_Result();
+    RyftOne_Result *result = new RyftOne_Result(__log);
 
     vector<__catalog_entry__>::iterator itr = __findTable(in_table);
     if(itr != __catalog.end())
