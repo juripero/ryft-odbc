@@ -421,12 +421,12 @@ bool RyftOne_Result::__execute()
             if(__edit) {
                 INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Issuing rol_ds_search_fuzzy_edit_distance");
                 result = rol_ds_search_fuzzy_edit_distance(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
-                    __query.c_str(), 0, __edit, NULL, NULL, __caseSensitive, true, NULL);
+                    __query.c_str(), 0, __edit, "\r\n", NULL, __caseSensitive, true, NULL);
             }
             else {
                 INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Issuing rol_ds_search_fuzzy_hamming");
                 result = rol_ds_search_fuzzy_hamming(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
-                    __query.c_str(), 0, __hamming, NULL, NULL, __caseSensitive, NULL);
+                    __query.c_str(), 0, __hamming, "\r\n", NULL, __caseSensitive, NULL);
             }
             if( rol_ds_has_error_occurred(result)) {
                 perr = rol_ds_get_error_string(result);
