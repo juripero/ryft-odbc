@@ -161,7 +161,7 @@ SIMBA_LIBS_RELEASE = $(subst _<TARGET>,,$(SIMBA_LIBS))
 SONAME_RELEASE=$(notdir $(TARGET_SO_RELEASE))
 SONAME_DEBUG=$(notdir $(TARGET_SO_DEBUG))
 
-COMMON_LDFLAGS = -L$(ICULIB_PATH) $(ICU_LIBS) $(EXPORT_DEF) -ldl -lconfig -lglib-2.0 -lldap -lryftone -lcrypt -luuid
+COMMON_LDFLAGS = -L$(ICULIB_PATH) $(ICU_LIBS) $(EXPORT_DEF) -ldl -lconfig -lglib-2.0 -lldap -lryftone -lcrypt -luuid -ljson
 
 ifeq ($(BUILDSERVER),exe)
 COMMON_LDFLAGS := -L$(OPENSSLLIB_PATH) $(OPENSSL_LIBS) $(COMMON_LDFLAGS)

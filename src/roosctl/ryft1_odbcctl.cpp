@@ -8,210 +8,20 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <sys/wait.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <libconfig.h>
+#include <math.h>
+#include <string>
+#include <vector>
 using namespace std;
+
+#include "libmeta.h"
 
 const char _exenam[]="ryft1_odbcd";
 const char _pidfile[]=".r1odbcd.pid";
-const char _R1Catalog[] = "/ryftone/ODBC";
-const char _R1Results[] = "/ryftone/ODBC/.results";
-const char _TableMeta[] = ".meta.table";
-
-#include <string>
-#include <vector>
-#include <deque>
-using namespace std;
-
-#define XML_STATIC
-#include "expat.h"
-// The IElement interface exposes useful behavior
-// for objects that can be parsed from XML by a parser:
-class IElement
-{
-    friend class IParser;
-
-public:
-    inline                      IElement() : m_bDeleteOnPop( false ) {}
-    inline                      IElement( const std::string &sElName ) : m_sElName( sElName ), m_bDeleteOnPop( false ) {}
-
-    enum NodeAction
-    {
-        ProcessNode = 0,
-        PushNode,
-        SkipNode,
-    };
-
-    // This function is called automatically by the parser
-    // for whichever element is on top of the parse stack
-    // when a new nested start tag is encountered.
-    // Return ProcessNode to continue parsing.
-    // Return PushNode and set ppElement if
-    // parsing should continue with a new IElement object on the
-    // top of the parse stack.
-    // Return SkipNode to ignore the node and its children.
-    virtual NodeAction          AddRow( ) { return ProcessNode; }
-    virtual NodeAction          AddElement(std::string sName, const char **psAttribs, IElement **ppElement) { return ProcessNode; }
-    
-    // This function is called automatically by the parser
-    // for whichever element is on top of the parse stack
-    // when enclosed text inside a pair of tags is being processed:
-    virtual void                AddText( std::string sText ) {}
-    
-    // This function is called when an element is about to be popped
-    // of the the parse stack
-    virtual void                ExitElement() {}
-
-    inline const std::string   &ElementName() const { return m_sElName; }
-    inline int                  ElementLevel() const { return m_iLevel; }
-
-protected:
-
-    inline                      IElement( const std::string &sElName, int iLevel, bool bDeleteOnPop ) : m_sElName( sElName ), m_iLevel( iLevel ), m_bDeleteOnPop( bDeleteOnPop ) {}
-
-    inline void                 SetLevel( int iLevel ) { m_iLevel = iLevel; }
-    inline bool                 DeleteOnPop() const { return m_bDeleteOnPop; }
-
-    std::string                 m_sElName;          // Inherited classes MUST initialize this
-                                                    // as it is used to determine when to pop
-                                                    // elements from the parser stack!!
-
-    int                         m_iLevel;           // Set by the IParser during XML Parsing
-
-    bool                        m_bDeleteOnPop;     // If true, IParser objects will delete this
-                                                    // object upon removing it from the parse stack
-                                                    // during XML parsing
-};
-
-// Element objects will be stored on a stack by parsers:
-typedef std::deque<IElement *> ElementStack;
-
-class IParser : public IElement
-{
-public:
-    inline          IParser() : m_bParsed( false ), m_iLevel( 0 ) {}
-    inline          IParser( const std::string &wsElName ) : IElement( wsElName ), m_bParsed( false ), m_iLevel( 0 ), m_inNode(false) {}
-  
-#define PARSER_WINDOW_SIZE      0x8000
-
-    // The auto-magic parse function.  This processes relationships and then
-    // parses the main XML file associated with the object:
-    bool Parse(char *pbBuffer, unsigned long dwSize, std::string delim)
-    {
-        // Don't re-parse:
-        if( IsParsed() )
-            return true;
-
-        // Open parse path XML file:
-        m_delim = delim;
-
-        XML_Parser parser = XML_ParserCreate( NULL );
-        if( parser )
-        {
-            // We will pop the first element, ourselves:
-            m_ParseStack.push_back( this );
-
-            // Set handlers:
-            XML_SetElementHandler( parser, IParser::StartHandler, IParser::EndHandler );
-            XML_SetCharacterDataHandler( parser, IParser::TextHandler );
-            XML_SetUserData( parser, (void *)this );
-            
-            // Parse:
-            try 
-            {
-                unsigned long dwCurr, dwRemain;
-                bool bLast;
-                //XML_Parse( parser, "<xml_start>", strlen("<xml_start>"), false);
-
-                for( dwCurr = 0; dwCurr < dwSize; dwCurr += PARSER_WINDOW_SIZE )
-                {
-                    dwRemain = dwSize - dwCurr;
-                    bLast = dwRemain < PARSER_WINDOW_SIZE;
-                    if( XML_STATUS_OK != XML_Parse( parser, (const char *)( pbBuffer + dwCurr ),
-                        bLast ? dwRemain : PARSER_WINDOW_SIZE, bLast ) )
-                        break;
-                    else if( bLast )
-                        m_bParsed = true;
-                }
-            }
-            catch(...)
-            {
-                m_bParsed = false;
-            }
-            XML_ParserFree( parser );
-        }
-
-        // NOTE: No need to pop us, as the close tag handler will pop us automatically.
-        return m_bParsed;
-    }
-
-    inline bool     IsParsed() const { return m_bParsed; }
-
-protected:
-    // Internal implementations:
-    static void XMLCALL StartHandler( void *pData, const char * sName, const char **pwsAttribs )
-    {
-        IElement *pPush = NULL;
-        IParser *pThis = (IParser *)pData;
-        ++pThis->m_iLevel;
-
-        if(pThis->m_delim == sName) {
-            pThis->m_ParseStack.back()->AddRow( );
-        }
-        else  {
-            switch( pThis->m_ParseStack.back()->AddElement( sName, pwsAttribs, &pPush ) )
-            {
-            default:
-            case ProcessNode:
-                break;
-            case PushNode:
-                pPush->SetLevel( pThis->m_iLevel );
-                pThis->m_ParseStack.push_back( pPush );
-                break;
-            case SkipNode:
-                pThis->m_ParseStack.push_back( new IElement( sName, pThis->m_iLevel, true ) );
-                break;
-            }
-        }
-        pThis->m_inNode = true;
-    }
-
-    static void XMLCALL TextHandler( void * pData, const char * sText, int len )
-    {
-        IParser *pThis = (IParser *)pData;
-        if(pThis->m_inNode) {
-            IElement *pElement = pThis->m_ParseStack.back();
-            std::string sString;
-            sString.append( sText, len );
-            pElement->AddText( sString );
-        }
-    }
-
-    static void XMLCALL EndHandler( void * pData, const char * sName )
-    {
-        IParser *pThis = (IParser *)pData;
-        IElement *pElement = pThis->m_ParseStack.back();
-        if( !strcmp( pElement->ElementName().c_str(), sName ) && pThis->m_iLevel == pElement->ElementLevel() ) 
-        {
-            pElement->ExitElement();
-            pThis->m_ParseStack.pop_back();
-            if( pElement->DeleteOnPop() )
-                delete pElement;
-        }
-        --pThis->m_iLevel;
-        pThis->m_inNode = false;
-    }
-
-    std::string     m_delim;
-    bool            m_bParsed;
-    bool            m_inNode;
-    int             m_iLevel;
-    ElementStack    m_ParseStack;
-};
 
 bool readNumber(const char *cstr, double& dbl) {
     dbl = 0;
@@ -242,7 +52,6 @@ bool readNumber(const char *cstr, double& dbl) {
     return true;
 }
 
-#include <math.h>
 static bool IsIntegral(double d) {
   double integral_part;
   return modf(d, &integral_part) == 0.0;
@@ -294,56 +103,7 @@ public:
     }
 };
 
-class __meta_config__ {
-public:
-    __meta_config__(string& in_table);
-
-    class __meta_col__ {
-    public:
-        string rdf_name;
-        string name;
-        string type_def;
-        string description;
-    };
-
-    class __meta_view__ {
-    public:
-        string id;
-        string view_name;
-        string restriction;
-        string description;
-    };
-
-    string table_name;
-    string table_remarks;
-    string rdf_path;
-    vector<__meta_col__> columns;
-    vector<__meta_view__> views;
-};
-
-class __rdf_config__ {
-public:
-    __rdf_config__(string& in_path);
-
-    class __rdf_tag__ {
-    public:
-        string name;
-        string start_tag;
-        string end_tag;
-    };
-
-    string file_glob;
-    string record_start;
-    string record_end;
-    vector<__rdf_tag__> tags;
-};
-
-class __catalog_entry__ {
-public:
-    __catalog_entry__(string in_table);
-    __meta_config__ meta_config;
-    string path;
-};
+vector<__catalog_entry__> __catalog;
 
 typedef struct __column {
     unsigned    _ordinal;
@@ -355,14 +115,19 @@ typedef struct __column {
 } __column;
 typedef vector<__column> __columns;
 
-class GuessColumn : public IParser {
+class GuessColumn : public XMLParser, public JSONParser {
 public:
     GuessColumn( ) : m_count(0) { }
 
     // XML Parse
-    virtual NodeAction AddRow( );
-    virtual NodeAction AddElement( std::string sName, const char **psAttribs, IElement **ppElement );
+    virtual NodeAction StartRow( );
+    virtual NodeAction AddElement( std::string sName, const char **psAttribs, XMLElement **ppElement );
     virtual void AddText( std::string sText );
+
+    // JSON Parse 
+    virtual NodeAction JSONStartRow( );
+    virtual NodeAction JSONAddElement( std::string sName, const char **psAttribs, JSONElement **ppElement );
+    virtual void JSONAddText( std::string sText );
 
     __columns& getCols( ) { return m_cols; }
 
@@ -376,7 +141,11 @@ private:
     vector<string>  m_strings;
 };
 
-IElement::NodeAction GuessColumn::AddRow()
+NodeAction GuessColumn::JSONStartRow()
+{
+    return StartRow();
+}
+NodeAction GuessColumn::StartRow()
 {
     m_count++;
     m_colIdx = -1;
@@ -402,7 +171,11 @@ IElement::NodeAction GuessColumn::AddRow()
     return ProcessNode;
 }
 
-IElement::NodeAction GuessColumn::AddElement(std::string sName, const char **psAttribs, IElement **ppElement)
+NodeAction GuessColumn::JSONAddElement(std::string sName, const char **psAttribs, JSONElement **ppElement)
+{
+    return AddElement(sName, NULL, NULL);
+}
+NodeAction GuessColumn::AddElement(std::string sName, const char **psAttribs, XMLElement **ppElement)
 {
     if(m_count == 1) {
         __column col = {m_colIdx + 1, sName, 0, 0, 0, 0 }; 
@@ -413,101 +186,15 @@ IElement::NodeAction GuessColumn::AddElement(std::string sName, const char **psA
     return ProcessNode;
 }
 
+void GuessColumn::JSONAddText(std::string sText)
+{
+    AddText(sText);
+}
 void GuessColumn::AddText(std::string sText) 
 {
     if(m_strings.size() > m_colIdx)
         m_strings[m_colIdx] += sText;
 }
-
-__meta_config__::__meta_config__(string& in_table)
-{
-    config_t tableMeta;
-    config_setting_t *colList;
-    config_setting_t *column;
-    char path[PATH_MAX];
-    __meta_col__ col;
-    config_setting_t *view;
-    config_setting_t *viewList;
-    __meta_view__ v;
-    const char *result;
-    int idx;
-
-    strcpy(path, _R1Catalog);
-    strcat(path, "/");
-    strcat(path, in_table.c_str());
-    strcat(path, "/");
-    strcat(path, _TableMeta);
-
-    config_init(&tableMeta);
-    if(CONFIG_TRUE == config_read_file(&tableMeta, path)) {
-        if(CONFIG_TRUE == config_lookup_string(&tableMeta, "table_name", &result)) 
-            table_name = in_table;
-        if(CONFIG_TRUE == config_lookup_string(&tableMeta, "table_remarks", &result))
-            table_remarks = result;
-        if(CONFIG_TRUE == config_lookup_string(&tableMeta, "rdf", &result))
-            rdf_path = result;
-
-        colList = config_lookup(&tableMeta, "columns");
-        for(idx=0; colList && (column = config_setting_get_elem(colList, idx)); idx++) {
-            col.rdf_name = column->name;
-            col.name = config_setting_get_string_elem(column, 0);
-            col.type_def = config_setting_get_string_elem(column, 1);
-            col.description = config_setting_get_string_elem(column, 2);
-            columns.push_back(col);
-        }
-
-        viewList = config_lookup(&tableMeta, "views");
-        for(idx=0; viewList && (view = config_setting_get_elem(viewList, idx)); idx++) {
-            v.id = view->name;
-            v.view_name = config_setting_get_string_elem(view, 0);
-            v.restriction = config_setting_get_string_elem(view, 1);
-            v.description = config_setting_get_string_elem(view, 2);
-            views.push_back(v);
-        }
-    }
-    config_destroy(&tableMeta);
-}
-
-__rdf_config__::__rdf_config__(string& in_path)
-{
-    config_t rdfConfig;
-    config_setting_t *tagList;
-    config_setting_t *tag;
-    __rdf_tag__ rdftag;
-    const char *result;
-    int idx;
-
-    config_init(&rdfConfig);
-    if(CONFIG_TRUE == config_read_file(&rdfConfig, in_path.c_str())) {
-        if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "file_glob", &result)) 
-            file_glob = result;
-        if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "record_start", &result))
-            record_start = result;
-        if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "record_end", &result))
-            record_end = result;
-
-        tagList = config_lookup(&rdfConfig, "fields");
-        // timwells - leave in for backward compatibility with older RDFs
-        if(!tagList)
-            tagList = config_lookup(&rdfConfig, "tags");
-        for(idx=0; tagList && (tag = config_setting_get_elem(tagList, idx)); idx++) {
-            rdftag.name = tag->name;
-            rdftag.start_tag = config_setting_get_string_elem(tag, 0);
-            rdftag.end_tag = config_setting_get_string_elem(tag, 1);
-            tags.push_back(rdftag);
-        }
-    }
-    config_destroy(&rdfConfig);
-}
-
-__catalog_entry__::__catalog_entry__(string in_table) : meta_config(in_table) 
-{
-    path = _R1Catalog;
-    path += "/";
-    path += in_table;
-}
-
-vector<__catalog_entry__> __catalog;
 
 __pid_t get_lock_file(string& exepath)
 {
@@ -625,7 +312,7 @@ void stop(string path)
         }
         cout << "done.\n";
     }
-    remove_directory(_R1Results);
+    remove_directory(s_R1Results);
 }
 
 void start(string path)
@@ -654,8 +341,8 @@ void start(string path)
     put_lock_file(getpid(), path);
 
     // make the ODBC directory if its not already there
-    mkdir(_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
-    mkdir(_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    mkdir(s_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
 
     // make directory containing bin current directory
     chdir(epath.c_str());
@@ -670,7 +357,7 @@ void load()
     DIR *d;
     struct dirent *dir;
     __catalog.clear();
-    if(d = opendir(_R1Catalog)) {
+    if(d = opendir(s_R1Catalog)) {
         while((dir = readdir(d)) != NULL) {
             if((dir->d_type == DT_DIR) && (strcmp(dir->d_name, ".") != 0)) {
                 __catalog_entry__ cat_ent(dir->d_name);
@@ -713,26 +400,16 @@ string getColumnType(__column& col)
     return typeString;
 }
 
-void add(string name, string filespec, string delim, int chunk)
+void add(string filespec)
 {
+    string in;
+    string delim;
+    string name;
     char path[PATH_MAX];
-    char config_path[PATH_MAX];
     char rdf_path[PATH_MAX];
     char rdf_glob[PATH_MAX];
-
-    // make the ODBC directory if its not already there
-    mkdir(_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
-    strcpy(path, _R1Catalog);
-    strcat(path, "/");
-    strcat(path, name.c_str());
-    mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-    strcpy(config_path, path);
-    strcat(config_path, "/");
-    strcat(config_path, _TableMeta);
-
-    sprintf(rdf_path, "%s/%s.rdf", path, name.c_str());
-    sprintf(rdf_glob, "*.%s", name.c_str());
+    int chunk = 64;
+    __rdf_config__::DataType data_type = __rdf_config__::dataType_None;
 
     int fd;
     struct stat sb;
@@ -741,79 +418,98 @@ void add(string name, string filespec, string delim, int chunk)
         cerr << "Could not read input file \"" << filespec << "\" (" << errno << ")\n";
         return;
     }
-
     fstat(fd, &sb);
-    char *buffer = (char *)mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    bool hasTop = false;
     GuessColumn guess;
-    guess.Parse(buffer, sb.st_size, delim);
-    munmap(buffer, sb.st_size);
+    if(guess.XMLSniff(fd, sb.st_size, delim)) {
+        cout << "XML record delimiter [<" + delim + ">]: ";
+        getline(std::cin, in);
+        if(!in.empty())
+            delim = in;
+
+        data_type = __rdf_config__::dataType_XML;
+        lseek(fd, 0, SEEK_SET);
+        guess.XMLParse(fd, sb.st_size, delim, false);
+    }
+    else {
+        data_type = __rdf_config__::dataType_JSON;
+        bool hasTop = guess.JSONHasTop(fd, sb.st_size);
+        if(!guess.JSONParse(fd, sb.st_size, !hasTop)) {
+            cerr << "Could not read input file \"" << filespec << "\" (" << errno << ")\n";
+            return;
+        }
+    }
     close(fd);
 
-    __columns cols = guess.getCols();
+    strcpy(path, filespec.c_str());
+    char *pstr = strrchr(path, '.');
+    if(pstr)
+        *pstr = '\0';
+    name = path;
+    cout << "Table name [" + name + "]: ";
+    getline(std::cin, in);
+    if(!in.empty())
+        name = in;
 
-    config_t tableMeta;
-    config_init(&tableMeta);
+    char str[16];
+    sprintf(str, "%d", chunk);
+    cout << "File chunk size [" + string(str) + "]: ";
+    getline(std::cin, in);
+    if(!in.empty())
+        chunk = atoi(in.c_str());
 
-    config_setting_t *root = config_root_setting(&tableMeta);
+    // make the ODBC directory if its not already there
+    mkdir(s_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    strcpy(path, s_R1Catalog);
+    strcat(path, "/");
+    strcat(path, name.c_str());
+    mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-    config_setting_t *table_name = config_setting_add(root, "table_name", CONFIG_TYPE_STRING);
-    config_setting_set_string(table_name, name.c_str());
-    config_setting_t *table_remarks = config_setting_add(root, "table_remarks", CONFIG_TYPE_STRING);
-    config_setting_set_string(table_remarks, "");
-    config_setting_t *table_rdf = config_setting_add(root, "rdf", CONFIG_TYPE_STRING);
-    config_setting_set_string(table_rdf, rdf_path);
+    __meta_config__ metaconfig;
+    metaconfig.table_name = name;
+
+    sprintf(rdf_path, "%s/%s.rdf", path, name.c_str());
+    metaconfig.rdf_path = rdf_path;
 
     __columns::iterator itr;
-    config_setting_t *colListEntry;
-    config_setting_t *colList = config_setting_add(root, "columns", CONFIG_TYPE_GROUP);
+    __meta_config__::__meta_col__ metacol;
+    __columns cols = guess.getCols();
     for(itr = cols.begin(); itr != cols.end(); itr++) {
-        colListEntry = config_setting_add(colList, itr->_colName.c_str(), CONFIG_TYPE_LIST);
-        config_setting_t *colElem = config_setting_add(colListEntry, "", CONFIG_TYPE_STRING);
-        config_setting_set_string(colElem, itr->_colName.c_str());
-        colElem = config_setting_add(colListEntry, "", CONFIG_TYPE_STRING);
-        config_setting_set_string(colElem, getColumnType((*itr)).c_str());
-        colElem = config_setting_add(colListEntry, "", CONFIG_TYPE_STRING);
-        config_setting_set_string(colElem, "");
+        metacol.rdf_name = itr->_colName;
+        metacol.name = itr->_colName;
+        metacol.type_def = getColumnType(*itr);
+        metaconfig.columns.push_back(metacol);
     }
-    config_write_file(&tableMeta, config_path);
-    config_destroy(&tableMeta);
+    metaconfig.write_meta_config(path);
 
     // create an rdf
-    config_t tableRdf;
-    config_init(&tableRdf);
+    __rdf_config__ rdfconfig;
 
-    root = config_root_setting(&tableRdf);
+    sprintf(rdf_path, "%s/%s.rdf", path, name.c_str());
+    sprintf(rdf_glob, "*.%s", name.c_str());
+    rdfconfig.rdf_name = name;
+    rdfconfig.data_type = data_type;
+    rdfconfig.file_glob = rdf_glob;
+    rdfconfig.chunk_size = chunk;
+    rdfconfig.no_top = !hasTop;
+
     char tagEntry[PATH_MAX];
-    config_setting_t *rdf_name = config_setting_add(root, "rdf_name", CONFIG_TYPE_STRING);
-    config_setting_set_string(rdf_name, name.c_str());
-    config_setting_t *chunk_size = config_setting_add(root, "chunk_size_mb", CONFIG_TYPE_INT);
-    config_setting_set_int(chunk_size, chunk);
-    config_setting_t *file_glob = config_setting_add(root, "file_glob", CONFIG_TYPE_STRING);
-    config_setting_set_string(file_glob, rdf_glob);
-    config_setting_t *record_start = config_setting_add(root, "record_start", CONFIG_TYPE_STRING);
     sprintf(tagEntry, "<%s>", delim.c_str());
-    config_setting_set_string(record_start, tagEntry);
-    config_setting_t *record_end = config_setting_add(root, "record_end", CONFIG_TYPE_STRING);
+    rdfconfig.record_start = tagEntry;
     sprintf(tagEntry, "</%s>", delim.c_str());
-    config_setting_set_string(record_end, tagEntry);
-    config_setting_t *data_type = config_setting_add(root, "data_type", CONFIG_TYPE_STRING);
-    config_setting_set_string(data_type, "XML");
+    rdfconfig.record_end = tagEntry;
 
-    config_setting_t *tagListEntry;
-    config_setting_t *tagList = config_setting_add(root, "fields", CONFIG_TYPE_GROUP);
+    __rdf_config__::__rdf_tag__ rdftag;
     for(itr = cols.begin(); itr != cols.end(); itr++) {
-        tagListEntry = config_setting_add(tagList, itr->_colName.c_str(), CONFIG_TYPE_LIST);
-        config_setting_t *tagElem = config_setting_add(tagListEntry, "", CONFIG_TYPE_STRING);
+        rdftag.name = itr->_colName;
         sprintf(tagEntry, "<%s>", itr->_colName.c_str());
-        config_setting_set_string(tagElem, tagEntry);
-        tagElem = config_setting_add(tagListEntry, "", CONFIG_TYPE_STRING);
+        rdftag.start_tag = tagEntry;
         sprintf(tagEntry, "</%s>", itr->_colName.c_str());
-        config_setting_set_string(tagElem, tagEntry);
+        rdftag.end_tag = tagEntry;
+        rdfconfig.tags.push_back(rdftag);
     }
-    config_write_file(&tableRdf, rdf_path);
-    config_destroy(&tableRdf);
+    rdfconfig.write_rdf_config(rdf_path);
 
-    int pid = 0;
     int ret;
     char rhfsctl[PATH_MAX];
     sprintf(rhfsctl, "rhfsctl -a %s", rdf_path);
@@ -839,7 +535,7 @@ void del(string id)
     if(in != "y" && in != "yes") 
         return;
 
-    strcpy(path, _R1Catalog);
+    strcpy(path, s_R1Catalog);
     strcat(path, "/");
     strcat(path, __catalog[idx].meta_config.table_name.c_str());
     remove_directory(path);
@@ -850,11 +546,11 @@ void edit(string id)
     char path[PATH_MAX];
     int idx = atoi(id.c_str()) - 1;
     load();
-    strcpy(path, _R1Catalog);
+    strcpy(path, s_R1Catalog);
     strcat(path, "/");
     strcat(path, __catalog[idx].meta_config.table_name.c_str());
     strcat(path, "/");
-    strcat(path, _TableMeta);
+    strcat(path, s_TableMeta);
     char vi[PATH_MAX];
     sprintf(vi, "vi %s", path);
     system(vi);
@@ -874,9 +570,9 @@ void usage(string name)
 {
     cout << "usage: " << name << " [opts] [args]\n";
     cout << "  opts:\n";
-    cout << "  -a, --add\tAdd file as a new database\t(Syntax: -a db_name xml_file record_delim [chunk_size])\n";
-    cout << "  -d, --del\tDelete installed database\t(Syntax: -d id)\n";
-    cout << "  -e, --edit\tEdit database metadata\t(Syntax: -e id)\n";
+    cout << "  -a, --add\tAdd file as a new database (Syntax: -a source_file)\n";
+    cout << "  -d, --del\tDelete installed database (Syntax: -d id)\n";
+    cout << "  -e, --edit\tEdit database metadata (Syntax: -e id)\n";
     cout << "  -h, --help\tDisplay help\n";
     cout << "  -k, --kill\tKill Ryft ODBC daemon\n";
     cout << "  -l, --list\tList installed databases\n";
@@ -900,18 +596,12 @@ int main(int argc, char *argv[])
     for(int i = 1; i < argc; i++) {
         string arg = argv[i];
         if((arg == "-a") || (arg == "--add")) {
-            string name, filespec, delim;
-            int chunk = 64;
-            if(i + 3 < argc) {
-                name = argv[++i];
-                filespec = argv[++i];
-                delim = argv[++i];
-            }
+            string filespec;
             if(i + 1 < argc) {
-                char *chunk_sz = argv[++i];
-                chunk = atoi(chunk_sz);
+                filespec = argv[++i];
             }
-            add(name, filespec, delim, chunk);
+            else usage(argv[0]);
+            add(filespec);
         }
         else if((arg == "-d") || (arg == "--del")) {
             string id;

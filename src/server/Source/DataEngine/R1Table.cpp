@@ -207,8 +207,8 @@ bool R1Table::WriteData(
     switch (sqlType) {
     case TDW_SQL_VARCHAR:
         strncpy(out_buf, reinterpret_cast<char *>(in_data->GetBuffer()), colSize);
-        out_buf[colSize] = '\0';
-        m_result->putStringValue(in_column, reinterpret_cast<char *>(in_data->GetBuffer()));
+        out_buf[in_data->GetLength()] = '\0';
+        m_result->putStringValue(in_column, out_buf);
         break;
     case TDW_SQL_SINTEGER:
         snprintf(out_buf, colSize+1, "%d", (*reinterpret_cast<simba_int32*> (in_data->GetBuffer())));

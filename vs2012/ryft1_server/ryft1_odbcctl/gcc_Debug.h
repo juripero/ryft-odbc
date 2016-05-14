@@ -256,6 +256,7 @@
 ///usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed
 ///usr/include/x86_64-linux-gnu
 ///usr/include
+//../libmeta
 // --- Include directories end --- //
 
 

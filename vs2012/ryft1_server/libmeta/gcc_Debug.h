@@ -128,6 +128,7 @@
 #define __INT16_MAX__ 32767
 #define __SIZE_TYPE__ long unsigned int
 #define __UINT64_MAX__ 18446744073709551615UL
+#define DEBUG 1
 #define __INT8_TYPE__ signed char
 #define __ELF__ 1
 #define __FLT_RADIX__ 2
@@ -244,7 +245,6 @@
 #define _GNU_SOURCE 1
 #define __ATOMIC_ACQ_REL 4
 #define __ATOMIC_RELEASE 3
-#define DEBUG 
 #endif
 
 // --- Include directories begin --- //

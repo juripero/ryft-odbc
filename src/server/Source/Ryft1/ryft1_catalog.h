@@ -39,7 +39,7 @@ public:
 
     bool getAuthRequired();
     bool logon(string& in_user, string& in_password);
-    void logoff();
+    void logoff() { }
 
     RyftOne_Tables getTables(string in_search, string in_type);
     RyftOne_Columns getColumns(string& in_table);

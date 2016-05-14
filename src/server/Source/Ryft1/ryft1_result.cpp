@@ -2,13 +2,8 @@
 #include <dirent.h>
 #include <stdio.h>
 #include <libconfig.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
-#include <sys/types.h>
 #include <uuid/uuid.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <string.h>
 
 #include "ryft1_result.h"
@@ -16,9 +11,8 @@
 #include "TypeDefines.h"
 #include "NumberConverter.h"
 
-static char s_R1Results[] = "/ryftone/ODBC/.results";
-
 RyftOne_Result::RyftOne_Result( ILogger *log ) : __hamming(0), __edit(0), __caseSensitive(true), __sqlite(0), __stmt(0), __log(log) { ; }
+
 RyftOne_Result::~RyftOne_Result( ) 
 {
     if(__stmt) 
@@ -28,15 +22,17 @@ RyftOne_Result::~RyftOne_Result( )
     if(__sqlite)
         sqlite3_close(__sqlite);
     __sqlite = NULL;
-
 }
 
 void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator in_catentry)
 {
-    __query.clear();
-    __hamming = 0;
     __edit = 0;
+    __hamming = 0;
+    __query.clear();
     __caseSensitive = true;
+
+    // JSON, XML
+    __dataType = in_catentry->rdf_config.data_type;
 
     __loadTable(in_name, in_catentry);
 
@@ -51,7 +47,7 @@ void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator i
     int idx;
     RyftOne_Column col;
     vector<__meta_config__::__meta_col__>::iterator colItr;
-    for(idx  =0, colItr = in_catentry->meta_config.columns.begin(); colItr != in_catentry->meta_config.columns.end(); colItr++, idx++) {
+    for(idx = 0, colItr = in_catentry->meta_config.columns.begin(); colItr != in_catentry->meta_config.columns.end(); colItr++, idx++) {
         col.m_ordinal = idx+1;
         col.m_tableName = in_catentry->meta_config.table_name;
         col.m_colTag = colItr->rdf_name;
@@ -63,7 +59,7 @@ void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator i
     }
 
     resultCol rcol;
-    for(idx = 0; idx < __rdfTags.size(); idx++) {
+    for(idx = 0; idx < __metaTags.size(); idx++) {
         rcol.colNum = idx;
         rcol.storageBytes = __cols[idx].m_bufLength;
         rcol.charCols = __cols[idx].m_charCols;
@@ -115,7 +111,7 @@ void RyftOne_Result::prepareAppend()
     char * errp;
     string coldefs;
     vector<string>::iterator itr;
-    for(idx = 0, itr = __rdfTags.begin(); itr != __rdfTags.end(); itr++, idx++) {
+    for(idx = 0, itr = __metaTags.begin(); itr != __metaTags.end(); itr++, idx++) {
         if(!coldefs.empty())
             coldefs += ",";
 
@@ -141,7 +137,7 @@ void RyftOne_Result::prepareAppend()
     sqlite3_free(sql);
 
     string values;
-    for(idx = 0; idx < __rdfTags.size(); idx++) {
+    for(idx = 0; idx < __metaTags.size(); idx++) {
         if(!values.empty())
             values += ",";
         values += "?";
@@ -247,34 +243,53 @@ void RyftOne_Result::flush()
     time_t now = ::time(NULL);
     tm *lt = localtime(&now);
     char file_path[PATH_MAX];
-    
+    char temp_path[PATH_MAX];
+    IFile *formattedFile = NULL;
+    sprintf(temp_path, "%s/%04d%02d%02d.%s%s", __path.c_str(), 1900 + lt->tm_year, lt->tm_mon + 1, lt->tm_mday, "journal_", __extension.c_str());
     sprintf(file_path, "%s/%04d%02d%02d.%s", __path.c_str(), 1900 + lt->tm_year, lt->tm_mon + 1, lt->tm_mday, __extension.c_str());
-    FILE *f = fopen(file_path, "a");
-    if(f == NULL)
+    if(__dataType == __rdf_config__::dataType_XML) {
+        formattedFile = new XMLFile(temp_path, m_delim);
+    }
+    else if(__dataType == __rdf_config__::dataType_JSON) {
+        formattedFile = new JSONFile(temp_path, __no_top);
+    }
+    if(formattedFile == NULL)
         return;
-    
+    formattedFile->prolog();
+    formattedFile->copyFile(file_path);
     char **prows;
     int nrows, ncols;
     char *errp;
     int sqlret = sqlite3_get_table(__sqlite, "SELECT * FROM \"__APPENDED__\"", &prows, &nrows, &ncols, &errp);
     if(errp)
         sqlite3_free(errp);
-    if(sqlret != SQLITE_OK)
+    if(sqlret != SQLITE_OK) {
+        delete formattedFile;
         return;
-
+    }
     int idx;
     int colIdx;
     for(idx = 1; idx <= nrows; idx++) {
         std::vector<resultCol>::iterator itr;
+        formattedFile->startRecord();
         for(itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++) 
-            (*itr).colResult.text = prows[idx * ncols + (*itr).colNum];
-
-        __writeRow(f);
+            formattedFile->outputField(__metaTags[(*itr).colNum].c_str(), prows[idx * ncols + (*itr).colNum]);
+        formattedFile->endRecord();
     }
-    fclose(f);
+    formattedFile->epilog();
+    delete formattedFile;
+    char cpcmd[PATH_MAX];
+    sprintf(cpcmd, "cp %s %s", temp_path, file_path);
+    system(cpcmd);
+    unlink(temp_path);
 }
 
-IElement::NodeAction RyftOne_Result::StartRow()
+NodeAction RyftOne_Result::JSONStartRow()
+{
+    return StartRow();
+}
+
+NodeAction RyftOne_Result::StartRow()
 {
     __cursor.__colIdx = -1;
     resultCols::iterator itr;
@@ -284,10 +299,47 @@ IElement::NodeAction RyftOne_Result::StartRow()
     return ProcessNode;
 }
 
-IElement::NodeAction RyftOne_Result::AddElement(std::string sName, const char **psAttribs, IElement **ppElement)
+NodeAction RyftOne_Result::JSONStartArray( std::string sName )
+{
+    __qualifiedCol.push_back(sName + ".[]");
+    return ProcessNode;
+}
+
+NodeAction RyftOne_Result::JSONStartGroup( std::string sName )
+{
+    __qualifiedCol.push_back(sName);
+    return ProcessNode;
+}
+
+NodeAction RyftOne_Result::JSONAddElement( std::string sName, const char **psAttribs, JSONElement **ppElement )
+{
+    string qualifiedName;
+    deque<string>::iterator itr;
+    for(itr = __qualifiedCol.begin(); itr != __qualifiedCol.end(); itr++) {
+        if(!qualifiedName.empty())
+            qualifiedName += ".";
+        qualifiedName += (*itr);
+    }
+    if(!qualifiedName.empty())
+        qualifiedName += ".";
+    qualifiedName += sName;
+    __cursor.__colIdx = __getColumnNum(qualifiedName);
+    return ProcessNode;
+}
+
+NodeAction RyftOne_Result::AddElement(std::string sName, const char **psAttribs, XMLElement **ppElement)
 {
     __cursor.__colIdx = __getColumnNum(sName);
     return ProcessNode;
+}
+
+void RyftOne_Result::JSONAddText( std::string sText )
+{
+    if(__cursor.__colIdx != -1) {
+        if(strlen(__cursor.__row[__cursor.__colIdx].colResult.text) && !__qualifiedCol.empty())
+            AddText(__delimiter);
+        AddText(sText);
+    }
 }
 
 void RyftOne_Result::AddText(std::string sText) 
@@ -296,6 +348,21 @@ void RyftOne_Result::AddText(std::string sText)
         strncat(__cursor.__row[__cursor.__colIdx].colResult.text, sText.c_str(), 
             __cursor.__row[__cursor.__colIdx].charCols - strlen(__cursor.__row[__cursor.__colIdx].colResult.text));
     }
+}
+
+void RyftOne_Result::JSONExitArray()
+{
+    __qualifiedCol.pop_back();
+}
+
+void RyftOne_Result::JSONExitGroup()
+{
+    __qualifiedCol.pop_back();
+}
+
+void RyftOne_Result::JSONExitRow()
+{
+    ExitRow();
 }
 
 void RyftOne_Result::ExitRow()
@@ -326,18 +393,16 @@ void RyftOne_Result::ExitRow()
 void RyftOne_Result::__loadTable(string& in_name, vector<__catalog_entry__>::iterator in_itr)
 {
     __name = in_name;
-
-    __rdf_config__ rdf_config(in_itr->meta_config.rdf_path);
-    string path = in_itr->path;
     __path = in_itr->path;
 
+    string path = in_itr->path;
     path += "/";
-    path += rdf_config.file_glob;
-    const char *perr;
+    path += in_itr->rdf_config.file_glob;
 
-    size_t idx1 = rdf_config.file_glob.find(".");
+    const char *perr;
+    size_t idx1 = in_itr->rdf_config.file_glob.find(".");
     if(idx1 != string::npos) 
-        __extension = rdf_config.file_glob.substr(idx1+1);
+        __extension = in_itr->rdf_config.file_glob.substr(idx1+1);
 
     glob_t glob_results;
     glob(path.c_str(), GLOB_TILDE, NULL, &glob_results);
@@ -353,25 +418,33 @@ void RyftOne_Result::__loadTable(string& in_name, vector<__catalog_entry__>::ite
     }
     globfree(&glob_results);
 
-    idx1 = rdf_config.record_start.find("<");
-    size_t idx2 = rdf_config.record_start.find(">");
+    idx1 = in_itr->rdf_config.record_start.find("<");
+    size_t idx2 = in_itr->rdf_config.record_start.find(">");
     if(idx1 == string::npos || idx2 == string::npos) {
-        m_delim = rdf_config.record_start;
+        m_delim = in_itr->rdf_config.record_start;
     }
     else
-        m_delim = rdf_config.record_start.substr(idx1+1, idx2-idx1-1);
+        m_delim = in_itr->rdf_config.record_start.substr(idx1+1, idx2-idx1-1);
+
+    __no_top = in_itr->rdf_config.no_top;
 
     vector<__meta_config__::__meta_col__>::iterator colItr;
     for(colItr = in_itr->meta_config.columns.begin(); colItr != in_itr->meta_config.columns.end(); colItr++) {
-        vector<__rdf_config__::__rdf_tag__>::iterator rdfItr;
-        for(rdfItr = rdf_config.tags.begin(); rdfItr != rdf_config.tags.end(); rdfItr++) {
-            if(rdfItr->name == colItr->rdf_name) {
-                idx1 = rdfItr->start_tag.find("<");
-                idx2 = rdfItr->start_tag.find(">");
-                __rdfTags.push_back(rdfItr->start_tag.substr(idx1+1, idx2-idx1-1));
+        if(__dataType == __rdf_config__::dataType_XML) {
+            vector<__rdf_config__::__rdf_tag__>::iterator rdfItr;
+            for(rdfItr = in_itr->rdf_config.tags.begin(); rdfItr != in_itr->rdf_config.tags.end(); rdfItr++) {
+                if(rdfItr->name == colItr->rdf_name) {
+                    idx1 = rdfItr->start_tag.find("<");
+                    idx2 = rdfItr->start_tag.find(">");
+                    __metaTags.push_back(rdfItr->start_tag.substr(idx1+1, idx2-idx1-1));
+                }
             }
         }
+        else
+            __metaTags.push_back(colItr->rdf_name);
     }
+
+    __delimiter = in_itr->meta_config.delimiter;
 }
 
 bool RyftOne_Result::__execute()
@@ -404,7 +477,7 @@ bool RyftOne_Result::__execute()
         if(__query.empty()) {
             vector<string>::iterator globItr;
             for(globItr = __glob.begin(); globItr != __glob.end(); globItr++) {
-                ret = __storeToSqlite(tableName, (*globItr).c_str(), false);
+                ret = __storeToSqlite(tableName, (*globItr).c_str(), __no_top);
                 if(!ret) {
                     __dropTable(query);
                     return false;
@@ -452,21 +525,11 @@ int RyftOne_Result::__getColumnNum(string colTag)
 {
     int idx;
     vector<string>::iterator itr;
-    for(idx = 0, itr = __rdfTags.begin(); itr != __rdfTags.end(); itr++, idx++) {
+    for(idx = 0, itr = __metaTags.begin(); itr != __metaTags.end(); itr++, idx++) {
         if((*itr) == colTag) 
             return idx;
     }
     return -1;
-}
-
-bool RyftOne_Result::__writeRow(FILE *f)
-{
-    std::vector<resultCol>::iterator itr;
-    fprintf(f, "<%s>", m_delim.c_str());
-    for(itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++) {
-        fprintf(f, "<%s>%s</%s>", __rdfTags[(*itr).colNum].c_str(), (char *)(*itr).colResult.text, __rdfTags[(*itr).colNum].c_str());
-    }
-    fprintf(f, "</%s>\n", m_delim.c_str());
 }
 
 bool RyftOne_Result::__initTable(string& query, string& tableName)
@@ -484,7 +547,7 @@ bool RyftOne_Result::__initTable(string& query, string& tableName)
     int idx;
     string coldefs;
     vector<string>::iterator itr;
-    for(idx = 0, itr = __rdfTags.begin(); itr != __rdfTags.end(); itr++, idx++) {
+    for(idx = 0, itr = __metaTags.begin(); itr != __metaTags.end(); itr++, idx++) {
         if(!coldefs.empty())
             coldefs += ",";
 
@@ -607,7 +670,7 @@ bool RyftOne_Result::__storeToSqlite(string& tableName, const char *file, bool n
     fstat(fd, &sb);
 
     string values;
-    for(idx = 0; idx < __rdfTags.size(); idx++) {
+    for(idx = 0; idx < __metaTags.size(); idx++) {
         if(!values.empty())
             values += ",";
         values += "?";
@@ -629,7 +692,12 @@ bool RyftOne_Result::__storeToSqlite(string& tableName, const char *file, bool n
         sqlite3_free(errp);
     __transMax = 0;
 
-    Parse(fd, sb.st_size, m_delim, no_top);
+    if(__dataType == __rdf_config__::dataType_XML) {
+        XMLParse(fd, sb.st_size, m_delim, no_top);
+    }
+    else if(__dataType == __rdf_config__::dataType_JSON) {
+        JSONParse(fd, sb.st_size, no_top);   
+    }
     
     sqlret = sqlite3_exec(__sqlite, "COMMIT", NULL, NULL, &errp);
     if(errp)
@@ -720,7 +788,6 @@ bool RyftOne_Result::__loadFromSqlite(string& query)
             query.c_str(), tableName.c_str());
         return true;
     }
-
     return false;
 }
 
@@ -813,3 +880,4 @@ void RyftOne_Result::__datetime(const char *datetimeStr, int colIdx, struct tm *
         break;
     }
 }
+
