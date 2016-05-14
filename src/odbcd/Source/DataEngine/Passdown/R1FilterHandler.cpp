@@ -396,6 +396,7 @@ void R1FilterHandler::ConstructComparisonFilter(
                 for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
                     num_hamming += *pfilter;
                 swscanf(num_hamming.c_str(), L"%d", &hamming);
+                edit = 0;
 
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
@@ -424,6 +425,7 @@ void R1FilterHandler::ConstructComparisonFilter(
                 for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
                     num_edit += *pfilter;
                 swscanf(num_edit.c_str(), L"%d", &edit);
+                hamming = 0;
 
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
@@ -516,6 +518,7 @@ void R1FilterHandler::ConstructLikeFilter(
                 for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
                     num_hamming += *pfilter;
                 swscanf(num_hamming.c_str(), L"%d", &hamming);
+                edit = 0;
 
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
@@ -544,6 +547,7 @@ void R1FilterHandler::ConstructLikeFilter(
                 for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
                     num_edit += *pfilter;
                 swscanf(num_edit.c_str(), L"%d", &edit);
+                hamming = 0;
 
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");

@@ -24,7 +24,7 @@ error:
 endif
 
 SOURCEFILES := ryft1_odbcctl.cpp
-EXTERNAL_LIBS := 
+EXTERNAL_LIBS := ../libmeta/$(BINARYDIR)/libmeta.a
 EXTERNAL_LIBS_COPIED := $(foreach lib, $(EXTERNAL_LIBS),$(BINARYDIR)/$(notdir $(lib)))
 
 CFLAGS += $(COMMONFLAGS)
@@ -163,3 +163,6 @@ $(BINARYDIR)/%.o : %.cxx $(all_make_files) |$(BINARYDIR)
 	$(CC) $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(@:.o=.dep)
 
 #VisualGDB: GeneratedRules				#<--- All lines below are auto-generated
+$(BINARYDIR)/libmeta.a : ../libmeta/$(BINARYDIR)/libmeta.a
+	$(CP) ../libmeta/$(BINARYDIR)/libmeta.a $(BINARYDIR)/libmeta.a
+

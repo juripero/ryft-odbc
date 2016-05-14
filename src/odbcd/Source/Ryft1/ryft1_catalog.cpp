@@ -11,9 +11,6 @@ using namespace RyftOne;
 
 #include "ryft1_catalog.h"
 
-static char s_R1Catalog[] = "/ryftone/ODBC";
-static char s_TableMeta[] = ".meta.table";
-
 RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __log(log)
 {
     GKeyFile *keyfile = g_key_file_new( );
@@ -57,9 +54,9 @@ bool RyftOne_Database::logon(string& in_user, string& in_password)
         if(pw->sp_pwdp == '\0')
             return true;
         char *epasswd = crypt(in_password.c_str(), pw->sp_pwdp);
-        if(!strcmp(epasswd, pw->sp_pwdp))
+        if(!strcmp(epasswd, pw->sp_pwdp)) {
             return true;
-    
+        }
         return false;
         }
     case AUTH_LDAP: {
@@ -101,11 +98,6 @@ bool RyftOne_Database::logon(string& in_user, string& in_password)
         return (result == LDAP_SUCCESS);
         }
     }
-}
-
-void RyftOne_Database::logoff()
-{
-    ;
 }
 
 bool RyftOne_Database::__matches(string& in_search, string& in_name)
@@ -240,6 +232,7 @@ bool RyftOne_Database::tableExists(string& in_table)
     return false;
 }
 
+// new tables will use an XML datatype
 void RyftOne_Database::createTable(string& in_table, RyftOne_Columns& in_columns)
 {
     char path[PATH_MAX];
