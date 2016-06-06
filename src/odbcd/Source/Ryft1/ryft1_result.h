@@ -127,6 +127,7 @@ public:
 
     bool fetchFirst();
     bool fetchNext();
+    void closeCursor();
 
     const char * getStringValue(int colIdx);
     int getIntValue(int colIdx);

@@ -260,6 +260,7 @@ void R1Table::DoCloseCursor()
         m_hasInsertedRecords = false;
         m_result->flush();
     }
+    m_result->closeCursor();
     m_hasStartedFetch = false;
 }
 

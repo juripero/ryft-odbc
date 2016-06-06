@@ -192,6 +192,13 @@ bool RyftOne_Result::fetchNext()
     return(sqlret == SQLITE_ROW);
 }
 
+void RyftOne_Result::closeCursor()
+{
+    if(__stmt) 
+        sqlite3_finalize(__stmt);
+    __stmt = NULL;
+}
+
 const char *RyftOne_Result::getStringValue(int colIdx)
 {
     return (const char *)sqlite3_column_text(__stmt, colIdx);
