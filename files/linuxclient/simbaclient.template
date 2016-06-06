@@ -4,7 +4,7 @@
 [Driver]
 DriverManagerEncoding=UTF-16
 DriverLocale=en-US
-ErrorMessagesPath=/usr/local/ryft/errormessages
+ErrorMessagesPath=_INSTALLDIR_/errormessages
 LogLevel=0
 LogNamespace=
 LogPath=

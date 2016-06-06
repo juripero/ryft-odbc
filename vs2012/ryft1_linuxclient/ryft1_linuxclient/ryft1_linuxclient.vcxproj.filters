@@ -28,12 +28,6 @@
     <None Include="..\..\..\files\linuxclient\README">
       <Filter>Files</Filter>
     </None>
-    <None Include="..\..\..\files\linuxclient\odbcinst.ini">
-      <Filter>Files</Filter>
-    </None>
-    <None Include="..\..\..\files\linuxclient\odbc.ini">
-      <Filter>Files</Filter>
-    </None>
     <None Include="..\..\..\files\linuxclient\Makefile" />
     <None Include="..\..\..\files\linuxclient\debug.mak">
       <Filter>Make files</Filter>
@@ -41,13 +35,19 @@
     <None Include="..\..\..\files\linuxclient\release.mak">
       <Filter>Make files</Filter>
     </None>
-    <None Include="..\..\..\files\linuxclient\simbaclient.ini">
-      <Filter>Files</Filter>
-    </None>
     <None Include="..\..\..\files\linuxclient\install.sh">
       <Filter>Files</Filter>
     </None>
-    <None Include="..\..\..\files\linuxclient\r.ld.so.conf">
+    <None Include="..\..\..\files\linuxclient\odbc.template">
+      <Filter>Files</Filter>
+    </None>
+    <None Include="..\..\..\files\linuxclient\odbcinst.template">
+      <Filter>Files</Filter>
+    </None>
+    <None Include="..\..\..\files\linuxclient\simbaclient.template">
+      <Filter>Files</Filter>
+    </None>
+    <None Include="..\..\..\files\linuxclient\r.ld.so.conf.template">
       <Filter>Files</Filter>
     </None>
   </ItemGroup>

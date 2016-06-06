@@ -62,12 +62,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\..\..\files\linuxclient\install.sh" />
-    <None Include="..\..\..\files\linuxclient\r.ld.so.conf" />
-    <None Include="..\..\..\files\linuxclient\simbaclient.ini" />
+    <None Include="..\..\..\files\linuxclient\r.ld.so.conf.template" />
+    <None Include="..\..\..\files\linuxclient\simbaclient.template" />
     <None Include="..\..\..\files\linuxclient\debug.mak" />
     <None Include="..\..\..\files\linuxclient\Makefile" />
-    <None Include="..\..\..\files\linuxclient\odbc.ini" />
-    <None Include="..\..\..\files\linuxclient\odbcinst.ini" />
+    <None Include="..\..\..\files\linuxclient\odbc.template" />
+    <None Include="..\..\..\files\linuxclient\odbcinst.template" />
     <None Include="..\..\..\files\linuxclient\README" />
     <None Include="..\..\..\files\linuxclient\release.mak" />
     <None Include="..\..\..\files\linuxclient\VERSION" />
