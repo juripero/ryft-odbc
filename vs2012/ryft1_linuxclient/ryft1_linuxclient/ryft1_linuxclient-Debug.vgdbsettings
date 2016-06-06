@@ -7,14 +7,14 @@
       <PathStyle>RemoteUnix</PathStyle>
     </CustomSourceDirectories>
     <BuildHost>
-      <HostName>192.168.56.101</HostName>
+      <HostName>172.16.13.3</HostName>
       <Transport>SSH</Transport>
       <UserName>ryftuser</UserName>
     </BuildHost>
     <MainSourceTransferCommand>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>192.168.56.101</HostName>
+        <HostName>172.16.13.3</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
@@ -28,7 +28,7 @@
         <string>*.cxx</string>
         <string>*.mak</string>
         <string>Makefile</string>
-        <string>*.ini</string>
+        <string>*.template</string>
         <string>*.xml</string>
         <string>README</string>
         <string>VERSION</string>

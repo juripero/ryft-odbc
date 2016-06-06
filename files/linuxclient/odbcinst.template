@@ -3,7 +3,7 @@
 APILevel=1
 ConnectFunctions=YYY
 Description=Ryft ODBC Client Driver
-Driver=/usr/local/ryft/bin/x8664/libSimbaClient.so
+Driver=_INSTALLDIR_/bin/x8664/libSimbaClient.so
 DriverODBCVer=03.80
 SQLLevel=1
 
