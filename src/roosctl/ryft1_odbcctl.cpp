@@ -346,7 +346,7 @@ void start(string path)
 
     // make directory containing bin current directory
     chdir(epath.c_str());
-    putenv("LD_LIBRARY_PATH=../lib/x8664");
+    putenv("LD_LIBRARY_PATH=../../lib/x8664");
     if(execl(path.c_str(), _exenam, (char *)NULL)) {
         cerr << "error starting ryft1_odbcd daemon \"" << path << "\" (" << errno << ")\n";
     }

@@ -26,3 +26,6 @@ chmod 6755 /usr/local/ryft/bin/x8664/ryft1_odbcd
 # update shared library cache
 cp r.ld.so.conf /etc/ld.so.conf.d
 ldconfig
+
+# upstart file
+cp ryftodbcd.conf /etc/init
