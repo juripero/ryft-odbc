@@ -35,5 +35,5 @@ NOTE: This installation assumes that OpenSSL components are already installed
 in your Linux distribution. If the OpenSSL libraries are not installed in your 
 distribution, run 'sudo apt-get install libssl1.0.0'. 
 
-Refer to the "Ryft Connector for ODBC Installation and User Guide" for more 
+Refer to the "Ryft Connectors: Installation and User Guide" for more 
 information on installing and configuring your RyftOne ODBC driver.
