@@ -68,7 +68,7 @@
     <None Include="..\..\..\files\server\r.ld.so.conf" />
     <None Include="..\..\..\files\server\README" />
     <None Include="..\..\..\files\server\release.mak" />
-    <None Include="..\..\..\files\server\ryftodbcd.conf" />
+    <None Include="..\..\..\files\server\ryftodbcd.template" />
     <None Include="..\..\..\files\server\VERSION" />
   </ItemGroup>
   <ItemGroup>

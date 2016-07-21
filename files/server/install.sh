@@ -28,4 +28,6 @@ cp r.ld.so.conf /etc/ld.so.conf.d
 ldconfig
 
 # upstart file
+sed 's/\r//g' ryftodbcd.template > ryftodbcd.conf
 cp ryftodbcd.conf /etc/init
+chmod 644 /etc/init/ryftodbcd.conf

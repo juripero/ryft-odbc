@@ -418,9 +418,11 @@ void RyftOne_Result::__loadTable(string& in_name, vector<__catalog_entry__>::ite
     for(int i = 0; i < glob_results.gl_pathc; i++) {
         __glob.push_back(glob_results.gl_pathv[i]);
         relpaths[i] = glob_results.gl_pathv[i] + strlen("/ryftone/");
+        INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadTable", "relpaths[i] = %s", relpaths[i]);
         rol_ds_add_file(__loaded, relpaths[i]);
         if(rol_ds_has_error_occurred(__loaded)) {
             perr = rol_ds_get_error_string(__loaded);
+            ERROR_LOG(__log, "RyftOne", "RyftOne_Result", "__loadTable", "rol_ds_get_error_string returned = %s", perr);
         }
     }
     globfree(&glob_results);
@@ -454,6 +456,19 @@ void RyftOne_Result::__loadTable(string& in_name, vector<__catalog_entry__>::ite
     __delimiter = in_itr->meta_config.delimiter;
 }
 
+ILogger *__slog;
+
+#include <signal.h>
+#include <unistd.h>
+#include <sys/types.h>
+void sig_handler(int signum)
+{
+    if(__slog)
+        INFO_LOG(__slog, "RyftOne", "RyftOne_Result", "__execute", "Caught signal = %d", signum);
+    signal(signum, SIG_DFL);
+    kill(getpid(), signum);
+}
+
 bool RyftOne_Result::__execute()
 {
     const char *perr;
@@ -461,6 +476,10 @@ bool RyftOne_Result::__execute()
     string query(__query);
     bool ret = false;
     string tableName;
+
+    signal(SIGSEGV, sig_handler);
+    setuid(1000);
+    setgid(1000);
 
     if(query.empty()) {
         query = "( RECORD CONTAINS ? )";
@@ -498,6 +517,9 @@ bool RyftOne_Result::__execute()
             string results_path(results);
             size_t idx = results_path.find("/", 1);
             rol_data_set_t result;
+            __slog = __log;
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "results_path = %s", results_path.substr(idx+1, string::npos).c_str());
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "uid = %d, gid = %d", getuid(), getgid());
             if(__edit) {
                 INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Issuing rol_ds_search_fuzzy_edit_distance");
                 result = rol_ds_search_fuzzy_edit_distance(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
@@ -508,6 +530,7 @@ bool RyftOne_Result::__execute()
                 result = rol_ds_search_fuzzy_hamming(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
                     __query.c_str(), 0, __hamming, "\r\n", NULL, __caseSensitive, NULL);
             }
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "result = %d, gid = %d", result);
             if( rol_ds_has_error_occurred(result)) {
                 perr = rol_ds_get_error_string(result);
                 INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "rol_ds_has_error_occurred perr = %s", perr);
