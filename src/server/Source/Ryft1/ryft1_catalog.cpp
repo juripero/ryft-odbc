@@ -19,17 +19,41 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
     gchar *authType = NULL;
 
     if(g_key_file_load_from_file(keyfile, SERVER_LINUX_BRANDING, flags, &error)) {
+        // auth
         authType = g_key_file_get_string(keyfile, "Auth", "Type", &error);
         if(authType && !strcmp(authType, "ldap")) {
+            gchar *ldapString;
             __authType = AUTH_LDAP;
-            __ldapServer = g_key_file_get_string(keyfile, "Auth", "LDAPServer", &error);
-            __ldapUser = g_key_file_get_string(keyfile, "Auth", "LDAPUser", &error);
-            __ldapPassword = g_key_file_get_string(keyfile, "Auth", "LDAPPassword", &error);
-            __ldapBaseDN = g_key_file_get_string(keyfile, "Auth", "LDAPBaseDN", &error);
-            free(authType);
+            __ldapServer = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPServer", &error);
+            if(ldapString)
+                free(ldapString);
+            __ldapUser = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPUser", &error);
+            if(ldapString)
+                free(ldapString);
+            __ldapPassword = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPPassword", &error);
+            if(ldapString)
+                free(ldapString);
+            __ldapBaseDN = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPBaseDN", &error);
+            if(ldapString) 
+                free(ldapString);
         }
         else if(authType && !strcmp(authType, "system")) 
             __authType = AUTH_SYSTEM;
+
+        if(authType)
+            free(authType);
+
+        // REST 
+        gchar *restString;
+        __restServer = restString = g_key_file_get_string(keyfile, "REST", "RESTServer", &error);
+        if(restString)
+            free(restString);
+        __restUser = restString = g_key_file_get_string(keyfile, "REST", "RESTUser", &error);
+        if(restString)
+            free(restString);
+        __restPass = restString = g_key_file_get_string(keyfile, "REST", "RESTPass", &error);
+        if(restString)
+            free(restString);
     }
     g_key_file_free(keyfile);
 
@@ -41,21 +65,71 @@ bool RyftOne_Database::getAuthRequired()
     return (__authType != AUTH_NONE);
 }
 
+#include <json/json.h>
+#include <curl/curl.h>
+size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+    string *json_token = (string *)userdata;
+    (*json_token).append(ptr, size * nmemb);
+    return size * nmemb;
+}
+
+bool RyftOne_Database::__logonToREST()
+{
+    // login to the REST server
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    CURL *curl = curl_easy_init();
+
+    string url = __restServer + "/login";
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+    string post = "{\"username\":\"" + __restUser + "\",\"password\":\"" + __restPass + "\"}";
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post.c_str());
+
+    __restToken.clear();
+    __restExpire.clear();
+
+    // WORKWORK VERIFY WITH GOOD CERT
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+    string json_token;
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, token_write_callback); 
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &json_token);
+    CURLcode code = curl_easy_perform(curl);
+
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+    if(code != CURLE_OK)
+        return false;
+
+    struct json_object *login_token = json_tokener_parse(json_token.c_str());
+    if(login_token) {
+        struct json_object *token = json_object_object_get(login_token, "token");
+        if(token)
+            __restToken = json_object_get_string(token);
+        struct json_object *expire = json_object_object_get(login_token, "expire");
+        if(expire)
+            __restExpire = json_object_get_string(expire);
+    }
+    return !__restToken.empty();
+}
+
 bool RyftOne_Database::logon(string& in_user, string& in_password)
 {
     switch(__authType) {
     default:
     case AUTH_NONE:
-        return true;
+        break;
     case AUTH_SYSTEM: {
         spwd *pw = getspnam(in_user.c_str());
         if(pw == NULL)
             return false;
         if(pw->sp_pwdp == '\0')
-            return true;
+            break;
         char *epasswd = crypt(in_password.c_str(), pw->sp_pwdp);
         if(!strcmp(epasswd, pw->sp_pwdp)) {
-            return true;
+            break;
         }
         return false;
         }
@@ -95,9 +169,13 @@ bool RyftOne_Database::logon(string& in_user, string& in_password)
         }
         ldap_msgfree(msg);
         ldap_unbind(ld);
-        return (result == LDAP_SUCCESS);
+        if(result != LDAP_SUCCESS)
+            return false;
         }
+        break;
     }
+
+    return __logonToREST();
 }
 
 bool RyftOne_Database::__matches(string& in_search, string& in_name)
@@ -219,8 +297,10 @@ RyftOne_Result *RyftOne_Database::openTable(string& in_table)
     RyftOne_Result *result = new RyftOne_Result(__log);
 
     vector<__catalog_entry__>::iterator itr = __findTable(in_table);
-    if(itr != __catalog.end())
-        result->open(in_table, itr);
+    if(itr != __catalog.end()) {
+        __logonToREST();
+        result->open(in_table, itr, __restServer, __restToken);
+    }
     return result;
 }
 

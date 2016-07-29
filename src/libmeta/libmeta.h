@@ -451,6 +451,28 @@ public:
         munmap(buffer, dwSize);
         return hasTop;
     }
+
+    bool JSONParseFromREST(int fd, unsigned long dwSize) 
+    {
+        unsigned long lRead = 0;
+        char *buffer = (char *)mmap(NULL, dwSize, PROT_READ, MAP_PRIVATE, fd, 0);
+        if(!buffer) {
+            return false;
+        }
+        json_object *jobj;
+        json_tokener *jtok = json_tokener_new();
+
+        jobj = json_tokener_parse_ex(jtok, buffer + lRead, dwSize - lRead);
+        if(jobj) {
+            lRead += jtok->char_offset;
+            jobj = json_object_object_get(jobj, "results");
+            json_parse_array(jobj, NULL, 0);
+        }
+        json_tokener_free(jtok);
+        munmap(buffer, dwSize);
+        return true;
+    }
+
 private:
     void json_value(char *key, json_object *jvalue)
     {
