@@ -24,12 +24,15 @@ RyftOne_Result::~RyftOne_Result( )
     __sqlite = NULL;
 }
 
-void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator in_catentry)
+void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator in_catentry, string in_server, string in_token)
 {
     __edit = 0;
     __hamming = 0;
     __query.clear();
     __caseSensitive = true;
+
+    __restServer = in_server;
+    __restToken = in_token;
 
     // JSON, XML
     __dataType = in_catentry->rdf_config.data_type;
@@ -413,17 +416,9 @@ void RyftOne_Result::__loadTable(string& in_name, vector<__catalog_entry__>::ite
 
     glob_t glob_results;
     glob(path.c_str(), GLOB_TILDE, NULL, &glob_results);
-    __loaded = rol_ds_create();
     char **relpaths = new char *[glob_results.gl_pathc];
     for(int i = 0; i < glob_results.gl_pathc; i++) {
         __glob.push_back(glob_results.gl_pathv[i]);
-        relpaths[i] = glob_results.gl_pathv[i] + strlen("/ryftone/");
-        INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadTable", "relpaths[i] = %s", relpaths[i]);
-        rol_ds_add_file(__loaded, relpaths[i]);
-        if(rol_ds_has_error_occurred(__loaded)) {
-            perr = rol_ds_get_error_string(__loaded);
-            ERROR_LOG(__log, "RyftOne", "RyftOne_Result", "__loadTable", "rol_ds_get_error_string returned = %s", perr);
-        }
     }
     globfree(&glob_results);
 
@@ -469,6 +464,32 @@ void sig_handler(int signum)
     kill(getpid(), signum);
 }
 
+#include <curl/curl.h>
+#include <cctype>
+#include <iomanip>
+#include <sstream>
+
+string urlEncode(const string &value) {
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    const char *pstr = value.c_str();
+    for ( ; *pstr; ++pstr) {
+        string::value_type c = *pstr;
+
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == '(' || c == ')') {
+            escaped << c;
+            continue;
+        }
+
+        // Any other characters are percent-encoded
+        escaped << '%' << setw(2) << int((unsigned char) c);
+    }
+    return escaped.str();
+}
+
 bool RyftOne_Result::__execute()
 {
     const char *perr;
@@ -476,10 +497,6 @@ bool RyftOne_Result::__execute()
     string query(__query);
     bool ret = false;
     string tableName;
-
-    signal(SIGSEGV, sig_handler);
-    setuid(1000);
-    setgid(1000);
 
     if(query.empty()) {
         query = "( RECORD CONTAINS ? )";
@@ -494,6 +511,7 @@ bool RyftOne_Result::__execute()
     INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Executing query = %s", query.c_str());
 
     if(!(ret = __loadFromSqlite(query))) {
+        vector<string>::iterator globItr;
 
         if (!__initTable(query, tableName)) {
             __dropTable(query);
@@ -501,9 +519,8 @@ bool RyftOne_Result::__execute()
         }
 
         if(__query.empty()) {
-            vector<string>::iterator globItr;
             for(globItr = __glob.begin(); globItr != __glob.end(); globItr++) {
-                ret = __storeToSqlite(tableName, (*globItr).c_str(), __no_top);
+                ret = __storeToSqlite(tableName, (*globItr).c_str(), __no_top, false);
                 if(!ret) {
                     __dropTable(query);
                     return false;
@@ -512,34 +529,63 @@ bool RyftOne_Result::__execute()
             return __loadFromSqlite(query);
         }
         else {
-            mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
-            sprintf(results, "%s/results.%08x", s_R1Results, pthread_self());
-            string results_path(results);
-            size_t idx = results_path.find("/", 1);
-            rol_data_set_t result;
-            __slog = __log;
-            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "results_path = %s", results_path.substr(idx+1, string::npos).c_str());
-            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "uid = %d, gid = %d", getuid(), getgid());
+
+            curl_global_init(CURL_GLOBAL_DEFAULT);
+            CURL *curl = curl_easy_init();
+
+            struct curl_slist *header = NULL;
+            string auth = "Authorization: Bearer " + __restToken;
+            header = curl_slist_append(header, auth.c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+
+            // http://172.16.13.3:8765/search?query=(RECORD.Name%20CONTAINS%20%22Michelle%22)&files=%2FPassengers%2F*.pxml&mode=fhs&surrounding=0&fuzziness=2&format=xml&cs=false&local=true
+            string url = __restServer + "/search?query=" + urlEncode(__query);
+            
+            //for(globItr = __glob.begin(); globItr != __glob.end(); globItr++) {
+            //    url += "&files=" + urlEncode(*globItr);
+            //}
+            url += "&files=" + urlEncode("/") + __name + urlEncode("/") + "*." + __extension; 
+
+            char decimal[10];
             if(__edit) {
-                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Issuing rol_ds_search_fuzzy_edit_distance");
-                result = rol_ds_search_fuzzy_edit_distance(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
-                    __query.c_str(), 0, __edit, "\r\n", NULL, __caseSensitive, true, NULL);
+                url += "&mode=feds";
+                sprintf(decimal, "%d", __edit);
             }
             else {
-                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Issuing rol_ds_search_fuzzy_hamming");
-                result = rol_ds_search_fuzzy_hamming(__loaded, results_path.substr(idx+1, string::npos).c_str(), 
-                    __query.c_str(), 0, __hamming, "\r\n", NULL, __caseSensitive, NULL);
+                url += "&mode=fhs";
+                sprintf(decimal, "%d", __hamming);
             }
-            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "result = %d, gid = %d", result);
-            if( rol_ds_has_error_occurred(result)) {
-                perr = rol_ds_get_error_string(result);
-                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "rol_ds_has_error_occurred perr = %s", perr);
-                __dropTable(query);
-                simba_wstring errorMsg = simba_wstring::CreateFromUTF8(perr);
-                R1THROWGEN1(L"RolException", errorMsg.GetAsPlatformWString());
-                return false;
+            url += "&fuzziness=" + string(decimal);
+
+            if(__dataType == __rdf_config__::dataType_XML) {
+                url += "&format=xml";
             }
-            ret = __storeToSqlite(tableName, results, true);
+            else if (__dataType == __rdf_config__::dataType_JSON)
+                url += "&format=json";
+
+            if(__caseSensitive) {
+                url += "&cs=true";
+            }
+            else
+                url += "&cs=false";
+
+            url += "&local=true";
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+            mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+            sprintf(results, "%s/results.%08x", s_R1Results, pthread_self());
+
+            FILE *f = fopen(results, "w+");
+
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
+            CURLcode code = curl_easy_perform(curl);
+
+            curl_easy_cleanup(curl);
+            curl_global_cleanup();
+            fclose(f);
+
+            ret = __storeToSqlite(tableName, results, true, true);
             unlink(results);
             if(!ret) {
                 __dropTable(query);
@@ -688,7 +734,7 @@ void RyftOne_Result::__dropTable(string& query)
 
 }
 
-bool RyftOne_Result::__storeToSqlite(string& tableName, const char *file, bool no_top)
+bool RyftOne_Result::__storeToSqlite(string& tableName, const char *file, bool no_top, bool is_query )
 {
     int fd;
     struct stat sb;
@@ -722,13 +768,17 @@ bool RyftOne_Result::__storeToSqlite(string& tableName, const char *file, bool n
         sqlite3_free(errp);
     __transMax = 0;
 
-    if(__dataType == __rdf_config__::dataType_XML) {
+    if(is_query) {
+        // files coming from REST are always JSON
+        JSONParseFromREST(fd, sb.st_size);   
+    } 
+    else if(__dataType == __rdf_config__::dataType_XML) {
         XMLParse(fd, sb.st_size, m_delim, no_top);
     }
     else if(__dataType == __rdf_config__::dataType_JSON) {
         JSONParse(fd, sb.st_size, no_top);   
     }
-    
+
     sqlret = sqlite3_exec(__sqlite, "COMMIT", NULL, NULL, &errp);
     if(errp)
         sqlite3_free(errp);

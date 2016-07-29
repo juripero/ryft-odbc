@@ -29,5 +29,6 @@ ldconfig
 
 # upstart file
 sed 's/\r//g' ryftodbcd.template > ryftodbcd.conf
+chmod 666 ryftodbcd.conf
 cp ryftodbcd.conf /etc/init
 chmod 644 /etc/init/ryftodbcd.conf

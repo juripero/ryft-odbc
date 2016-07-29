@@ -50,6 +50,7 @@ public:
     void dropTable(string& in_table);
 
 private:
+    bool __logonToREST();
     void __loadCatalog();
     bool __matches(string& in_search, string& in_name);
     int __remove_directory(const char *path);
@@ -63,6 +64,12 @@ private:
     string __ldapUser;
     string __ldapPassword;
     string __ldapBaseDN;
+
+    string __restServer;
+    string __restUser;
+    string __restPass;
+    string __restToken;
+    string __restExpire;
 
     // Reference to the ILogger. (NOT OWN)
     ILogger* __log;

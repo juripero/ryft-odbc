@@ -118,7 +118,7 @@ public:
     RyftOne_Result(ILogger *);
    ~RyftOne_Result( );
 
-    void open(string& in_name, vector<__catalog_entry__>::iterator in_catentry);
+    void open(string& in_name, vector<__catalog_entry__>::iterator in_catentry, string in_server, string in_token);
     void appendFilter(string in_filter, int in_hamming, int in_edit, bool in_caseSensitive);
     
     void prepareAppend();
@@ -169,7 +169,6 @@ private:
     string __query;
     bool __queryFinished;
 
-    rol_data_set_t __loaded;
     string __path;
     string __name;
     string __extension;
@@ -188,6 +187,9 @@ private:
     // Reference to the ILogger. (NOT OWN)
     ILogger* __log;
 
+    string __restServer;
+    string __restToken;
+
     void __loadTable(string& in_name, vector<__catalog_entry__>::iterator in_itr);
     bool __execute();
 
@@ -196,7 +198,7 @@ private:
     bool __initTable(string &query, string& table);
     void __dropTable(string &query);
 
-    bool __storeToSqlite(string& table, const char *file, bool no_top);
+    bool __storeToSqlite(string& table, const char *file, bool no_top, bool is_query );
     bool __loadFromSqlite(string &query);
 
     void __date(const char *dateStr, int colIdx, struct tm *date);
