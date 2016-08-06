@@ -112,6 +112,7 @@ bool RyftOne_Database::__logonToREST()
         if(expire)
             __restExpire = json_object_get_string(expire);
     }
+
     return !__restToken.empty();
 }
 
@@ -298,8 +299,13 @@ RyftOne_Result *RyftOne_Database::openTable(string& in_table)
 
     vector<__catalog_entry__>::iterator itr = __findTable(in_table);
     if(itr != __catalog.end()) {
-        __logonToREST();
-        result->open(in_table, itr, __restServer, __restToken);
+        //__logonToREST();
+        string basic = __restUser + ":" + __restPass;
+        gchar * basic64 = g_base64_encode((const guchar *)basic.c_str(), basic.length());
+        result->open(in_table, itr, __restServer, (char *)basic64);
+        if(basic64)
+            free(basic64);
+
     }
     return result;
 }

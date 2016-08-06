@@ -451,19 +451,6 @@ void RyftOne_Result::__loadTable(string& in_name, vector<__catalog_entry__>::ite
     __delimiter = in_itr->meta_config.delimiter;
 }
 
-ILogger *__slog;
-
-#include <signal.h>
-#include <unistd.h>
-#include <sys/types.h>
-void sig_handler(int signum)
-{
-    if(__slog)
-        INFO_LOG(__slog, "RyftOne", "RyftOne_Result", "__execute", "Caught signal = %d", signum);
-    signal(signum, SIG_DFL);
-    kill(getpid(), signum);
-}
-
 #include <curl/curl.h>
 #include <cctype>
 #include <iomanip>
@@ -534,17 +521,14 @@ bool RyftOne_Result::__execute()
             CURL *curl = curl_easy_init();
 
             struct curl_slist *header = NULL;
-            string auth = "Authorization: Bearer " + __restToken;
+            string auth = "Authorization: Basic " + __restToken;
             header = curl_slist_append(header, auth.c_str());
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
 
-            // http://172.16.13.3:8765/search?query=(RECORD.Name%20CONTAINS%20%22Michelle%22)&files=%2FPassengers%2F*.pxml&mode=fhs&surrounding=0&fuzziness=2&format=xml&cs=false&local=true
             string url = __restServer + "/search?query=" + urlEncode(__query);
             
-            //for(globItr = __glob.begin(); globItr != __glob.end(); globItr++) {
-            //    url += "&files=" + urlEncode(*globItr);
-            //}
-            url += "&files=" + urlEncode("/") + __name + urlEncode("/") + "*." + __extension; 
+            string relPath = __path.c_str() + strlen(s_R1Catalog);
+            url += "&files=" + relPath + urlEncode("/") + "*." + __extension; 
 
             char decimal[10];
             if(__edit) {
