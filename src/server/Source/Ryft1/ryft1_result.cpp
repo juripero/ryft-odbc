@@ -24,7 +24,7 @@ RyftOne_Result::~RyftOne_Result( )
     __sqlite = NULL;
 }
 
-void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator in_catentry, string in_server, string in_token)
+void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator in_catentry, string in_server, string in_token, string in_path)
 {
     __edit = 0;
     __hamming = 0;
@@ -33,6 +33,7 @@ void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator i
 
     __restServer = in_server;
     __restToken = in_token;
+    __restPath = in_path;
 
     // JSON, XML
     __dataType = in_catentry->rdf_config.data_type;
@@ -89,7 +90,7 @@ void RyftOne_Result::open(string& in_name, vector<__catalog_entry__>::iterator i
     dbpath += ".caches.db";
     int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
 
-    char *errp;
+    char *errp = NULL;
     sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT)", NULL, NULL, &errp);
     if(errp)
         sqlite3_free(errp);
@@ -520,14 +521,16 @@ bool RyftOne_Result::__execute()
             curl_global_init(CURL_GLOBAL_DEFAULT);
             CURL *curl = curl_easy_init();
 
-            struct curl_slist *header = NULL;
-            string auth = "Authorization: Basic " + __restToken;
-            header = curl_slist_append(header, auth.c_str());
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+            if(!__restToken.empty()) {
+                struct curl_slist *header = NULL;
+                string auth = "Authorization: Basic " + __restToken;
+                header = curl_slist_append(header, auth.c_str());
+                curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+            }
 
             string url = __restServer + "/search?query=" + urlEncode(__query);
             
-            string relPath = __path.c_str() + strlen(s_R1Catalog);
+            string relPath = __path.c_str() + __restPath.length();
             url += "&files=" + relPath + urlEncode("/") + "*." + __extension; 
 
             char decimal[10];

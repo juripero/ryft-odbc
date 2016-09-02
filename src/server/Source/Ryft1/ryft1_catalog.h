@@ -70,6 +70,7 @@ private:
     string __restPass;
     string __restToken;
     string __restExpire;
+    string __restPath;
 
     // Reference to the ILogger. (NOT OWN)
     ILogger* __log;

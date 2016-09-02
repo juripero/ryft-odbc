@@ -118,7 +118,7 @@ public:
     RyftOne_Result(ILogger *);
    ~RyftOne_Result( );
 
-    void open(string& in_name, vector<__catalog_entry__>::iterator in_catentry, string in_server, string in_token);
+    void open(string& in_name, vector<__catalog_entry__>::iterator in_catentry, string in_server, string in_token, string in_path);
     void appendFilter(string in_filter, int in_hamming, int in_edit, bool in_caseSensitive);
     
     void prepareAppend();
@@ -189,6 +189,7 @@ private:
 
     string __restServer;
     string __restToken;
+    string __restPath;
 
     void __loadTable(string& in_name, vector<__catalog_entry__>::iterator in_itr);
     bool __execute();

@@ -24,18 +24,38 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
         if(authType && !strcmp(authType, "ldap")) {
             gchar *ldapString;
             __authType = AUTH_LDAP;
-            __ldapServer = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPServer", &error);
-            if(ldapString)
+            ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPServer", &error);
+            if(ldapString) {
+                __ldapServer = ldapString;
                 free(ldapString);
-            __ldapUser = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPUser", &error);
-            if(ldapString)
+            }
+            if(error != NULL)
+                g_clear_error(&error);
+
+            ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPUser", &error);
+            if(ldapString) {
+                __ldapUser = ldapString;
                 free(ldapString);
-            __ldapPassword = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPPassword", &error);
-            if(ldapString)
+            }
+            if(error != NULL)
+                g_clear_error(&error);
+
+            ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPPassword", &error);
+            if(ldapString) {
+                __ldapPassword = ldapString;
                 free(ldapString);
+            }
+            if(error != NULL)
+                g_clear_error(&error);
+
             __ldapBaseDN = ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPBaseDN", &error);
-            if(ldapString) 
+            if(ldapString) {
+                __ldapBaseDN = ldapString;
                 free(ldapString);
+            }
+            if(error != NULL)
+                g_clear_error(&error);
+
         }
         else if(authType && !strcmp(authType, "system")) 
             __authType = AUTH_SYSTEM;
@@ -45,16 +65,33 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
 
         // REST 
         gchar *restString;
-        __restServer = restString = g_key_file_get_string(keyfile, "REST", "RESTServer", &error);
-        if(restString)
+        restString = g_key_file_get_string(keyfile, "REST", "RESTServer", &error);
+        if(restString) {
+            __restServer = restString;
             free(restString);
-        __restUser = restString = g_key_file_get_string(keyfile, "REST", "RESTUser", &error);
-        if(restString)
+        }
+        if(error != NULL)
+            g_clear_error(&error);
+
+        restString = g_key_file_get_string(keyfile, "REST", "RESTUser", &error);
+        if(restString) {
+            __restUser = restString;
             free(restString);
-        __restPass = restString = g_key_file_get_string(keyfile, "REST", "RESTPass", &error);
-        if(restString)
+        }
+        if(error != NULL)
+            g_clear_error(&error);
+
+        restString = g_key_file_get_string(keyfile, "REST", "RESTPass", &error);
+        if(restString) {
+            __restPass = restString;
             free(restString);
+        }
+        if(error != NULL)
+            g_clear_error(&error);
     }
+    if(error != NULL)
+        g_clear_error(&error);
+
     g_key_file_free(keyfile);
 
     __loadCatalog();
@@ -76,6 +113,12 @@ size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata
 
 bool RyftOne_Database::__logonToREST()
 {
+    __restPath = "/ryftone";
+
+    // if no user specified run without authenticating
+    if(__restUser.empty())
+        return true;
+
     // login to the REST server
     curl_global_init(CURL_GLOBAL_DEFAULT);
     CURL *curl = curl_easy_init();
@@ -112,6 +155,11 @@ bool RyftOne_Database::__logonToREST()
         if(expire)
             __restExpire = json_object_get_string(expire);
     }
+
+    //
+    // Get path from JSON response?
+    if(!__restToken.empty())
+        __restPath = s_R1Catalog;
 
     return !__restToken.empty();
 }
@@ -300,12 +348,15 @@ RyftOne_Result *RyftOne_Database::openTable(string& in_table)
     vector<__catalog_entry__>::iterator itr = __findTable(in_table);
     if(itr != __catalog.end()) {
         //__logonToREST();
-        string basic = __restUser + ":" + __restPass;
-        gchar * basic64 = g_base64_encode((const guchar *)basic.c_str(), basic.length());
-        result->open(in_table, itr, __restServer, (char *)basic64);
-        if(basic64)
-            free(basic64);
-
+        string auth;
+        if(!__restUser.empty()) {
+            string basic = __restUser + ":" + __restPass;
+            gchar * basic64 = g_base64_encode((const guchar *)basic.c_str(), basic.length());
+            auth = basic64;
+            if(basic64)
+                free(basic64);
+        }
+        result->open(in_table, itr, __restServer, auth, __restPath);
     }
     return result;
 }
