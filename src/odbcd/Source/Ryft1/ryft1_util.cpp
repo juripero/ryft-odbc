@@ -4,10 +4,16 @@
 #include "TypeDefines.h"
 
 void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_charCols, 
-                                 unsigned *out_bufLength, string& out_format, unsigned *out_dtType)
+                                 unsigned *out_bufLength, string& out_formatCustom, unsigned *out_typeCustom)
 {
     unsigned charCols = 0;
     unsigned bufLength = 0;
+    char subitizer;
+    char decimal;
+    char currency;
+
+    *out_typeCustom = TYPE_NONE;
+
     char format[80];
     char formatSpec[80];
     if(!strcasecmp(in_typeName.c_str(), "integer")) {
@@ -35,65 +41,65 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         }
         if(format[0] == 'Y' && format[2] == 'Y') { // YYYY/MM/DD-HH:MM:SS
             if(format[11] == '1') {
-                *out_dtType = DATETIME_YYYYMMDD_12MMSS;
+                *out_typeCustom = DATETIME_YYYYMMDD_12MMSS;
                 sprintf(formatSpec, "%%04d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[4], format[7], format[10], format[13], format[16]);
             }
             else {
-                *out_dtType = DATETIME_YYYYMMDD_24MMSS;
+                *out_typeCustom = DATETIME_YYYYMMDD_24MMSS;
                 sprintf(formatSpec, "%%04d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[4], format[7], format[10], format[13], format[16]);
             }
         }
         else if(format[0] == 'Y') { // YY/MM/DD-HH:MM:SS
             if(format[11] == '1') {
-                *out_dtType = DATETIME_YYMMDD_12MMSS;
+                *out_typeCustom = DATETIME_YYMMDD_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
             }
             else {
-                *out_dtType = DATETIME_YYMMDD_24MMSS;
+                *out_typeCustom = DATETIME_YYMMDD_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
             }
         }
         else if (format[0] == 'D' && format[8] == 'Y') { // DD/MM/YYYY-HH:MM:SS
             if(format[11] == '1') {
-                *out_dtType = DATETIME_DDMMYYYY_12MMSS;
+                *out_typeCustom = DATETIME_DDMMYYYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[10], format[13], format[16]);
             }
             else {
-                *out_dtType = DATETIME_DDMMYYYY_24MMSS;
+                *out_typeCustom = DATETIME_DDMMYYYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
             }
         }
         else if (format[0] == 'D') { // DD/MM/YY-HH:MM:SS
             if(format[11] == '1') {
-                *out_dtType = DATETIME_DDMMYY_12MMSS;
+                *out_typeCustom = DATETIME_DDMMYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
             }
             else {
-                *out_dtType = DATETIME_DDMMYY_24MMSS;
+                *out_typeCustom = DATETIME_DDMMYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
             }
         }
         else if (format[0] == 'M' && format[8] == 'Y') { // MM/DD/YYYY-HH:MM:SS
             if(format[11] == '1') {
-                *out_dtType = DATETIME_MMDDYYYY_12MMSS;
+                *out_typeCustom = DATETIME_MMDDYYYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[10], format[13], format[16]);
             }
             else {
-                *out_dtType = DATETIME_MMDDYYYY_24MMSS;
+                *out_typeCustom = DATETIME_MMDDYYYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
             }
         }
         else if (format[0] == 'M') { // MM/DD/YY-HH:MM:SS
             if(format[11] == '1') {
-                *out_dtType = DATETIME_MMDDYY_12MMSS;
+                *out_typeCustom = DATETIME_MMDDYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
             }
             else {
-                *out_dtType = DATETIME_MMDDYY_24MMSS;
+                *out_typeCustom = DATETIME_MMDDYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
             }
         }
-        out_format = formatSpec;
+        out_formatCustom = formatSpec;
         charCols = 19;
         bufLength = 16;
     }
@@ -107,33 +113,33 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         }
         if(strlen(format) == 10) {
             if(format[0] == 'Y') { // YYYY/MM/DD
-                *out_dtType = DATE_YYYYMMDD;
+                *out_typeCustom = DATE_YYYYMMDD;
                 sprintf(formatSpec, "%%04d%c%%02d%c%%02d", format[4], format[7]);
             }
             else if (format[0] == 'D') { // DD/MM/YYYY
-                *out_dtType = DATE_DDMMYYYY;
+                *out_typeCustom = DATE_DDMMYYYY;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%04d", format[2], format[5]);
             }
             else { // MM/DD/YYYY
-                *out_dtType = DATE_MMDDYYYY;
+                *out_typeCustom = DATE_MMDDYYYY;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%04d", format[2], format[5]);
             }
         }
         else if(strlen(format) == 8) {
             if(format[0] == 'Y') { // YY/MM/DD
-                *out_dtType = DATE_YYMMDD;
+                *out_typeCustom = DATE_YYMMDD;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d", format[2], format[5]);
             }
             else if(format[0] == 'D') { // DD/MM/YY
-                *out_dtType = DATE_DDMMYY;
+                *out_typeCustom = DATE_DDMMYY;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d", format[2], format[5]);
             }
             else { // MM/DD/YY
-                *out_dtType = DATE_MMDDYY;
+                *out_typeCustom = DATE_MMDDYY;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d", format[2], format[5]);
             }
         }
-        out_format = formatSpec;
+        out_formatCustom = formatSpec;
         charCols = 10;
         bufLength = 6;
     }
@@ -146,14 +152,14 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
             format[strlen(format)-1] = '\0';
         }
         if(!strcmp(format, "24:MM:SS")) {
-            *out_dtType = TIME_24MMSS;
+            *out_typeCustom = TIME_24MMSS;
             strcpy(formatSpec, "%02d:%02d:02d");
         }
         else {
-            *out_dtType = TIME_12MMSS;
+            *out_typeCustom = TIME_12MMSS;
             strcpy(formatSpec, "%02d:%02d:02d %s");
         }
-        out_format = formatSpec;
+        out_formatCustom = formatSpec;
         charCols = 8;
         bufLength = 6;
     }
@@ -163,6 +169,26 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         if(paren)
             sscanf(paren, "(%d)", &charCols);
         bufLength = charCols;
+    }
+    else if(!strncasecmp(in_typeName.c_str(), "number", strlen("number"))) {
+        *out_sqlType = SQL_VARCHAR;
+        *out_typeCustom = TYPE_NUMBER;
+        const char * paren = strchr(in_typeName.c_str(), '(');
+        if(paren)
+            sscanf(paren, "(%d,%c,%c)", &charCols, &subitizer, &decimal);
+        bufLength = charCols;
+        sprintf(formatSpec, "%c%c", subitizer, decimal);
+        out_formatCustom = formatSpec;
+    }
+    else if(!strncasecmp(in_typeName.c_str(), "currency", strlen("currency"))) {
+        *out_sqlType = SQL_VARCHAR;
+        *out_typeCustom = TYPE_CURRENCY;
+        const char * paren = strchr(in_typeName.c_str(), '(');
+        if(paren)
+            sscanf(paren, "(%d,%c,%c,%c)", &charCols, &currency, &subitizer, &decimal);
+        bufLength = charCols;
+        sprintf(formatSpec, "%c%c%c", currency, subitizer, decimal);
+        out_formatCustom = formatSpec;
     }
     *out_charCols = charCols;
     *out_bufLength = bufLength;

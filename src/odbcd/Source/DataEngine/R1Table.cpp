@@ -245,6 +245,15 @@ bool R1Table::WriteData(
     return false;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void R1Table::GetTypeFormatSpecifier(
+    simba_uint16 in_column,
+    unsigned *out_dtType,
+    string& out_formatSpec)
+{
+    m_result->getTypeFormatSpecifier(in_column, out_dtType, out_formatSpec);
+}
+
 // Protected =======================================================================================
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 R1Table::~R1Table()

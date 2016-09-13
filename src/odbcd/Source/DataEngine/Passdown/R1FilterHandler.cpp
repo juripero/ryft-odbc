@@ -295,26 +295,99 @@ bool R1FilterHandler::PassdownSimpleComparison(
 
     // Get the literal type of RHS of comparison expression.
     PSLiteralType exprLiteralType = in_rightExpr.first->GetLiteralType();
-            
+
+    // Get the column name.
+    simba_wstring columnName;
+    lColumn->GetLabel(columnName);
+
+    simba_wstring literalVal = in_rightExpr.first->GetLiteralValue();
+
+    unsigned typeSpecial = TYPE_NONE;
+    string formatSpecial;
+    m_table->GetTypeFormatSpecifier(in_leftExpr.m_colIndex, &typeSpecial, formatSpecial);
+
     // Supported literal types: Unsigned Integer, Decimal, Character String, and Date
-    if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+    if((exprLiteralType == PS_LITERAL_DATE) && 
+        ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
+            (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        // Construct the filter string for input to CodeBase.
+        ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if((exprLiteralType == PS_LITERAL_TIME) && 
+        ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME) || 
+            (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
+        ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        // Construct the filter string for input to CodeBase.
+        m_filter += "( ";
+        ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp);
+        m_filter += " AND ";
+        literalVal.Remove(0,11);
+        ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp);
+        m_filter += " )";
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+        (typeSpecial == TYPE_NUMBER) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        // Construct the filter string for input to CodeBase.
+        ConstructNumberComparisonFilter(columnName, formatSpecial, literalVal, in_compOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+        (typeSpecial == TYPE_CURRENCY) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        // Construct the filter string for input to CodeBase.
+        ConstructCurrencyComparisonFilter(columnName, formatSpecial, literalVal, in_compOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
         (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE)))
     {
-        // Get the column name.
-        simba_wstring columnName;
-        lColumn->GetLabel(columnName);
-
         // Get the literal and prepend it with '-' if it's been negated.
-        simba_wstring literalVal;
-        if (in_rightExpr.second) {
+        if (in_rightExpr.second) 
             literalVal = "-" + in_rightExpr.first->GetLiteralValue();
-        }
-        else
-            literalVal = in_rightExpr.first->GetLiteralValue();
 
         // Construct the filter string for input to CodeBase.
-        ConstructComparisonFilter(columnName, columnSqlType, in_rightExpr.first->GetMetadata()->GetSqlType(), 
+        ConstructStringComparisonFilter(columnName, columnSqlType, in_rightExpr.first->GetMetadata()->GetSqlType(), 
             literalVal, in_compOp);
 
         // Setting passdown flag so the filter result set is returned.
@@ -370,7 +443,7 @@ static const wchar_t whitespace_chars[] = L" \f\n\r\t\v";
 #define iswhitespace(c) \
     ((c) && wcschr(whitespace_chars, (c)))
 
-void R1FilterHandler::ConstructComparisonFilter(
+void R1FilterHandler::ConstructStringComparisonFilter(
     simba_wstring in_columnName,
     simba_int16 in_columnSqlType,
     simba_int16 in_exprSqlType,
@@ -490,6 +563,274 @@ void R1FilterHandler::ConstructComparisonFilter(
     m_hamming = hamming;
     m_edit = edit;
     m_caseSensitive = case_sensitive;
+}
+
+#include <algorithm>
+void R1FilterHandler::ConstructDateComparisonFilter(
+    simba_wstring in_columnName,
+    unsigned in_typeCustom,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp)
+{
+    int year, mon, day;
+    string in_dateLiteral = in_exprValue.GetAsPlatformString();
+    sscanf(in_dateLiteral.c_str(), "%04d-%02d-%02d", &year, &mon, &day);
+
+    m_filter += "( RECORD." + in_columnName + " CONTAINS DATE(";
+
+    unsigned typeCustom = in_typeCustom;
+    string formatSpec = in_formatCustom.substr(0,14);
+    switch(in_typeCustom) {
+    case DATETIME_YYYYMMDD_12MMSS:
+    case DATETIME_YYYYMMDD_24MMSS:
+        typeCustom = DATE_YYYYMMDD;
+        break;
+    case DATETIME_YYMMDD_12MMSS:
+    case DATETIME_YYMMDD_24MMSS:
+        typeCustom = DATE_YYMMDD;
+        break;
+    case DATETIME_DDMMYYYY_12MMSS:
+    case DATETIME_DDMMYYYY_24MMSS:
+        typeCustom = DATE_DDMMYYYY;
+        break;
+    case DATETIME_DDMMYY_12MMSS:
+    case DATETIME_DDMMYY_24MMSS:
+        typeCustom = DATE_DDMMYY;
+        break;
+    case DATETIME_MMDDYYYY_12MMSS:
+    case DATETIME_MMDDYYYY_24MMSS:
+        typeCustom = DATE_MMDDYYYY;
+        break;
+    case DATETIME_MMDDYY_12MMSS:
+    case DATETIME_MMDDYY_24MMSS:
+        typeCustom = DATE_MMDDYY;
+        break;
+    }
+
+    char outdate[11];
+    string outfmt;
+    switch(typeCustom) {
+    case DATE_YYMMDD:
+    case DATE_YYYYMMDD:
+        sprintf(outdate, formatSpec.c_str(), 1111, 22, 33);
+        outfmt = outdate;
+        std::replace(outfmt.begin(), outfmt.end(), '1', 'Y');
+        std::replace(outfmt.begin(), outfmt.end(), '2', 'M');
+        std::replace(outfmt.begin(), outfmt.end(), '3', 'D');
+        sprintf(outdate, formatSpec.c_str(), year, mon, day);
+        break;
+    case DATE_DDMMYY:
+    case DATE_DDMMYYYY:
+        sprintf(outdate, formatSpec.c_str(), 11, 22, 3333);
+        outfmt = outdate;
+        std::replace(outfmt.begin(), outfmt.end(), '1', 'D');
+        std::replace(outfmt.begin(), outfmt.end(), '2', 'M');
+        std::replace(outfmt.begin(), outfmt.end(), '3', 'Y');
+        sprintf(outdate, formatSpec.c_str(), day, mon, year);
+        break;
+    case DATE_MMDDYY:
+    case DATE_MMDDYYYY:
+        sprintf(outdate, formatSpec.c_str(), 11, 22, 3333);
+        outfmt = outdate;
+        std::replace(outfmt.begin(), outfmt.end(), '1', 'M');
+        std::replace(outfmt.begin(), outfmt.end(), '2', 'D');
+        std::replace(outfmt.begin(), outfmt.end(), '3', 'Y');
+        sprintf(outdate, formatSpec.c_str(), mon, day, year);
+        break;
+    }
+
+    m_filter += outfmt.c_str();
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " = ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += outdate;
+    m_filter += ") )";
+}
+
+void R1FilterHandler::ConstructTimeComparisonFilter(
+    simba_wstring in_columnName,
+    unsigned in_typeCustom,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp)
+{
+    int hour, min, sec;
+    string in_dateLiteral = in_exprValue.GetAsPlatformString();
+    sscanf(in_dateLiteral.c_str(), "%04d:%02d:%02d", &hour, &min, &sec);
+
+    unsigned typeCustom = in_typeCustom;
+    string formatSpec = in_formatCustom.substr(0,14);
+    switch(in_typeCustom) {
+    case DATETIME_YYYYMMDD_24MMSS:
+    case DATETIME_DDMMYYYY_24MMSS:
+    case DATETIME_MMDDYYYY_24MMSS:
+    case DATETIME_YYMMDD_24MMSS:
+    case DATETIME_DDMMYY_24MMSS:
+    case DATETIME_MMDDYY_24MMSS:
+        in_typeCustom = TIME_24MMSS;
+        formatSpec = in_formatCustom.substr(15,14);
+        break;
+    case DATETIME_YYYYMMDD_12MMSS:
+    case DATETIME_YYMMDD_12MMSS:
+    case DATETIME_DDMMYYYY_12MMSS:
+    case DATETIME_DDMMYY_12MMSS:
+    case DATETIME_MMDDYYYY_12MMSS:
+    case DATETIME_MMDDYY_12MMSS:
+        in_typeCustom = TIME_12MMSS;
+        formatSpec = in_formatCustom.substr(15,14);
+        break;
+    }
+
+    char outtime[9];
+    string outfmt;
+    sprintf(outtime, formatSpec.c_str(), 11, 22, 33);
+    outfmt = outtime;
+    std::replace(outfmt.begin(), outfmt.end(), '1', 'H');
+    std::replace(outfmt.begin(), outfmt.end(), '2', 'M');
+    std::replace(outfmt.begin(), outfmt.end(), '3', 'S');
+
+    switch(in_typeCustom) {
+    case TIME_24MMSS:
+        sprintf(outtime, formatSpec.c_str(), hour, min, sec);
+        break;
+    case TIME_12MMSS:
+        sprintf(outtime, formatSpec.c_str(), hour % 12, min, sec);
+        m_filter += "( ";
+        break;
+    }
+
+    m_filter += "( RECORD." + in_columnName + " CONTAINS TIME(";
+
+    m_filter += outfmt.c_str();
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " = ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += outtime;
+    m_filter += ") )";
+
+    if(in_typeCustom == TIME_12MMSS) {
+        m_filter += " AND ( RECORD." + in_columnName + " CONTAINS \"";
+        m_filter += (hour / 12) ? "PM" : "AM";
+        m_filter += "\" ) )";
+    }
+}
+
+void R1FilterHandler::ConstructNumberComparisonFilter(
+    simba_wstring in_columnName,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp)
+{
+    string numLiteral = in_exprValue.GetAsPlatformString();
+
+    m_filter += "( RECORD." + in_columnName + " CONTAINS NUMBER(NUM";
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " = ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += "\"" + numLiteral + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(0,1) + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(1,1) + "\"";
+    m_filter += ") )";
+}
+
+void R1FilterHandler::ConstructCurrencyComparisonFilter(
+    simba_wstring in_columnName,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp)
+{
+    string numLiteral = in_exprValue.GetAsPlatformString();
+
+    m_filter += "( RECORD." + in_columnName + " CONTAINS CURRENCY(CUR";
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " = ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += "\"" + in_formatCustom.substr(0,1) + numLiteral + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(0,1) + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(1,1) + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(2,1) + "\"";
+    m_filter += ") )";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

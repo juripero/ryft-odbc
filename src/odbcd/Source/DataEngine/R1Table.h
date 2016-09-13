@@ -178,6 +178,11 @@ namespace RyftOne
             simba_signed_native in_offset,
             bool in_isDefault);
 
+        void GetTypeFormatSpecifier(
+            simba_uint16 in_column,
+            unsigned *out_dtType,
+            string& out_formatSpec);
+
     // Protected ===================================================================================
     public:
         /// @brief Destructor.
