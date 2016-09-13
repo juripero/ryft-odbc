@@ -221,13 +221,74 @@ namespace RyftOne
         /// @param in_exprSqlType       Right side expression SQL type.
         /// @param in_exprValue         Right side expression value as a simba_wstring.
         /// @param in_compOp            Comparison operation.  Cannot be NULL.
-        void ConstructComparisonFilter(
+        void ConstructStringComparisonFilter(
             simba_wstring in_columnName,
             simba_int16 in_columnSqlType,
             simba_int16 in_exprSqlType,
             const simba_wstring& in_exprValue,
             Simba::SQLEngine::SEComparisonType in_compOp);
 
+        /// @brief Construct the date filter string. 
+        ///
+        /// @param in_columnName        Name of the column. Cannot be NULL.
+        /// @param in_dtType            The datetime format type.
+        /// @param in_formatCustom      The datetime format specifier string.
+        /// @param in_exprValue         Right side expression value as a simba_wstring.
+        /// @param in_compOp            Comparison operation.  Cannot be NULL.        void ConstructDateComparisonFilter(
+        void ConstructDateComparisonFilter(
+            simba_wstring in_columnName,
+            unsigned in_dtType,
+            string& in_formatCustom,
+            const simba_wstring& in_exprValue,
+            Simba::SQLEngine::SEComparisonType in_compOp);
+
+        /// @brief Construct the time filter string. 
+        ///
+        /// @param in_columnName        Name of the column. Cannot be NULL.
+        /// @param in_dtType            The datetime format type.
+        /// @param in_formatCustom      The datetime format specifier string.
+        /// @param in_exprValue         Right side expression value as a simba_wstring.
+        /// @param in_compOp            Comparison operation.  Cannot be NULL.
+        void ConstructTimeComparisonFilter(
+            simba_wstring in_columnName,
+            unsigned in_dtType,
+            string& in_formatCustom,
+            const simba_wstring& in_exprValue,
+            Simba::SQLEngine::SEComparisonType in_compOp);
+
+        /// @brief Construct the number filter string. 
+        ///
+        /// @param in_columnName        Name of the column. Cannot be NULL.
+        /// @param in_dtType            The datetime format type.
+        /// @param in_formatCustom      The datetime format specifier string.
+        /// @param in_exprValue         Right side expression value as a simba_wstring.
+        /// @param in_compOp            Comparison operation.  Cannot be NULL.
+        void ConstructNumberComparisonFilter(
+            simba_wstring in_columnName,
+            string& in_formatCustom,
+            const simba_wstring& in_exprValue,
+            Simba::SQLEngine::SEComparisonType in_compOp);
+
+        /// @brief Construct the currency filter string. 
+        ///
+        /// @param in_columnName        Name of the column. Cannot be NULL.
+        /// @param in_dtType            The datetime format type.
+        /// @param in_formatCustom      The datetime format specifier string.
+        /// @param in_exprValue         Right side expression value as a simba_wstring.
+        /// @param in_compOp            Comparison operation.  Cannot be NULL.
+        void ConstructCurrencyComparisonFilter(
+            simba_wstring in_columnName,
+            string& in_formatCustom,
+            const simba_wstring& in_exprValue,
+            Simba::SQLEngine::SEComparisonType in_compOp);
+
+        /// @brief Construct the filter string. 
+        ///
+        /// @param in_columnName        Name of the column. Cannot be NULL.
+        /// @param in_columnSqlType     SQL Type of the column. Cannot be NULL.
+        /// @param in_exprSqlType       Right side expression SQL type.
+        /// @param in_exprValue         Right side expression value as a simba_wstring.
+        /// @param in_compOp            Comparison operation.  Cannot be NULL.
         void ConstructLikeFilter(
             simba_wstring in_columnName,
             simba_int16 in_columnSqlType,

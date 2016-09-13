@@ -3,6 +3,8 @@
 #include <string>
 using namespace std;
 
+#define TYPE_NONE                   0
+
 #define DATE_YYYYMMDD               1
 #define DATE_YYMMDD                 2
 #define DATE_DDMMYYYY               3
@@ -26,9 +28,12 @@ using namespace std;
 #define DATETIME_MMDDYY_12MMSS      19
 #define DATETIME_MMDDYY_24MMSS      20
 
+#define TYPE_NUMBER                 21
+#define TYPE_CURRENCY               22
+
 class RyftOne_Util {
 public:
     static void RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_charCols, 
-        unsigned *out_bufLength, string& out_format, unsigned *out_dtType);
+        unsigned *out_bufLength, string& out_formatCustom, unsigned *out_typeCustom);
     static string SqlToRyftType(unsigned in_type, unsigned in_bufLen);
 };

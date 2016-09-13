@@ -225,28 +225,34 @@ double RyftOne_Result::getDoubleValue(int colIdx)
 
 struct tm RyftOne_Result::getDateValue(int colIdx)
 {
-    struct tm date;
+    struct tm date = {0};
     __date((const char *)sqlite3_column_text(__stmt, colIdx), colIdx, &date);
     return date;
 }
 
 struct tm RyftOne_Result::getTimeValue(int colIdx)
 {
-    struct tm time;
-    __date((const char *)sqlite3_column_text(__stmt, colIdx), colIdx, &time);
+    struct tm time = {0};
+    __time((const char *)sqlite3_column_text(__stmt, colIdx), colIdx, &time);
     return time;
 }
 
 struct tm RyftOne_Result::getDateTimeValue(int colIdx)
 {
-    struct tm ts;
-    __date((const char *)sqlite3_column_text(__stmt, colIdx), colIdx, &ts);
+    struct tm ts = {0};
+    __datetime((const char *)sqlite3_column_text(__stmt, colIdx), colIdx, &ts);
     return ts;
 }
 
 void RyftOne_Result::putStringValue(int colIdx, string colValue)
 {
     strcpy(__cursor.__row[colIdx].colResult.text, colValue.c_str());
+}
+
+void RyftOne_Result::getTypeFormatSpecifier(int colIdx, unsigned *dtType, string& formatSpec)
+{
+    *dtType = __cols[colIdx].m_dtType;
+    formatSpec = __cols[colIdx].m_formatSpec;
 }
 
 void RyftOne_Result::flush()

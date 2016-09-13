@@ -139,6 +139,8 @@ public:
 
     void putStringValue(int colIdx, string colValue);
 
+    void getTypeFormatSpecifier(int colIdx, unsigned *dtType, string& formatSpec);
+
 protected:
     // XML Parse
     virtual NodeAction StartRow( );
