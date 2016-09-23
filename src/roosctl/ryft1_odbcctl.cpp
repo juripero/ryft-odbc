@@ -209,7 +209,7 @@ __pid_t get_lock_file(string& exepath)
     if(lfp < 0) 
         return -1;
     char str[10];
-    __pid_t pid;
+    __pid_t pid = -1;
     read(lfp, str, sizeof(str));
     sscanf(str, "%d", &pid);
     close(lfp);
