@@ -573,9 +573,10 @@ void R1FilterHandler::ConstructDateComparisonFilter(
     const simba_wstring& in_exprValue,
     SEComparisonType in_compOp)
 {
-    int year, mon, day;
+    int year = 1970, mon = 1, day = 1;
     string in_dateLiteral = in_exprValue.GetAsPlatformString();
-    sscanf(in_dateLiteral.c_str(), "%04d-%02d-%02d", &year, &mon, &day);
+    if(in_dateLiteral.length())
+        sscanf(in_dateLiteral.c_str(), "%04d-%02d-%02d", &year, &mon, &day);
 
     m_filter += "( RECORD." + in_columnName + " CONTAINS DATE(";
 
@@ -675,9 +676,10 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
     const simba_wstring& in_exprValue,
     SEComparisonType in_compOp)
 {
-    int hour, min, sec;
+    int hour = 0, min = 0, sec = 0;
     string in_dateLiteral = in_exprValue.GetAsPlatformString();
-    sscanf(in_dateLiteral.c_str(), "%04d:%02d:%02d", &hour, &min, &sec);
+    if(in_dateLiteral.length())
+        sscanf(in_dateLiteral.c_str(), "%04d:%02d:%02d", &hour, &min, &sec);
 
     unsigned typeCustom = in_typeCustom;
     string formatSpec = in_formatCustom.substr(0,14);

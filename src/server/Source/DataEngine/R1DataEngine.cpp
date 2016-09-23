@@ -216,14 +216,14 @@ SharedPtr<DSIExtResultSet> R1DataEngine::OpenTable(
     ENTRANCE_LOG(GetLog(), "RyftOne", "R1DataEngine", "OpenTable");
 
     SharedPtr<DSIExtResultSet> table;
-
-    table = new R1Table(
-        GetLog(),
-        in_tableName,
-        m_ryft1,
-        m_statement->GetWarningListener(),
-        IsODBCVersion3());
-
+    if(DoesTableExist(in_catalogName, in_schemaName, in_tableName)) {
+        table = new R1Table(
+            GetLog(),
+            in_tableName,
+            m_ryft1,
+            m_statement->GetWarningListener(),
+            IsODBCVersion3());
+    }
     return table;
 }
 
