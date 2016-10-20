@@ -128,10 +128,7 @@ R1FilterHandler::R1FilterHandler(
     SharedPtr<R1Table> in_table) :
     m_table(in_table),
     m_isPassedDown(false),
-    m_negate(false),
-    m_hamming(0),
-    m_edit(0),
-    m_caseSensitive(true)
+    m_negate(false)
 {
     assert(!in_table.IsNull());
 }
@@ -158,7 +155,7 @@ SharedPtr<DSIExtResultSet> R1FilterHandler::TakeResult()
     }
 
     // Return filter result.
-    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter, m_hamming, m_edit, m_caseSensitive));
+    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter));
 }
 
 // Protected =======================================================================================
@@ -455,7 +452,10 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     size_t idx1, idx2;
     int hamming = 0;
     int edit = 0;
-    bool case_sensitive = true;
+    int width = 0;
+    char distance[10];
+    char surrounding[10];
+    string case_sensitive = "true";
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();
     for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
@@ -466,7 +466,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
             case L'h':
             case L'H': {
                 wstring num_hamming;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= L'9'); pfilter++)
                     num_hamming += *pfilter;
                 swscanf(num_hamming.c_str(), L"%d", &hamming);
                 edit = 0;
@@ -495,7 +495,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
             case L'e':
             case L'E': {
                 wstring num_edit;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= L'9'); pfilter++)
                     num_edit += *pfilter;
                 swscanf(num_edit.c_str(), L"%d", &edit);
                 hamming = 0;
@@ -521,9 +521,18 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 }
                 break;
                 }
+            case L'w':
+            case L'W': {
+                wstring num_width;
+                for(idx1 = 1; pfilter[idx1] && (pfilter[idx1] >= L'0' && pfilter[idx1] <= L'9'); idx1++)
+                    num_width += pfilter[idx1];
+                swscanf(num_width.c_str(), L"%d", &width);
+                pfilter += idx1-1;
+                break;
+                }
             case L'i':
             case L'I':
-                case_sensitive = false;
+                case_sensitive = "false";
                 break;
             case L'-':
                 out_filter += L"-";
@@ -546,7 +555,11 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     }
     out_filter += L"\"";
 
-    m_filter += "( RECORD." + in_columnName;
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
@@ -558,11 +571,20 @@ void R1FilterHandler::ConstructStringComparisonFilter(
         break;
     }
 
+    if(edit) {
+        m_filter += "FEDS(";
+        sprintf(distance, "%d", edit);
+    }
+    else {
+        m_filter += "FHS(";
+        sprintf(distance, "%d", hamming);
+    }
     m_filter += out_filter.c_str();
-    m_filter += " )";
-    m_hamming = hamming;
-    m_edit = edit;
-    m_caseSensitive = case_sensitive;
+    m_filter += ",CS=" + case_sensitive;
+    m_filter += ",DIST=" + string(distance);
+    sprintf(surrounding, "%d", width);
+    m_filter += ",WIDTH=" + string(surrounding);
+    m_filter += "))";
 }
 
 #include <algorithm>
@@ -578,7 +600,13 @@ void R1FilterHandler::ConstructDateComparisonFilter(
     if(in_dateLiteral.length())
         sscanf(in_dateLiteral.c_str(), "%04d-%02d-%02d", &year, &mon, &day);
 
-    m_filter += "( RECORD." + in_columnName + " CONTAINS DATE(";
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
+
+    m_filter += " CONTAINS DATE(";
 
     unsigned typeCustom = in_typeCustom;
     string formatSpec = in_formatCustom.substr(0,14);
@@ -722,8 +750,13 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
         break;
     }
 
-    m_filter += "( RECORD." + in_columnName + " CONTAINS TIME(";
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
 
+    m_filter += " CONTAINS TIME(";
     m_filter += outfmt.c_str();
 
     // Determine the math symbol for comparison type.
@@ -766,7 +799,13 @@ void R1FilterHandler::ConstructNumberComparisonFilter(
 {
     string numLiteral = in_exprValue.GetAsPlatformString();
 
-    m_filter += "( RECORD." + in_columnName + " CONTAINS NUMBER(NUM";
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
+
+    m_filter += " CONTAINS NUMBER(NUM";
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
@@ -804,7 +843,13 @@ void R1FilterHandler::ConstructCurrencyComparisonFilter(
 {
     string numLiteral = in_exprValue.GetAsPlatformString();
 
-    m_filter += "( RECORD." + in_columnName + " CONTAINS CURRENCY(CUR";
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
+
+    m_filter += " CONTAINS CURRENCY(CUR";
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
@@ -847,7 +892,10 @@ void R1FilterHandler::ConstructLikeFilter(
     size_t idx1, idx2;
     int hamming = 0;
     int edit = 0;
-    bool case_sensitive = true;
+    int width = 0;
+    char distance[10];
+    char surrounding[10];
+    string case_sensitive = "true";
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();
     for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
@@ -858,7 +906,7 @@ void R1FilterHandler::ConstructLikeFilter(
             case L'h':
             case L'H': {
                 wstring num_hamming;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= L'9'); pfilter++)
                     num_hamming += *pfilter;
                 swscanf(num_hamming.c_str(), L"%d", &hamming);
                 edit = 0;
@@ -887,7 +935,7 @@ void R1FilterHandler::ConstructLikeFilter(
             case L'e':
             case L'E': {
                 wstring num_edit;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= L'9'); pfilter++)
                     num_edit += *pfilter;
                 swscanf(num_edit.c_str(), L"%d", &edit);
                 hamming = 0;
@@ -913,9 +961,18 @@ void R1FilterHandler::ConstructLikeFilter(
                 }
                 break;
                 }
+            case L'w':
+            case L'W': {
+                wstring num_width;
+                for(idx1 = 1; pfilter[idx1] && (pfilter[idx1] >= L'0' && pfilter[idx1] <= L'9'); idx1++)
+                    num_width += pfilter[idx1];
+                swscanf(num_width.c_str(), L"%d", &width);
+                pfilter += idx1-1;
+                break;
+                }
             case L'i':
             case L'I':
-                case_sensitive = false;
+                case_sensitive = "false";
                 break;
             case '-':
                 out_filter += L"-";
@@ -938,7 +995,11 @@ void R1FilterHandler::ConstructLikeFilter(
     }
     out_filter += L"\"";
 
-    m_filter += "( RECORD." + in_columnName;
+    if(m_table->IsStructuredType()) {
+        m_filter += "(RECORD." + in_columnName;
+    }
+    else
+        m_filter += "(RAW_TEXT";
 
     if(m_negate) {
         m_filter += " NOT_CONTAINS ";
@@ -946,9 +1007,18 @@ void R1FilterHandler::ConstructLikeFilter(
     else
         m_filter += " CONTAINS ";
 
+    if(edit) {
+        m_filter += "FEDS(";
+        sprintf(distance, "%d", edit);
+    }
+    else {
+        m_filter += "FHS(";
+        sprintf(distance, "%d", hamming);
+    }
     m_filter += out_filter.c_str();
-    m_filter += " )";
-    m_hamming = hamming;
-    m_edit = edit;
-    m_caseSensitive = case_sensitive;
+    m_filter += ",CS=" + case_sensitive;
+    m_filter += ",DIST=" + string(distance);
+    sprintf(surrounding, "%d", width);
+    m_filter += ",WIDTH=" + string(surrounding);
+    m_filter += "))";
 }

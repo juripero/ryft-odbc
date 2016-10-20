@@ -1,3 +1,11 @@
+// =================================================================================================
+///  @file R1Catalog.cpp
+///
+///  Implements the R1 catalog class
+///
+///  Copyright (C) 2016 Ryft Systems, Inc.
+// =================================================================================================
+
 #include <stdio.h>
 #include <libconfig.h>
 #include <sys/stat.h>
@@ -9,7 +17,7 @@
 #include "RyftOne.h"
 using namespace RyftOne;
 
-#include "ryft1_catalog.h"
+#include "R1Catalog.h"
 
 RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __log(log)
 {
@@ -97,74 +105,12 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
     __loadCatalog();
 }
 
-bool RyftOne_Database::getAuthRequired() 
+bool RyftOne_Database::GetAuthRequired() 
 {
     return (__authType != AUTH_NONE);
 }
 
-#include <json/json.h>
-#include <curl/curl.h>
-size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
-{
-    string *json_token = (string *)userdata;
-    (*json_token).append(ptr, size * nmemb);
-    return size * nmemb;
-}
-
-bool RyftOne_Database::__logonToREST()
-{
-    __restPath = "/ryftone";
-
-    // if no user specified run without authenticating
-    if(__restUser.empty())
-        return true;
-
-    // login to the REST server
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    CURL *curl = curl_easy_init();
-
-    string url = __restServer + "/login";
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-    string post = "{\"username\":\"" + __restUser + "\",\"password\":\"" + __restPass + "\"}";
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post.c_str());
-
-    __restToken.clear();
-    __restExpire.clear();
-
-    // WORKWORK VERIFY WITH GOOD CERT
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-
-    string json_token;
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, token_write_callback); 
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &json_token);
-    CURLcode code = curl_easy_perform(curl);
-
-    curl_easy_cleanup(curl);
-    curl_global_cleanup();
-    if(code != CURLE_OK)
-        return false;
-
-    struct json_object *login_token = json_tokener_parse(json_token.c_str());
-    if(login_token) {
-        struct json_object *token = json_object_object_get(login_token, "token");
-        if(token)
-            __restToken = json_object_get_string(token);
-        struct json_object *expire = json_object_object_get(login_token, "expire");
-        if(expire)
-            __restExpire = json_object_get_string(expire);
-    }
-
-    //
-    // Get path from JSON response?
-    if(!__restToken.empty())
-        __restPath = s_R1Catalog;
-
-    return !__restToken.empty();
-}
-
-bool RyftOne_Database::logon(string& in_user, string& in_password)
+bool RyftOne_Database::Logon(string& in_user, string& in_password)
 {
     switch(__authType) {
     default:
@@ -227,69 +173,7 @@ bool RyftOne_Database::logon(string& in_user, string& in_password)
     return __logonToREST();
 }
 
-bool RyftOne_Database::__matches(string& in_search, string& in_name)
-{
-    int idx1 = 0;
-    int idx2;
-    string term;
-    int req_distance;
-    bool match = true;
-    const char *search = in_search.c_str();
-    // empty search term matches all
-    if(*search == '\0')
-        return true;
-    while(*search && match) {
-        switch (*search) {
-        case '%':
-            term.clear();
-            req_distance = 0;
-            idx2 = 0;
-            for(search++; *search; search++) {
-                if(*search == '%' || *search == '_') { 
-                    if(!term.empty()) {
-                        break;
-                    }
-                    else if(*search == '_') {
-                        req_distance++;
-                    }
-                }
-                else
-                    term += *search;
-            }
-            if(term.length()) {
-                idx2 = in_name.find(term, idx1);
-                if(idx2 == string::npos || (idx2 - idx1) < req_distance) {
-                    match = false;
-                }
-                else
-                    idx1 = idx2 + term.length();
-            }
-            else if(*search == '\0') {
-                // if wildcard came at the end of the search term, consume remaining name
-                idx1 = in_name.length();
-            }
-            break;
-        case '_':
-            if(idx1 >= in_name.length())
-                match = false;
-            search++;
-            idx1++;
-            break;
-        default:
-            if((idx1 >= in_name.length()) || *search != in_name[idx1])
-                match = false;
-            search++;
-            idx1++;
-            break;
-        }
-    }
-    // did we consume the entire table name string
-    if(idx1 < in_name.length())
-        match = false;
-    return match;
-}
-
-RyftOne_Tables RyftOne_Database::getTables(string in_search, string in_type)
+RyftOne_Tables RyftOne_Database::GetTables(string in_search, string in_type)
 {
     RyftOne_Table table;
     RyftOne_Tables tables;
@@ -318,7 +202,7 @@ RyftOne_Tables RyftOne_Database::getTables(string in_search, string in_type)
     return tables;
 }
 
-RyftOne_Columns RyftOne_Database::getColumns(string& in_table)
+RyftOne_Columns RyftOne_Database::GetColumns(string& in_table)
 {
     RyftOne_Column col;
     RyftOne_Columns cols;
@@ -330,7 +214,11 @@ RyftOne_Columns RyftOne_Database::getColumns(string& in_table)
         for(idx=0, colItr = itr->meta_config.columns.begin(); colItr != itr->meta_config.columns.end(); colItr++, idx++) {
             col.m_ordinal = idx+1;
             col.m_tableName = itr->meta_config.table_name;
-            col.m_colTag = colItr->rdf_name;
+            if(itr->rdf_config.data_type == __rdf_config__::dataType_XML) {
+                col.m_colTag = colItr->xml_tag;
+            }
+            else
+                col.m_colTag = colItr->json_tag;
             col.m_colName = colItr->name;
             col.m_typeName = colItr->type_def;
             RyftOne_Util::RyftToSqlType(col.m_typeName, &col.m_dataType, &col.m_charCols, &col.m_bufLength, col.m_formatSpec, &col.m_dtType);
@@ -341,13 +229,12 @@ RyftOne_Columns RyftOne_Database::getColumns(string& in_table)
     return cols;
 }
 
-RyftOne_Result *RyftOne_Database::openTable(string& in_table)
+IQueryResult *RyftOne_Database::OpenTable(string& in_table)
 {
-    RyftOne_Result *result = new RyftOne_Result(__log);
+    IQueryResult * result = NULL;
 
     vector<__catalog_entry__>::iterator itr = __findTable(in_table);
     if(itr != __catalog.end()) {
-        //__logonToREST();
         string auth;
         if(!__restUser.empty()) {
             string basic = __restUser + ":" + __restPass;
@@ -356,12 +243,23 @@ RyftOne_Result *RyftOne_Database::openTable(string& in_table)
             if(basic64)
                 free(basic64);
         }
-        result->open(in_table, itr, __restServer, auth, __restPath);
+        switch(itr->rdf_config.data_type) {
+        case __rdf_config__::dataType_JSON:
+            result = new RyftOne_JSONResult(__log);
+            break;
+        case __rdf_config__::dataType_XML:
+            result = new RyftOne_XMLResult(__log);
+            break;
+        default:
+            result = new RyftOne_RAWResult(__log);
+            break;
+        }
+        result->OpenQuery(in_table, itr, __restServer, auth, __restPath);
     }
     return result;
 }
 
-bool RyftOne_Database::tableExists(string& in_table)
+bool RyftOne_Database::TableExists(string& in_table)
 {
     vector<__catalog_entry__>::iterator itr = __findTable(in_table);
     if(itr != __catalog.end())
@@ -370,7 +268,7 @@ bool RyftOne_Database::tableExists(string& in_table)
 }
 
 // new tables will use an XML datatype
-void RyftOne_Database::createTable(string& in_table, RyftOne_Columns& in_columns)
+void RyftOne_Database::CreateTable(string& in_table, RyftOne_Columns& in_columns)
 {
     char path[PATH_MAX];
     char config_path[PATH_MAX];
@@ -458,6 +356,173 @@ void RyftOne_Database::createTable(string& in_table, RyftOne_Columns& in_columns
     __loadCatalog();
 }
 
+void RyftOne_Database::DropTable(string& in_table)
+{
+    char path[PATH_MAX];
+    strcpy(path, s_R1Catalog);
+    strcat(path, "/");
+    strcat(path, in_table.c_str());
+    __remove_directory(path);
+    __loadCatalog();
+}
+
+//////////////////////////////////////////////////////////////
+#include <json/json.h>
+#include <curl/curl.h>
+size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+    string *json_token = (string *)userdata;
+    (*json_token).append(ptr, size * nmemb);
+    return size * nmemb;
+}
+
+bool RyftOne_Database::__logonToREST()
+{
+    __restPath = "/ryftone";
+
+    // if no user specified run without authenticating
+    if(__restUser.empty())
+        return true;
+
+    // login to the REST server
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+    CURL *curl = curl_easy_init();
+
+    string url = __restServer + "/login";
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+    string post = "{\"username\":\"" + __restUser + "\",\"password\":\"" + __restPass + "\"}";
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post.c_str());
+
+    __restToken.clear();
+    __restExpire.clear();
+
+    // WORKWORK VERIFY WITH GOOD CERT
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+
+    string json_token;
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, token_write_callback); 
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &json_token);
+    CURLcode code = curl_easy_perform(curl);
+
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+    if(code != CURLE_OK)
+        return false;
+
+    struct json_object *login_token = json_tokener_parse(json_token.c_str());
+    if(login_token) {
+        struct json_object *token = json_object_object_get(login_token, "token");
+        if(token)
+            __restToken = json_object_get_string(token);
+        struct json_object *expire = json_object_object_get(login_token, "expire");
+        if(expire)
+            __restExpire = json_object_get_string(expire);
+    }
+
+    //
+    // Get path from JSON response?
+    if(!__restToken.empty())
+        __restPath = s_R1Catalog;
+
+    return !__restToken.empty();
+}
+
+void RyftOne_Database::__loadCatalog()
+{
+    DIR *d;
+    struct dirent *dir;
+    __catalog.clear();
+    if(d = opendir(s_R1Catalog)) {
+        while((dir = readdir(d)) != NULL) {
+            if((dir->d_type == DT_DIR) && (strcmp(dir->d_name, ".") != 0)) {
+                __catalog_entry__ cat_ent(dir->d_name);
+                if(cat_ent._is_valid())
+                    __catalog.push_back(cat_ent);
+            }
+        }
+        closedir(d);
+    }
+}
+
+bool RyftOne_Database::__matches(string& in_search, string& in_name)
+{
+    int idx1 = 0;
+    int idx2;
+    string term;
+    int req_distance;
+    bool match = true;
+    const char *search = in_search.c_str();
+    // empty search term matches all
+    if(*search == '\0')
+        return true;
+    while(*search && match) {
+        switch (*search) {
+        case '%':
+            term.clear();
+            req_distance = 0;
+            idx2 = 0;
+            for(search++; *search; search++) {
+                if(*search == '%' || *search == '_') { 
+                    if(!term.empty()) {
+                        break;
+                    }
+                    else if(*search == '_') {
+                        req_distance++;
+                    }
+                }
+                else
+                    term += *search;
+            }
+            if(term.length()) {
+                idx2 = in_name.find(term, idx1);
+                if(idx2 == string::npos || (idx2 - idx1) < req_distance) {
+                    match = false;
+                }
+                else
+                    idx1 = idx2 + term.length();
+            }
+            else if(*search == '\0') {
+                // if wildcard came at the end of the search term, consume remaining name
+                idx1 = in_name.length();
+            }
+            break;
+        case '_':
+            if(idx1 >= in_name.length())
+                match = false;
+            search++;
+            idx1++;
+            break;
+        default:
+            if((idx1 >= in_name.length()) || *search != in_name[idx1])
+                match = false;
+            search++;
+            idx1++;
+            break;
+        }
+    }
+    // did we consume the entire table name string
+    if(idx1 < in_name.length())
+        match = false;
+    return match;
+}
+
+vector<__catalog_entry__>::iterator RyftOne_Database::__findTable(string& in_table)
+{
+    vector<__catalog_entry__>::iterator itr;
+    vector<__meta_config__::__meta_view__>::iterator viewItr;
+    for(itr = __catalog.begin(); itr != __catalog.end(); itr++) {
+        if(!itr->meta_config.table_name.compare(in_table))
+            return itr;
+        for(viewItr = itr->meta_config.views.begin(); viewItr != itr->meta_config.views.end(); viewItr++) {
+            if(!viewItr->view_name.compare(in_table))
+                return itr;
+        }
+    }
+    return __catalog.end();
+}
+
 int RyftOne_Database::__remove_directory(const char *path)
 {
    DIR *d = opendir(path);
@@ -504,48 +569,4 @@ int RyftOne_Database::__remove_directory(const char *path)
    }
 
    return r;
-}
-
-void RyftOne_Database::dropTable(string& in_table)
-{
-    char path[PATH_MAX];
-    strcpy(path, s_R1Catalog);
-    strcat(path, "/");
-    strcat(path, in_table.c_str());
-    __remove_directory(path);
-    __loadCatalog();
-}
-
-//////////////////////////////////////////////////////////////
-
-void RyftOne_Database::__loadCatalog()
-{
-    DIR *d;
-    struct dirent *dir;
-    __catalog.clear();
-    if(d = opendir(s_R1Catalog)) {
-        while((dir = readdir(d)) != NULL) {
-            if((dir->d_type == DT_DIR) && (strcmp(dir->d_name, ".") != 0)) {
-                __catalog_entry__ cat_ent(dir->d_name);
-                if(cat_ent._is_valid())
-                    __catalog.push_back(cat_ent);
-            }
-        }
-        closedir(d);
-    }
-}
-
-vector<__catalog_entry__>::iterator RyftOne_Database::__findTable(string& in_table)
-{
-    vector<__catalog_entry__>::iterator itr;
-    vector<__meta_config__::__meta_view__>::iterator viewItr;
-    for(itr = __catalog.begin(); itr != __catalog.end(); itr++) {
-        if(!itr->meta_config.table_name.compare(in_table))
-            return itr;
-        for(viewItr = itr->meta_config.views.begin(); viewItr != itr->meta_config.views.end(); viewItr++) {
-            if(!viewItr->view_name.compare(in_table))
-                return itr;
-        }
-    }
-    return __catalog.end();
 }

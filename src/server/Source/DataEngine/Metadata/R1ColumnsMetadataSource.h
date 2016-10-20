@@ -10,7 +10,7 @@
 #define _RYFTONE_R1COLUMNSMETADATASOURCE_H_
 
 #include "RyftOne.h"
-#include "ryft1_catalog.h"
+#include "R1Catalog.h"
 #include "DSIMetadataSource.h"
 
 namespace RyftOne

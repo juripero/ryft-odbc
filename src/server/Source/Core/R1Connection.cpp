@@ -72,7 +72,7 @@ void R1Connection::Connect(const DSIConnSettingRequestMap& in_connectionSettings
     if(GetOptionalSetting(R1_PWD_KEY, in_connectionSettings, &pwdVar))
         pwd = pwdVar->GetStringValue();
 
-    if(!m_ryft1.logon(uid, pwd))
+    if(!m_ryft1.Logon(uid, pwd))
         R1THROW(Simba::Support::DIAG_INVALID_AUTH_SPEC, L"AuthorizationFailed");
 
     SetProperty(DSI_CONN_USER_NAME, AttributeData::MakeNewWStringAttributeData(uidVar.GetWStringValue()));
@@ -91,7 +91,7 @@ IStatement* R1Connection::CreateStatement()
 void R1Connection::Disconnect()
 {
     ENTRANCE_LOG(m_log, "Simba::RyftOne", "R1Connection", "Disconnect");
-    m_ryft1.logoff();
+    m_ryft1.Logoff();
     m_isConnected = false;
 }
 
@@ -166,7 +166,7 @@ void R1Connection::UpdateConnectionSettings(
     //      Required Key: UID - represents a name of a user, could be anything.
     //      Required Key: PWD - represents the password, could be anything.
     VerifyRequiredSetting(R1_UID_KEY, in_connectionSettings, out_connectionSettings);
-    if(m_ryft1.getAuthRequired()) {
+    if(m_ryft1.GetAuthRequired()) {
         VerifyRequiredSetting(R1_PWD_KEY, in_connectionSettings, out_connectionSettings);
     }
     else 
@@ -176,7 +176,7 @@ void R1Connection::UpdateConnectionSettings(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void R1Connection::ToNativeSQL(const simba_wstring& in_string, simba_wstring& out_string)
 {
-    INFO_LOG(m_log, "Simba::RyftOne", "R1Connection", "ToNativeSQL", "Execute SQL=%s", in_string.GetAsPlatformString().c_str());
+    INFO_LOG(m_log, "RyftOne", "R1Connection", "ToNativeSQL", "Execute SQL=%s", in_string.GetAsPlatformString().c_str());
     out_string = in_string;
 }
 
@@ -186,6 +186,7 @@ void R1Connection::SetConnectionPropertyValues()
 {
 	DSIPropertyUtilities::SetReadOnly(this, false);
     DSIPropertyUtilities::SetSchemaSupport(this, false);
+    DSIPropertyUtilities::SetStoredProcedureSupport(this, true);
 
     // Note that DSI_CONN_SERVER_NAME and DSI_CONN_USER_NAME should be updated after connection to 
     // reflect the server that was connected to and the user that connected.

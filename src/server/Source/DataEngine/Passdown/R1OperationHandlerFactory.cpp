@@ -1,5 +1,5 @@
 // =================================================================================================
-///  @file CBOperationHandlerFactory.cpp
+///  @file R1OperationHandlerFactory.cpp
 ///
 ///  Implementation of the Class CBOperationHandlerFactory
 ///
@@ -10,7 +10,6 @@
 
 #include "R1FilterHandler.h"
 #include "R1Table.h"
-//#include "R1ResultSet.h"
 #include "DSIExtResultSet.h"
 
 using namespace RyftOne;
@@ -27,8 +26,7 @@ R1OperationHandlerFactory::R1OperationHandlerFactory()
 AutoPtr<IBooleanExprHandler> R1OperationHandlerFactory::CreateFilterHandler(
     SharedPtr<DSIExtResultSet> in_table)
 {
-    SharedPtr<R1Table> temp(static_cast<R1Table*> (in_table.Get()));
-
-    return AutoPtr<IBooleanExprHandler>(new R1FilterHandler(temp));
+    SharedPtr<R1Table> table(static_cast<R1Table*> (in_table.Get()));
+    return AutoPtr<IBooleanExprHandler>(new R1FilterHandler(table));
 }
 

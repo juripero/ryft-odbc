@@ -14,6 +14,7 @@ COMMON_CFLAGS = $(DMFLAGS) \
 -I./DataEngine \
 -I./DataEngine/Metadata \
 -I./DataEngine/Passdown \
+-I./DataEngine/Procedures \
 -I./Ryft1 \
 -I../../libmeta \
 -I../../libsqlite \
@@ -26,6 +27,8 @@ COMMON_CFLAGS = $(DMFLAGS) \
 -I$(SIMBAENGINE_DIR)/Include/SQLEngine/AETree \
 -I$(SIMBAENGINE_DIR)/Include/SQLEngine/Parser \
 -I$(SIMBAENGINE_DIR)/Include/SQLEngine/DSIExt \
+-I$(SIMBAENGINE_DIR)/Include/SQLEngine/Executor \
+-I$(SIMBAENGINE_DIR)/Include/SQLEngine/Executor/ETree \
 -I$(SIMBAENGINE_DIR)/Include/Server \
 -I$(SIMBAENGINE_THIRDPARTY_DIR)/Expat/2.0.1 \
 -I/usr/include/glib-2.0 \

@@ -20,5 +20,6 @@
         <Error Key="R1ResultSetTraverseDirNotSupported" NativeErrorCode="1">Result set traversal direction is not supported.</Error>
         <Error Key="AuthorizationFailed" NativeErrorCode="2">Could not establish a connection. Authorization failed.</Error>
         <Error Key="RolException" NativeErrorCode="3" Params="1">An error occurred executing a RYFT One library call (%1%).</Error>
+        <Error Key="UnstructuredSelectException" NativeErrorCode="4">Cannot execute unrestricted select on unstructured data.</Error>
     </Package>
 </Messages>

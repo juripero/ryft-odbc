@@ -45,15 +45,15 @@ R1Table::R1Table(
     ENTRANCE_LOG(m_log, "RyftOne", "R1Table", "R1Table");
 
     string tableName = m_tableName.GetAsPlatformString();
-    m_result = m_ryft1->openTable(tableName);
+    m_result = m_ryft1->OpenTable(tableName);
 
     InitializeColumns(in_isODBCV3);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void R1Table::AppendFilter(simba_wstring& in_filter, int in_hamming, int in_edit, bool in_caseSensitive)
+void R1Table::AppendFilter(simba_wstring& in_filter)
 {
-    m_result->appendFilter(in_filter.GetAsPlatformString(), in_hamming, in_edit, in_caseSensitive);
+    m_result->AppendFilter(in_filter.GetAsPlatformString());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ void R1Table::AppendRow( )
 {
     m_hasInsertedRecords = true;
     m_isAppendingRow = true;
-    m_result->prepareAppend();
+    m_result->PrepareUpdate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +114,7 @@ void R1Table::OnFinishRowUpdate()
 {
     if (m_isAppendingRow) {
         m_isAppendingRow = false;
-        m_result->finishUpdate();
+        m_result->FinishUpdate();
     }
 }
 
@@ -133,7 +133,7 @@ bool R1Table::RetrieveData(
     try {
         switch (sqlType) {
         case TDW_SQL_VARCHAR: {
-            const char *colResult = m_result->getStringValue(in_column);
+            const char *colResult = m_result->GetStringValue(in_column);
             return DSITypeUtilities::OutputVarCharStringData(
 			    colResult,
                 strlen(colResult),
@@ -142,31 +142,31 @@ bool R1Table::RetrieveData(
 			    in_maxSize);
             }
         case TDW_SQL_SINTEGER: {
-		    *reinterpret_cast<simba_int32*>(in_data->GetBuffer()) = m_result->getIntValue(in_column);
+		    *reinterpret_cast<simba_int32*>(in_data->GetBuffer()) = m_result->GetIntValue(in_column);
 		    return false;
             }
         case TDW_SQL_SBIGINT: {
-		    *reinterpret_cast<simba_int64*>(in_data->GetBuffer()) = m_result->getInt64Value(in_column);
+		    *reinterpret_cast<simba_int64*>(in_data->GetBuffer()) = m_result->GetInt64Value(in_column);
 		    return false;
             }
 	    case TDW_SQL_DOUBLE: {
-		    *reinterpret_cast<simba_double64*>(in_data->GetBuffer()) = m_result->getDoubleValue(in_column);
+		    *reinterpret_cast<simba_double64*>(in_data->GetBuffer()) = m_result->GetDoubleValue(in_column);
             return false;
 		    }
         case TDW_SQL_TYPE_DATE: {
-            struct tm date = m_result->getDateValue(in_column);
+            struct tm date = m_result->GetDateValue(in_column);
             TDWDate sqlDate(date.tm_year, date.tm_mon, date.tm_mday);
             memcpy(in_data->GetBuffer(), &sqlDate, sizeof(TDWDate));
             return false;
             }
         case TDW_SQL_TYPE_TIME: {
-            struct tm time = m_result->getTimeValue(in_column);
+            struct tm time = m_result->GetTimeValue(in_column);
             TDWTime sqlTime(time.tm_hour, time.tm_min, time.tm_sec, 0);
             memcpy(in_data->GetBuffer(), &sqlTime, sizeof(TDWTime));
             return false;
             }
         case TDW_SQL_TYPE_TIMESTAMP: {
-            struct tm ts = m_result->getDateTimeValue(in_column);
+            struct tm ts = m_result->GetDateTimeValue(in_column);
             TDWTimestamp sqlTimestamp(ts.tm_year, ts.tm_mon, ts.tm_mday, ts.tm_hour, ts.tm_min, ts.tm_sec, 0);
             memcpy(in_data->GetBuffer(), &sqlTimestamp, sizeof(TDWTimestamp));
             return false;
@@ -192,7 +192,7 @@ bool R1Table::WriteData(
         return false;
 
     if(in_data->IsNull()) {
-        m_result->putStringValue(in_column, "");
+        m_result->PutStringValue(in_column, "");
         return false;
     }
 
@@ -200,7 +200,7 @@ bool R1Table::WriteData(
     size_t colSize = GetSelectColumns()->GetColumn(in_column)->GetColumnSize();
     char *out_buf = new char[colSize + 1];
     if(!out_buf) {
-        m_result->putStringValue(in_column, "");
+        m_result->PutStringValue(in_column, "");
         return false;
     }
 
@@ -208,37 +208,37 @@ bool R1Table::WriteData(
     case TDW_SQL_VARCHAR:
         strncpy(out_buf, reinterpret_cast<char *>(in_data->GetBuffer()), colSize);
         out_buf[in_data->GetLength()] = '\0';
-        m_result->putStringValue(in_column, out_buf);
+        m_result->PutStringValue(in_column, out_buf);
         break;
     case TDW_SQL_SINTEGER:
         snprintf(out_buf, colSize+1, "%d", (*reinterpret_cast<simba_int32*> (in_data->GetBuffer())));
-        m_result->putStringValue(in_column, out_buf);
+        m_result->PutStringValue(in_column, out_buf);
         break;
     case TDW_SQL_SBIGINT:
         snprintf(out_buf, colSize+1, "%lld", (*reinterpret_cast<simba_int64*> (in_data->GetBuffer())));
-        m_result->putStringValue(in_column, out_buf);
+        m_result->PutStringValue(in_column, out_buf);
         break;
     case TDW_SQL_DOUBLE:
         snprintf(out_buf, colSize+1, "%f", (*reinterpret_cast<simba_double64*> (in_data->GetBuffer())));
-        m_result->putStringValue(in_column, out_buf);
+        m_result->PutStringValue(in_column, out_buf);
         break;
     case TDW_SQL_TYPE_DATE: {
         TDWDate date = (*reinterpret_cast<TDWDate *> (in_data->GetBuffer()));
         snprintf(out_buf, colSize+1, "%04d-%02d-%02d", date.Year, date.Month, date.Day);
-        m_result->putStringValue(in_column, out_buf);
+        m_result->PutStringValue(in_column, out_buf);
         break;
         }
     case TDW_SQL_TYPE_TIME: {
         TDWTime time = (*reinterpret_cast<TDWTime *> (in_data->GetBuffer()));
         snprintf(out_buf, colSize+1, "%02d:%02d:%02d", time.Hour, time.Minute, time.Second);
-        m_result->putStringValue(in_column, out_buf);
+        m_result->PutStringValue(in_column, out_buf);
         break;
         }
     case TDW_SQL_TYPE_TIMESTAMP: {
         TDWTimestamp timestamp = (*reinterpret_cast<TDWTimestamp *> (in_data->GetBuffer()));
         snprintf(out_buf, colSize+1, "%04d-%02d-%02d %02d.%02d.%02d", timestamp.Year, timestamp.Month, timestamp.Day,
             timestamp.Hour, timestamp.Minute, timestamp.Second);
-        m_result->putStringValue(in_column, out_buf);
+        m_result->PutStringValue(in_column, out_buf);
         break;
         }
     }
@@ -251,7 +251,13 @@ void R1Table::GetTypeFormatSpecifier(
     unsigned *out_dtType,
     string& out_formatSpec)
 {
-    m_result->getTypeFormatSpecifier(in_column, out_dtType, out_formatSpec);
+    m_result->GetTypeFormatSpecifier(in_column, out_dtType, out_formatSpec);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+bool R1Table::IsStructuredType()
+{
+    return m_result->IsStructuredType();
 }
 
 // Protected =======================================================================================
@@ -267,9 +273,9 @@ void R1Table::DoCloseCursor()
     ENTRANCE_LOG(m_log, "RyftOne", "R1Table", "DoCloseCursor");
     if(m_hasInsertedRecords) {
         m_hasInsertedRecords = false;
-        m_result->flush();
+        m_result->FlushUpdate();
     }
-    m_result->closeCursor();
+    m_result->CloseCursor();
     m_hasStartedFetch = false;
 }
 
@@ -286,11 +292,11 @@ bool R1Table::MoveToNextRow()
     DEBUG_ENTRANCE_LOG(m_log, "RyftOne", "R1Table", "MoveToNextRow");
     bool isMoveSuccessful = false;
     if(m_hasStartedFetch) {
-        isMoveSuccessful = m_result->fetchNext();
+        isMoveSuccessful = m_result->FetchNext();
     }
     else {
         m_hasStartedFetch = true;
-        isMoveSuccessful = m_result->fetchFirst();
+        isMoveSuccessful = m_result->FetchFirst();
     }
     return isMoveSuccessful;
 }
@@ -345,7 +351,7 @@ inline simba_int16 ConvertTypeIfNeeded(simba_int16 in_type, bool in_isODBCV3)
 void R1Table::InitializeColumns(bool in_isODBCV3)
 {
     string tableName = m_tableName.GetAsPlatformString();
-    RyftOne_Columns ryft1cols = m_ryft1->getColumns(tableName);
+    RyftOne_Columns ryft1cols = m_ryft1->GetColumns(tableName);
     RyftOne_Columns::iterator ryft1col;
 
     AutoPtr<DSIResultSetColumns> columns(new DSIResultSetColumns());
