@@ -11,8 +11,8 @@ const char s_R1Catalog[] = "/ryftone/ODBC";
 const char s_R1Results[] = "/ryftone/ODBC/.results";
 const char s_TableMeta[] = ".meta.table";
 
-__meta_config__::__meta_config__( ) { }
-__meta_config__::__meta_config__(string& in_table)
+__meta_config__::__meta_config__() { }
+__meta_config__::__meta_config__(string& in_dir)
 {
     config_t tableMeta;
     char path[PATH_MAX];
@@ -24,17 +24,17 @@ __meta_config__::__meta_config__(string& in_table)
 
     strcpy(path, s_R1Catalog);
     strcat(path, "/");
-    strcat(path, in_table.c_str());
+    strcat(path, in_dir.c_str());
     strcat(path, "/");
     strcat(path, s_TableMeta);
 
     config_init(&tableMeta);
     if(CONFIG_TRUE == config_read_file(&tableMeta, path)) {
         if(CONFIG_TRUE == config_lookup_string(&tableMeta, "table_name", &result)) 
-            table_name = in_table;
+            table_name = in_dir;
         if(CONFIG_TRUE == config_lookup_string(&tableMeta, "table_remarks", &result))
             table_remarks = result;
-        if(CONFIG_TRUE == config_lookup_string(&tableMeta, "rdf", &result))
+        if(CONFIG_TRUE == config_lookup_string(&tableMeta, "rdf", &result)) 
             rdf_path = result;
         delimiter = "|";
         if(CONFIG_TRUE == config_lookup_string(&tableMeta, "delimiter", &result))
@@ -55,7 +55,7 @@ __meta_config__::__meta_config__(string& in_table)
     config_destroy(&tableMeta);
 }
 
-void __meta_config__::column_meta(config_t in_table_meta, string in_group, string in_name, string in_rdfname)
+void __meta_config__::column_meta(config_t in_table_meta, string in_group, string in_name, string in_jsonroot)
 {
     config_setting_t *colList;
     config_setting_t *column;
@@ -64,12 +64,13 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
 
     if(!in_name.empty())
         in_name += ".";
-    if(!in_rdfname.empty())
-        in_rdfname += ".";
+    if(!in_jsonroot.empty())
+        in_jsonroot += ".";
 
     colList = config_lookup(&in_table_meta, in_group.c_str());
     for(idx = 0; colList && (column = config_setting_get_elem(colList, idx)); idx++) {
-        col.rdf_name = in_rdfname + column->name;
+        col.json_tag = in_jsonroot + column->name;
+        col.xml_tag = column->name;
         col.name = in_name + config_setting_get_string_elem(column, 0);
         col.type_def = config_setting_get_string_elem(column, 1);
         col.description = config_setting_get_string_elem(column, 2);
@@ -81,7 +82,7 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
                 sscanf(paren, "(%s)", arrayof);
                 arrayof[strlen(arrayof)-1] = '\0';
             }
-            column_meta(in_table_meta, arrayof, col.name, col.rdf_name + string(".[]"));
+            column_meta(in_table_meta, arrayof, col.name, col.json_tag + string(".[]"));
         }
         else if(!strncasecmp(col.type_def.c_str(), "groupof", strlen("groupof"))) {
             char *groupof = new char[col.type_def.length()+1];
@@ -90,7 +91,7 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
                 sscanf(paren, "(%s)", groupof);
                 groupof[strlen(groupof)-1] = '\0';
             }
-            column_meta(in_table_meta, groupof, col.name, col.rdf_name);
+            column_meta(in_table_meta, groupof, col.name, col.json_tag);
         }
         else
             columns.push_back(col);
@@ -99,7 +100,6 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
 
 void __meta_config__::write_meta_config(string path)
 {
-
     config_t tableMeta;
     config_init(&tableMeta);
 
@@ -121,7 +121,7 @@ void __meta_config__::write_meta_config(string path)
     config_setting_t *colList = config_setting_add(root, "columns", CONFIG_TYPE_GROUP);
     vector<__meta_col__>::iterator itr;
     for(itr = columns.begin(); itr != columns.end(); itr++) {
-        colListEntry = config_setting_add(colList, itr->rdf_name.c_str(), CONFIG_TYPE_LIST);
+        colListEntry = config_setting_add(colList, itr->xml_tag.c_str(), CONFIG_TYPE_LIST);
         config_setting_t *colElem = config_setting_add(colListEntry, "", CONFIG_TYPE_STRING);
         config_setting_set_string(colElem, itr->name.c_str());
         colElem = config_setting_add(colListEntry, "", CONFIG_TYPE_STRING);
@@ -133,7 +133,7 @@ void __meta_config__::write_meta_config(string path)
     config_destroy(&tableMeta);
 }
 
-__rdf_config__::__rdf_config__() { }
+__rdf_config__::__rdf_config__() : data_type(dataType_None) { }
 __rdf_config__::__rdf_config__(string& in_path) : data_type(dataType_None)
 {
     config_t rdfConfig;
@@ -145,10 +145,13 @@ __rdf_config__::__rdf_config__(string& in_path) : data_type(dataType_None)
 
     config_init(&rdfConfig);
     if(CONFIG_TRUE == config_read_file(&rdfConfig, in_path.c_str())) {
-        data_type = dataType_XML;
         if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "data_type", &result)) {
-            if(!strcasecmp(result, "JSON")) 
+            if(!strcasecmp(result, "JSON")) {
                 data_type = dataType_JSON;
+            }
+            else if(!strcasecmp(result, "XML")) {
+                data_type = dataType_XML;
+            }
         }
         if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "file_glob", &result)) 
             file_glob = result;
@@ -224,26 +227,28 @@ void __rdf_config__::write_rdf_config(string path)
     config_destroy(&tableRdf);
 }
 
-__catalog_entry__::__catalog_entry__(string in_table) : meta_config(in_table), rdf_config(meta_config.rdf_path) 
+__catalog_entry__::__catalog_entry__(string in_dir) : meta_config(in_dir), rdf_config(meta_config.rdf_path) 
 {
     path = s_R1Catalog;
     path += "/";
-    path += in_table;
+    path += in_dir;
 }
 
 bool __catalog_entry__::_is_valid()
 {
     if(meta_config.table_name.empty())
         return false;
+
     if(rdf_config.file_glob.empty())
         return false;
+
     // if the file type is XML match up rdftags with the metadata tags, there is no check for JSON files
     if(rdf_config.data_type == __rdf_config__::dataType_XML) {
         vector<__meta_config__::__meta_col__>::iterator colitr;
         vector<__rdf_config__::__rdf_tag__>::iterator tagitr;
         for(colitr = meta_config.columns.begin(); colitr != meta_config.columns.end(); colitr++) {
             for(tagitr = rdf_config.tags.begin(); tagitr != rdf_config.tags.end(); tagitr++) {
-                if(!colitr->rdf_name.compare(tagitr->name))
+                if(!colitr->xml_tag.compare(tagitr->name))
                     break;
             }
             if(tagitr == rdf_config.tags.end())
@@ -518,7 +523,7 @@ bool JSONFile::copyFile( char *src_path )
     struct stat sb;
     if((ffile = open(src_path, O_RDONLY)) != -1) {
         fstat(ffile, &sb);
-        JSONParse(ffile, sb.st_size, __no_top);
+        JSONParse(ffile, sb.st_size, __no_top, "");
         close(ffile);
         return true;
     }

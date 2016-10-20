@@ -1,4 +1,12 @@
-#pragma once
+// =================================================================================================
+///  @file R1Util.h
+///
+///  Implements the static utilities
+///
+///  Copyright (C) 2016 Ryft Systems, Inc.
+// =================================================================================================
+#ifndef _R1UTIL_H_
+#define _R1UTIL_H_
 
 #include <string>
 using namespace std;
@@ -31,9 +39,14 @@ using namespace std;
 #define TYPE_NUMBER                 21
 #define TYPE_CURRENCY               22
 
+using namespace std;
+
 class RyftOne_Util {
 public:
     static void RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_charCols, 
         unsigned *out_bufLength, string& out_formatCustom, unsigned *out_typeCustom);
     static string SqlToRyftType(unsigned in_type, unsigned in_bufLen);
+
+    static string UrlEncode(const string& value);
 };
+#endif

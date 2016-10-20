@@ -10,7 +10,7 @@
 #define _RYFTONE_R1DATAENGINE_H_
 
 #include "RyftOne.h"
-#include "ryft1_catalog.h"
+#include "R1Catalog.h"
 #include "DSIExtSqlDataEngine.h"
 
 namespace Simba
@@ -22,6 +22,7 @@ namespace DSI
 }
 namespace RyftOne
 {
+    class R1ProcedureFactory;
     class R1QueryExecutor;
 }
 
@@ -138,6 +139,31 @@ namespace RyftOne
             const simba_wstring& in_identifierQuoteChar, 
             bool in_filterAsIdentifier);
 
+        /// @brief Open a stored procedure.
+        /// 
+        /// This method will be called during the preparation of a SQL statement.
+        ///
+        /// Once the stored procedure is opened, it should allow retrieval of metadata. That is, 
+        /// calling GetResults() on the returned procedure should return results that provide column 
+        /// metadata, if any, and calling GetParameters() on the returned procedure should return 
+        /// parameter metadata, if any.
+        /// 
+        /// If a result set is returned, before data can be retrieved from the table SetCursorType() 
+        /// will have to called. Since this is done at the execution time, the DSII should _NOT_ try 
+        /// to make the data ready for retrieval until Execute() is called.
+        ///
+        /// The DSII decides how catalog and schema are interpreted or supported.
+        /// 
+        /// @param in_catalogName   The name of the catalog in which the stored procedure resides.
+        /// @param in_schemaName    The name of the schema in which the stored procedure resides.
+        /// @param in_procName      The name of the stored procedure to open.
+        ///
+        /// @return the opened procedure, NULL if the procedure does not exist.
+        virtual SharedPtr<Simba::SQLEngine::DSIExtProcedure> OpenProcedure(
+            const simba_wstring& in_catalogName,
+            const simba_wstring& in_schemaName,
+            const simba_wstring& in_procName);
+
         /// @brief Open a physical table/view.
         /// 
         /// This method will be called during the preparation of a SQL statement.
@@ -172,6 +198,9 @@ namespace RyftOne
 
     protected:
         RyftOne_Database *m_ryft1;
+
+        /// The R1ProcedureFactory instance (OWN).
+        AutoPtr<R1ProcedureFactory> m_procedureFactory;
     };
 }
 

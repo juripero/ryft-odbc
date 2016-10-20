@@ -28,8 +28,7 @@ namespace RyftOne
         /// @param in_table         The table on which to apply filters. Cannot be NULL.
         /// @param in_filter        The string representing the dbase expression for the filter.
         R1FilterResult(
-            Simba::Support::SharedPtr<R1Table> in_table, 
-            const simba_wstring& in_filter, int in_hamming, int in_edit, bool in_caseSensitive);
+            Simba::Support::SharedPtr<R1Table> in_table, const simba_wstring& in_filter);
 
         /// @brief Destructor.
         virtual ~R1FilterResult();

@@ -10,7 +10,7 @@
 #define _RYFTONE_R1TABLE_H_
 
 #include "RyftOne.h"
-#include "ryft1_catalog.h"
+#include "R1Catalog.h"
 
 #include "AutoPtr.h"
 #include "DSIExtSimpleResultSet.h"
@@ -18,10 +18,6 @@
 
 namespace Simba
 {
-namespace Quickstart
-{
-    class TabbedUnicodeFileReader;
-}
 namespace Support
 {
     class ILogger;
@@ -54,7 +50,7 @@ namespace RyftOne
             IWarningListener* in_warningListener,
             bool in_isODBCV3);
 
-        void AppendFilter(simba_wstring &in_filter, int in_hamming, int in_edit, bool in_caseSensitive);
+        void AppendFilter(simba_wstring &in_filter);
 
         /// @brief Append an empty row to the end of the result set.
         ///
@@ -183,6 +179,8 @@ namespace RyftOne
             unsigned *out_dtType,
             string& out_formatSpec);
 
+        bool IsStructuredType();
+
     // Protected ===================================================================================
     public:
         /// @brief Destructor.
@@ -247,7 +245,7 @@ namespace RyftOne
 
         RyftOne_Database *m_ryft1;
 
-        RyftOne_Result *m_result;
+        IQueryResult *m_result;
 
         // Warning listener for posting warnings. (NOT OWN)
         IWarningListener* m_warningListener;
@@ -259,5 +257,4 @@ namespace RyftOne
         bool m_isAppendingRow;
     };
 }
-
 #endif

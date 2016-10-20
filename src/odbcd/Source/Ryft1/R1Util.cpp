@@ -1,6 +1,15 @@
+// =================================================================================================
+///  @file R1Util.cpp
+///
+///  Implements the static utilities
+///
+///  Copyright (C) 2016 Ryft Systems, Inc.
+// =================================================================================================
 #include <string.h>
+#include <iomanip>
+#include <sstream>
 
-#include "ryft1_util.h"
+#include "R1Util.h"
 #include "TypeDefines.h"
 
 void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_charCols, 
@@ -217,4 +226,25 @@ string RyftOne_Util::SqlToRyftType(unsigned in_type, unsigned in_charLen)
         return out_typeName;
         }
     }
+}
+
+string RyftOne_Util::UrlEncode(const string &value) {
+    ostringstream escaped;
+    escaped.fill('0');
+    escaped << hex;
+
+    const char *pstr = value.c_str();
+    for ( ; *pstr; ++pstr) {
+        string::value_type c = *pstr;
+
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~' || c == '(' || c == ')') {
+            escaped << c;
+            continue;
+        }
+
+        // Any other characters are percent-encoded
+        escaped << '%' << setw(2) << int((unsigned char) c);
+    }
+    return escaped.str();
 }
