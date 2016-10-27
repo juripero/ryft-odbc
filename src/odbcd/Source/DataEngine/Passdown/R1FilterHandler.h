@@ -226,7 +226,7 @@ namespace RyftOne
             simba_int16 in_columnSqlType,
             simba_int16 in_exprSqlType,
             const simba_wstring& in_exprValue,
-            Simba::SQLEngine::SEComparisonType in_compOp);
+            simba_wstring in_RelationalOp);
 
         /// @brief Construct the date filter string. 
         ///
@@ -240,7 +240,8 @@ namespace RyftOne
             unsigned in_dtType,
             string& in_formatCustom,
             const simba_wstring& in_exprValue,
-            Simba::SQLEngine::SEComparisonType in_compOp);
+            Simba::SQLEngine::SEComparisonType in_compOp,
+            simba_wstring in_RelationalOp);
 
         /// @brief Construct the time filter string. 
         ///
@@ -254,7 +255,8 @@ namespace RyftOne
             unsigned in_dtType,
             string& in_formatCustom,
             const simba_wstring& in_exprValue,
-            Simba::SQLEngine::SEComparisonType in_compOp);
+            Simba::SQLEngine::SEComparisonType in_compOp,
+            simba_wstring in_RelationalOp);
 
         /// @brief Construct the number filter string. 
         ///
@@ -267,7 +269,8 @@ namespace RyftOne
             simba_wstring in_columnName,
             string& in_formatCustom,
             const simba_wstring& in_exprValue,
-            Simba::SQLEngine::SEComparisonType in_compOp);
+            Simba::SQLEngine::SEComparisonType in_compOp,
+            simba_wstring in_RelationalOp);
 
         /// @brief Construct the currency filter string. 
         ///
@@ -280,20 +283,8 @@ namespace RyftOne
             simba_wstring in_columnName,
             string& in_formatCustom,
             const simba_wstring& in_exprValue,
-            Simba::SQLEngine::SEComparisonType in_compOp);
-
-        /// @brief Construct the filter string. 
-        ///
-        /// @param in_columnName        Name of the column. Cannot be NULL.
-        /// @param in_columnSqlType     SQL Type of the column. Cannot be NULL.
-        /// @param in_exprSqlType       Right side expression SQL type.
-        /// @param in_exprValue         Right side expression value as a simba_wstring.
-        /// @param in_compOp            Comparison operation.  Cannot be NULL.
-        void ConstructLikeFilter(
-            simba_wstring in_columnName,
-            simba_int16 in_columnSqlType,
-            simba_int16 in_exprSqlType,
-            const simba_wstring& in_exprValue);
+            Simba::SQLEngine::SEComparisonType in_compOp,
+            simba_wstring in_RelationalOp);
 
         // The table on which to apply filters. (NOT OWN)
         Simba::Support::SharedPtr<R1Table> m_table;
