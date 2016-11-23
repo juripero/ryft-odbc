@@ -29,5 +29,6 @@ protected:
     virtual string __getFormatString();
     virtual void __loadTable(string& in_name, vector<__catalog_entry__>::iterator in_itr);
     virtual bool __execute();
+    virtual void __parse(int fd, size_t st_size, bool no_top, string top_object);
 };
 #endif

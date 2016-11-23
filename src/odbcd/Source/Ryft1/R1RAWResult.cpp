@@ -72,3 +72,15 @@ bool RyftOne_RAWResult::__execute()
 
     return IQueryResult::__execute();
 }
+
+void RyftOne_RAWResult::__parse(int fd, size_t st_size, bool no_top, string top_object)
+{
+    char *buffer = new char[st_size+1];
+    __startRow();
+    __addElement("data", NULL, NULL);
+    size_t st_read = read(fd, buffer, st_size);
+    buffer[st_read] = '\0';
+    __addText(buffer, "") ;
+    delete[] buffer;
+    __exitRow();
+}
