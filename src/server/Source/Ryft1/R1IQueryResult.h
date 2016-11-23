@@ -31,6 +31,7 @@ using namespace RyftOne;
 #include <string.h>
 #include <curl/curl.h>
 #include <cctype>
+#include <json/json.h>
 
 #include "R1Util.h"
 #include "TypeDefines.h"
@@ -127,7 +128,21 @@ typedef struct _RyftOne_Column {
 } RyftOne_Column;
 typedef vector<RyftOne_Column> RyftOne_Columns;
 
-class IQueryResult : public JSONParser {
+static int xCreate(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr);
+static int xConnect(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr);
+static int xDisconnect(sqlite3_vtab *in_pVTab);
+static int xDestroy(sqlite3_vtab *in_pVTab);
+static int xOpen(sqlite3_vtab *in_pVTab, sqlite3_vtab_cursor **out_ppCursor);
+static int xClose(sqlite3_vtab_cursor *in_pVTabCursor);
+static int xBestIndex(sqlite3_vtab *pVTab, sqlite3_index_info*);
+static int xFilter(sqlite3_vtab_cursor*, int idxNum, const char *idxStr, int argc, sqlite3_value **argv);
+static int xNext(sqlite3_vtab_cursor *in_pVTabCursor);
+static int xEof(sqlite3_vtab_cursor *in_pVTabCursor);
+static int xColumn(sqlite3_vtab_cursor *in_pVTabCursor, sqlite3_context*, int);
+static int xRowid(sqlite3_vtab_cursor *in_pVTabCursor, sqlite3_int64 *pRowid);
+static int xRename(sqlite3_vtab *pVtab, const char *zNew);
+
+class IQueryResult {
 public:
     IQueryResult(ILogger *log) : __log(log), __sqlite(0), __stmt(0) { ; }
    ~IQueryResult()
@@ -189,14 +204,32 @@ public:
         }
 
         string dbpath = __path;
-        dbpath += "/";
-        dbpath += ".caches.db";
+        dbpath += "/.caches";
+        mkdir(dbpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+
+        dbpath += "/caches.bin";
         int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
 
         char *errp = NULL;
-        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT)", NULL, NULL, &errp);
+        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT, IDX_FILE TEXT, NUM_ROWS INTEGER)", NULL, NULL, &errp);
         if(errp)
             sqlite3_free(errp);
+
+        memset(&__vtab_mod, 0, sizeof(sqlite3_module));
+        __vtab_mod.xCreate = xCreate;
+        __vtab_mod.xConnect = xConnect;
+        __vtab_mod.xDisconnect = xDisconnect;
+        __vtab_mod.xDestroy = xDestroy;
+        __vtab_mod.xOpen = xOpen;
+        __vtab_mod.xClose = xClose;
+        __vtab_mod.xBestIndex = xBestIndex;
+        __vtab_mod.xFilter = xFilter;
+        __vtab_mod.xNext = xNext;
+        __vtab_mod.xEof = xEof;
+        __vtab_mod.xColumn = xColumn;
+        __vtab_mod.xRowid = xRowid;
+        __vtab_mod.xRename = xRename;
+        sqlite3_create_module(__sqlite, "query_vtab", &__vtab_mod, this);
 
         __queryFinished = false;
     }
@@ -401,12 +434,91 @@ public:
         return __isStructuredType();
     }
 
-protected:
-
-    virtual NodeAction JSONStartRow()
+    bool OpenIndexedResult()
     {
-        return __startRow();
+        __idxFD = fopen(__idxFile.c_str(), "r");
+        if(__idxFD == NULL) 
+            return false;
+
+        __idxCurRow = 0;
+
+        resultCols::iterator itr;
+        for(itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++) {
+            (*itr).colResult.text = (char *)sqlite3_malloc((*itr).charCols + 1);
+        }
+
+        __idxLine = new char[FILENAME_MAX];
+        __idxFilename = new char[FILENAME_MAX];
+        __cachedFile = new char[FILENAME_MAX];
+        __idxLine[0] = '\0';
+        __idxFilename[0] = '\0';
+        __cachedFile[0] = '\0';
+        __cachedFD = -1;
+
+        return FetchNextIndexedResult();
     }
+
+    bool CloseIndexedResult()
+    {
+        fclose(__idxFD);
+
+        resultCols::iterator itr;
+        for(itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++) {
+            sqlite3_free((*itr).colResult.text);
+        }
+
+        delete[] __idxLine;
+        delete[] __idxFilename;
+        delete[] __cachedFile;
+        close(__cachedFD);
+
+        return true;
+    }
+
+    bool FetchNextIndexedResult()
+    {
+        long long offset = 0, length = 0, surrounding = 0;
+
+        if(fgets(__idxLine, FILENAME_MAX, __idxFD)) {
+            strcpy(__idxFilename, strtok(__idxLine, ","));
+            offset = strtoll(strtok(NULL, ","), NULL, 10);
+            length = strtoll(strtok(NULL, ","), NULL, 10);
+            surrounding = strtoll(strtok(NULL, "\n"), NULL, 10);
+        }
+
+        if(strcmp(__cachedFile, __idxFilename)) {
+            close(__cachedFD);
+            __cachedFD = open(__idxFilename, O_RDONLY);
+            strcpy(__cachedFile, __idxFilename);
+        }
+
+        lseek(__cachedFD, offset, SEEK_SET);
+        
+        __parse(__cachedFD, length, true, "");
+
+        __idxCurRow++;
+        return true;
+    }
+
+    bool IndexedResultEof() 
+    {
+        if(__idxCurRow > __idxNumRows)
+            return true;
+
+        return false;
+    }
+
+    const char * GetIndexedResultColumn(int col)
+    {
+        return __cursor.__row[col].colResult.text;
+    }
+
+    long GetResultCount()
+    {
+        return __idxNumRows;
+    }
+
+protected:
 
     NodeAction __startRow()
     {
@@ -418,95 +530,26 @@ protected:
         return ProcessNode;
     }
 
-    virtual NodeAction JSONStartArray( std::string sName )
-    {
-        __qualifiedCol.push_back(sName + ".[]");
-        return ProcessNode;
-}
-
-    virtual NodeAction JSONStartGroup( std::string sName )
-    {
-        __qualifiedCol.push_back(sName);
-        return ProcessNode;
-    }
-
-    virtual NodeAction JSONAddElement( std::string sName, const char **psAttribs, JSONElement **ppElement )
-    {
-        string qualifiedName;
-        deque<string>::iterator itr;
-        for(itr = __qualifiedCol.begin(); itr != __qualifiedCol.end(); itr++) {
-            if(!qualifiedName.empty())
-                qualifiedName += ".";
-            qualifiedName += (*itr);
-        }
-        if(!qualifiedName.empty())
-            qualifiedName += ".";
-        qualifiedName += sName;
-        __cursor.__colIdx = __getColumnNum(qualifiedName);
-        return ProcessNode;
-    }
-
     NodeAction __addElement(std::string sName, const char **psAttribs, XMLElement **ppElement)
     {
         __cursor.__colIdx = __getColumnNum(sName);
         return ProcessNode;
     }
 
-    virtual void JSONAddText( std::string sText )
+    void __addText(std::string sText, std::string sDelimiter) 
     {
         if(__cursor.__colIdx != -1) {
-            if(strlen(__cursor.__row[__cursor.__colIdx].colResult.text) && !__qualifiedCol.empty())
-                __addText(__delimiter);
-            __addText(sText);
-        }
-    }
-
-    void __addText(std::string sText) 
-    {
-        if(__cursor.__colIdx != -1) {
+            if(!sDelimiter.empty() && strlen(__cursor.__row[__cursor.__colIdx].colResult.text))
+                strncat(__cursor.__row[__cursor.__colIdx].colResult.text, sDelimiter.c_str(), 
+                    __cursor.__row[__cursor.__colIdx].charCols - strlen(__cursor.__row[__cursor.__colIdx].colResult.text));
             strncat(__cursor.__row[__cursor.__colIdx].colResult.text, sText.c_str(), 
                 __cursor.__row[__cursor.__colIdx].charCols - strlen(__cursor.__row[__cursor.__colIdx].colResult.text));
         }
     }
 
-    virtual void JSONExitArray()
-    {
-        __qualifiedCol.pop_back();
-    }
-
-    virtual void JSONExitGroup()
-    {
-        __qualifiedCol.pop_back();
-    }
-
-    virtual void JSONExitRow()
-    {
-        __exitRow();
-    }
-
     void __exitRow()
     {
-        int sqlret;
-        char *errp;
-        if(__transMax == 1000) {
-            sqlret = sqlite3_exec(__sqlite, "COMMIT", NULL, NULL, &errp);
-            if(errp)
-                sqlite3_free(errp);
-            sqlret = sqlite3_exec(__sqlite, "BEGIN", NULL, NULL, &errp);
-            if(errp)
-                sqlite3_free(errp);
-            __transMax = 0;
-        }
-        if(__stmt) {
-            resultCols::iterator itr;
-            for(itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++) {
-                // bind as text, sqlite will do the conversion into the right storage class
-                sqlret = sqlite3_bind_text(__stmt, (*itr).colNum + 1, (const char *)(*itr).colResult.text, -1, SQLITE_STATIC);
-            }
-            sqlret = sqlite3_step(__stmt);
-            sqlret = sqlite3_reset(__stmt);
-            __transMax++;
-        }
+
     }
 
     virtual RyftOne_Columns __getColumns(__meta_config__ meta_config) 
@@ -521,7 +564,7 @@ protected:
 
     virtual string __getFormatString()
     {
-        return "raw";
+        return "";
     }
 
     virtual bool __isStructuredType()
@@ -542,79 +585,73 @@ protected:
         bool ret = false;
         string tableName;
 
-        if(query.empty()) {
+        if(query.empty()) 
             query = "( RECORD CONTAINS ? )";
-        }
 
         INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Executing query = %s", query.c_str());
 
         if(!(ret = __loadFromSqlite(query))) {
+
             vector<string>::iterator globItr;
+
+            uuid_t id;
+            uuid_generate(id);
+            char stringId[100];
+            uuid_unparse(id, stringId);
+            for(char *pstr = stringId; *pstr; pstr++)
+                *pstr = toupper(*pstr);
+            tableName = stringId;
 
             if (!__initTable(query, tableName)) {
                 __dropTable(query);
                 return false;
             }
 
-            if(__query.empty()) {
-                for(globItr = __glob.begin(); globItr != __glob.end(); globItr++) {
-                    ret = __storeToSqlite(tableName, (*globItr).c_str(), __no_top, "");
-                    if(!ret) {
-                        __dropTable(query);
-                        return false;
-                    }
-                }
-                return __loadFromSqlite(query);
+            curl_global_init(CURL_GLOBAL_DEFAULT);
+            CURL *curl = curl_easy_init();
+
+            if(!__restToken.empty()) {
+                struct curl_slist *header = NULL;
+                string auth = "Authorization: Basic " + __restToken;
+                header = curl_slist_append(header, auth.c_str());
+                curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
             }
-            else {
-                curl_global_init(CURL_GLOBAL_DEFAULT);
-                CURL *curl = curl_easy_init();
 
-                if(!__restToken.empty()) {
-                    struct curl_slist *header = NULL;
-                    string auth = "Authorization: Basic " + __restToken;
-                    header = curl_slist_append(header, auth.c_str());
-                    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
-                }
+            string url = __restServer + "/count?query=" + RyftOne_Util::UrlEncode(query);
+            string relPath = RyftOne_Util::UrlEncode(__path.c_str() + __restPath.length());
 
-                string url = __restServer + "/search?query=" + RyftOne_Util::UrlEncode(__query);
-            
-                string relPath = __path.c_str() + __restPath.length();
-                url += "&files=" + relPath + RyftOne_Util::UrlEncode("/") + "*." + __extension; 
+            url += "&files=" + relPath + RyftOne_Util::UrlEncode("/") + "*." + __extension; 
+            url += "&index=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
+            url += "&local=true";
 
-                url += "&format=" + __getFormatString();
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
-                url += "&local=true";
+            mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+            sprintf(results, "%s/results.%08x", s_R1Results, pthread_self());
 
-                curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            FILE *f = fopen(results, "w+");
 
-                mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
-                sprintf(results, "%s/results.%08x", s_R1Results, pthread_self());
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
+            CURLcode code = curl_easy_perform(curl);
 
-                FILE *f = fopen(results, "w+");
+            curl_easy_cleanup(curl);
+            curl_global_cleanup();
+            fclose(f);
 
-                curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
-                CURLcode code = curl_easy_perform(curl);
-
-                curl_easy_cleanup(curl);
-                curl_global_cleanup();
-                fclose(f);
-
-                ret = __storeToSqlite(tableName, results, false, "results");
-                unlink(results);
-                if(!ret) {
-                    __dropTable(query);
-                    return false;
-                }
-                return __loadFromSqlite(query);
+            ret = __storeToSqlite(tableName, results);
+            unlink(results);
+            if(!ret) {
+                __dropTable(query);
+                return false;
             }
+            return __loadFromSqlite(query);
         }
         return ret;
     }
 
     virtual void __parse(int fd, size_t st_size, bool no_top, string top_object)
     {
-        JSONParse(fd, st_size, no_top, top_object);   
+
     }
 
     vector<string> __glob;
@@ -644,23 +681,23 @@ private:
 
     sqlite3 *__sqlite;
     sqlite3_stmt *__stmt;
-    int __transMax;
+    sqlite3_module __vtab_mod;
 
     Cursor __cursor;
 
-    deque<string> __qualifiedCol;
+    string __idxFile;
+    long __idxNumRows;
+    long __idxCurRow;
+    FILE * __idxFD;
+
+    int __cachedFD;
+    char * __cachedFile;
+    char * __idxLine;
+    char * __idxFilename;
 
     bool __initTable(string& query, string& tableName)
     {
         char * errp;
-
-        uuid_t id;
-        uuid_generate(id);
-        char stringId[100];
-        uuid_unparse(id, stringId);
-        for(char *pstr = stringId; *pstr; pstr++)
-            *pstr = toupper(*pstr);
-        tableName = stringId;
 
         int idx;
         string coldefs;
@@ -686,7 +723,7 @@ private:
             }
         }
 
-        char *sql = sqlite3_mprintf("CREATE TABLE \"%s\" (%s)", tableName.c_str(), coldefs.c_str());
+        char *sql = sqlite3_mprintf("CREATE VIRTUAL TABLE \"%s\" USING query_vtab (%s)", tableName.c_str(), coldefs.c_str());
         int sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -723,7 +760,7 @@ private:
 
         string escapedQuery;
         CopyEscapedLiteral(escapedQuery, query);
-        sql = sqlite3_mprintf("INSERT INTO __DIRECTORY__ VALUES ('%s','%s')", tableName.c_str(), escapedQuery.c_str());
+        sql = sqlite3_mprintf("INSERT INTO \"__DIRECTORY__\" VALUES ('%s','%s', NULL, NULL)", tableName.c_str(), escapedQuery.c_str());
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -801,6 +838,8 @@ private:
             return false;
 
         string tableName = prows[ncols+0];
+        __idxFile = prows[ncols+2];
+        __idxNumRows = atoi(prows[ncols+3]);
         sqlite3_free_table(prows);
         sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\"", tableName.c_str());
         sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
@@ -853,52 +892,23 @@ private:
         return false;
     }
 
-    bool __storeToSqlite(string& tableName, const char *file, bool no_top, string top_object )
+    bool __storeToSqlite(string& tableName, const char *count_file)
     {
         int fd;
         struct stat sb;
-        int idx;
-
-        if((fd = ::open(file, O_RDONLY)) == -1)
+        if((fd = ::open(count_file, O_RDONLY)) == -1)
             return false;
-
         fstat(fd, &sb);
 
-        string values;
-        for(idx = 0; idx < __metaTags.size(); idx++) {
-            if(!values.empty())
-                values += ",";
-            values += "?";
-        }
+        int matches = __getRowCount(fd, sb.st_size);
+        string idxPath = __path + "/.caches/" + tableName + ".txt";
 
         char * errp;
-        char * sql = sqlite3_mprintf("INSERT INTO \"%s\" VALUES (%s)", tableName.c_str(), values.c_str() );
-        int sqlret = sqlite3_prepare_v2(__sqlite, sql, -1, &__stmt, NULL);
+        char * sql = sqlite3_mprintf("UPDATE \"__DIRECTORY__\" SET IDX_FILE = '%s', NUM_ROWS = %d WHERE ID = '%s'", idxPath.c_str(), matches, tableName.c_str());
+        int sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(sqlret != SQLITE_OK) 
             return false;
-    
-        resultCols::iterator itr;
-        for(idx = 0, itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++, idx++) {
-            (*itr).colResult.text = (char *)sqlite3_malloc((*itr).charCols + 1);
-        }
-        sqlret = sqlite3_exec(__sqlite, "BEGIN", NULL, NULL, &errp);
-        if(errp)
-            sqlite3_free(errp);
-        __transMax = 0;
-
-        __parse(fd, sb.st_size, no_top, top_object);
-
-        sqlret = sqlite3_exec(__sqlite, "COMMIT", NULL, NULL, &errp);
-        if(errp)
-            sqlite3_free(errp);
-
-        for(itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++) {
-            sqlite3_free((*itr).colResult.text);
-        }
-
-        sqlite3_finalize(__stmt);
-        __stmt = NULL;
 
         close(fd);
         return true;
@@ -913,6 +923,33 @@ private:
                 return idx;
         }
         return -1;
+    }
+
+    int __getRowCount(int fd, size_t stSize)
+    {
+        int matches = -1;
+        int read_count;
+        char *buffer = (char *)malloc(stSize);
+        if(!buffer)
+            return false;
+
+        json_object *jobj;
+        json_tokener *jtok = json_tokener_new();
+        enum json_tokener_error jerr;
+
+        read_count = read(fd, buffer, stSize);
+        if(read_count == -1) {
+            free(buffer);
+            json_tokener_free(jtok);
+            return -1;
+        }
+        jobj = json_tokener_parse_ex(jtok, buffer, read_count);
+
+        free(buffer);
+
+        jobj = json_object_object_get(jobj, "matches");
+        matches = json_object_get_int(jobj);
+        return matches;
     }
 
     void __date(const char *dateStr, int colIdx, struct tm *date)
@@ -1005,4 +1042,121 @@ private:
         }
     }
 };
+
+struct vtab : public sqlite3_vtab
+{
+    IQueryResult *__qresult;
+};
+struct vtab_cursor : public sqlite3_vtab_cursor
+{
+    sqlite_int64 __rowId;
+    IQueryResult *__qresult;
+};
+
+int xCreate(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr)
+{
+    vtab * out_vtab = new vtab;
+    if(!out_vtab) 
+        return SQLITE_NOMEM;
+
+    out_vtab->__qresult = (IQueryResult *)in_qresult;
+
+    string coldefs;
+    for(int idx = 3; idx < in_argc; idx++) {
+        if(!coldefs.empty())
+            coldefs += ",";
+        coldefs += in_argv[idx];
+    }
+    char *sql = sqlite3_mprintf("CREATE TABLE \"%s\" (%s)", in_argv[2], coldefs.c_str());
+    int sqlret = sqlite3_declare_vtab(in_sqlite, sql);
+    sqlite3_free(sql);
+    if(sqlret != SQLITE_OK) 
+        return sqlret;
+
+    *out_ppVTab = out_vtab;
+    return SQLITE_OK;
+}
+
+int xConnect(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr)
+{
+    return xCreate(in_sqlite, in_qresult, in_argc, in_argv, out_ppVTab, out_pzErr);
+}
+
+int xDisconnect(sqlite3_vtab *in_pVTab)
+{
+    return xDestroy(in_pVTab);
+}
+
+int xDestroy(sqlite3_vtab *in_pVTab)
+{
+    vtab * in_vtab = (vtab *)in_pVTab;
+    delete in_vtab;
+    return SQLITE_OK;
+}
+
+int xOpen(sqlite3_vtab *in_pVTab, sqlite3_vtab_cursor **out_ppCursor)
+{
+    vtab * in_vtab = (vtab *)in_pVTab;
+    if(!in_vtab->__qresult->OpenIndexedResult())
+        return SQLITE_ERROR;
+    vtab_cursor * out_vtab_cursor = new vtab_cursor;
+    if(!out_vtab_cursor)
+        return SQLITE_NOMEM;
+    out_vtab_cursor->__rowId = 0;
+    out_vtab_cursor->__qresult = in_vtab->__qresult;
+    *out_ppCursor = out_vtab_cursor;
+    return SQLITE_OK;
+}
+
+int xClose(sqlite3_vtab_cursor *in_pVTabCursor)
+{
+    vtab_cursor * in_vtab_cursor = (vtab_cursor *)in_pVTabCursor;
+    in_vtab_cursor->__qresult->CloseIndexedResult();
+    delete in_vtab_cursor;
+    return SQLITE_OK;
+}
+
+int xBestIndex(sqlite3_vtab *pVTab, sqlite3_index_info*)
+{
+    return SQLITE_OK;
+}
+
+int xFilter(sqlite3_vtab_cursor*, int idxNum, const char *idxStr, int argc, sqlite3_value **argv)
+{
+    return SQLITE_OK;
+}
+
+int xNext(sqlite3_vtab_cursor *in_pVTabCursor)
+{
+    vtab_cursor * in_vtab_cursor = (vtab_cursor *)in_pVTabCursor;
+    in_vtab_cursor->__qresult->FetchNextIndexedResult();
+    in_vtab_cursor->__rowId++;
+    return SQLITE_OK;
+}
+
+int xEof(sqlite3_vtab_cursor *in_pVTabCursor)
+{
+    vtab_cursor * in_vtab_cursor = (vtab_cursor *)in_pVTabCursor;
+    return in_vtab_cursor->__qresult->IndexedResultEof();
+}
+
+int xColumn(sqlite3_vtab_cursor *in_pVTabCursor, sqlite3_context* in_context, int in_col)
+{
+    vtab_cursor * in_vtab_cursor = (vtab_cursor *)in_pVTabCursor;
+    const char *out_text = in_vtab_cursor->__qresult->GetIndexedResultColumn(in_col);
+    sqlite3_result_text(in_context, out_text, -1, SQLITE_TRANSIENT);
+    return SQLITE_OK;
+}
+
+int xRowid(sqlite3_vtab_cursor *in_pVTabCursor, sqlite3_int64 *pRowid)
+{
+    vtab_cursor * in_vtab_cursor = (vtab_cursor *)in_pVTabCursor;
+    *pRowid = in_vtab_cursor->__rowId;
+    return SQLITE_OK;
+}
+
+int xRename(sqlite3_vtab *pVtab, const char *zNew)
+{
+    return SQLITE_READONLY;
+}
 #endif

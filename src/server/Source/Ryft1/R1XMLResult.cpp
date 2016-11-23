@@ -20,7 +20,7 @@ NodeAction RyftOne_XMLResult::AddElement(std::string sName, const char **psAttri
 
 void RyftOne_XMLResult::AddText(std::string sText) 
 {
-    __addText(sText);
+    __addText(sText, "");
 }
 
 void RyftOne_XMLResult::ExitRow() 
@@ -112,9 +112,5 @@ void RyftOne_XMLResult::__loadTable(string& in_name, vector<__catalog_entry__>::
 
 void RyftOne_XMLResult::__parse(int fd, size_t st_size, bool no_top, string top_object)
 {
-    if(!top_object.empty()) {
-        IQueryResult::__parse(fd, st_size, no_top, top_object);
-    }
-    else
-        XMLParse(fd, st_size, m_delim, no_top);
+    XMLParse(fd, st_size, m_delim, no_top);
 }

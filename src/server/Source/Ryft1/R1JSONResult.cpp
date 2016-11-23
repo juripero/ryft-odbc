@@ -8,6 +8,63 @@
 
 #include "R1JSONResult.h"
 
+NodeAction RyftOne_JSONResult::JSONStartRow()
+{
+    return __startRow();
+}
+
+NodeAction RyftOne_JSONResult::JSONStartArray( std::string sName )
+{
+    __qualifiedCol.push_back(sName + ".[]");
+    return ProcessNode;
+}
+
+NodeAction RyftOne_JSONResult::JSONStartGroup( std::string sName )
+{
+    __qualifiedCol.push_back(sName);
+    return ProcessNode;
+}
+
+NodeAction RyftOne_JSONResult::JSONAddElement( std::string sName, const char **psAttribs, JSONElement **ppElement )
+{
+    string qualifiedName;
+    deque<string>::iterator itr;
+    for(itr = __qualifiedCol.begin(); itr != __qualifiedCol.end(); itr++) {
+        if(!qualifiedName.empty())
+            qualifiedName += ".";
+        qualifiedName += (*itr);
+    }
+    if(!qualifiedName.empty())
+        qualifiedName += ".";
+    qualifiedName += sName;
+    __addElement(qualifiedName, NULL, NULL);
+    return ProcessNode;
+}
+
+void RyftOne_JSONResult::JSONAddText( std::string sText )
+{
+    if(!__qualifiedCol.empty()) {
+        __addText(sText, __delimiter);
+    }
+    else
+        __addText(sText, "");
+}
+
+void RyftOne_JSONResult::JSONExitArray()
+{
+    __qualifiedCol.pop_back();
+}
+
+void RyftOne_JSONResult::JSONExitGroup()
+{
+    __qualifiedCol.pop_back();
+}
+
+void RyftOne_JSONResult::JSONExitRow()
+{
+    __exitRow();
+}
+
 RyftOne_Columns RyftOne_JSONResult::__getColumns(__meta_config__ meta_config)
 {
     int idx;
