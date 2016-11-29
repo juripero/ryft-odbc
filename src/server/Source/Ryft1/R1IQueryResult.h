@@ -31,6 +31,7 @@ using namespace RyftOne;
 #include <string.h>
 #include <curl/curl.h>
 #include <cctype>
+#include <pwd.h>
 #include <json/json.h>
 
 #include "R1Util.h"
@@ -205,7 +206,10 @@ public:
 
         string dbpath = __path;
         dbpath += "/.caches";
-        mkdir(dbpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+        mkdir(dbpath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH);
+        struct passwd *pwd = getpwnam(s_RyftUser);
+        if(pwd != NULL)
+            chown(dbpath.c_str(), pwd->pw_uid, pwd->pw_gid);
 
         dbpath += "/caches.bin";
         int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
@@ -626,7 +630,11 @@ protected:
 
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
-            mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+            mkdir(s_R1Results, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
+            struct passwd *pwd = getpwnam(s_RyftUser);
+            if(pwd != NULL)
+                chown(s_R1Results, pwd->pw_uid, pwd->pw_gid);
+
             sprintf(results, "%s/results.%08x", s_R1Results, pthread_self());
 
             FILE *f = fopen(results, "w+");

@@ -10,6 +10,7 @@
 const char s_R1Catalog[] = "/ryftone/ODBC";
 const char s_R1Results[] = "/ryftone/ODBC/.results";
 const char s_TableMeta[] = ".meta.table";
+const char s_RyftUser[] = "ryftuser";
 
 __meta_config__::__meta_config__() { }
 __meta_config__::__meta_config__(string& in_dir)
