@@ -7,6 +7,11 @@ stop on shutdown
 pre-start script
 	echo `date "+%F %T"` "pre-start"
 
+	pidfile=/usr/local/ryft/bin/x8664/.r1odbcd.pid
+	if [ -e "${pidfile}" ]
+	then
+		rm -f "${pidfile}"
+	fi
 	# wait for partition
 	waitSeconds=15
 	partition="/ryftone"
