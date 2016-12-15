@@ -54,7 +54,7 @@ AutoPtr<DSIExtOperationHandlerFactory> R1DataEngine::CreateOperationHandlerFacto
         "R1DataEngine", 
         "CreateOperationHandlerFactory");
 
-    return AutoPtr<DSIExtOperationHandlerFactory>(new R1OperationHandlerFactory());
+    return AutoPtr<DSIExtOperationHandlerFactory>(new R1OperationHandlerFactory(m_ryft1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

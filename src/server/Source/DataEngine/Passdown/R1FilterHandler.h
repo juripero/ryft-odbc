@@ -27,7 +27,8 @@ namespace RyftOne
         /// @param in_table             The table on which to apply filters. Cannot be NULL.
         /// @param in_codeBaseSettings  The CodeBase settings. (NOT OWN)
         R1FilterHandler(
-            Simba::Support::SharedPtr<R1Table> in_table);
+            Simba::Support::SharedPtr<R1Table> in_table,
+            RyftOne_Database *ryft1);
 
         /// @brief Destructor.
         virtual ~R1FilterHandler();
@@ -218,13 +219,11 @@ namespace RyftOne
         ///
         /// @param in_columnName        Name of the column. Cannot be NULL.
         /// @param in_columnSqlType     SQL Type of the column. Cannot be NULL.
-        /// @param in_exprSqlType       Right side expression SQL type.
         /// @param in_exprValue         Right side expression value as a simba_wstring.
         /// @param in_compOp            Comparison operation.  Cannot be NULL.
         void ConstructStringComparisonFilter(
             simba_wstring in_columnName,
             simba_int16 in_columnSqlType,
-            simba_int16 in_exprSqlType,
             const simba_wstring& in_exprValue,
             simba_wstring in_RelationalOp);
 
@@ -294,6 +293,8 @@ namespace RyftOne
 
         /// Flag for successful pass down.
         bool m_isPassedDown;
+
+        RyftOne_Database *m_ryft1;
     };
 }
 
