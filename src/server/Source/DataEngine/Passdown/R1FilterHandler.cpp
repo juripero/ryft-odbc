@@ -517,7 +517,6 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
     lColumn->GetLabel(columnName);
     
     int literalIdx = 0;
-    m_filter.Clear();
     m_filter += "( ";
 
     LiteralVector::iterator literalItr;
