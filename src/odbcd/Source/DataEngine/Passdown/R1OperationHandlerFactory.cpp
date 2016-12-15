@@ -17,7 +17,7 @@ using namespace Simba::SQLEngine;
 
 // Public ==========================================================================================
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-R1OperationHandlerFactory::R1OperationHandlerFactory() 
+R1OperationHandlerFactory::R1OperationHandlerFactory(RyftOne_Database *ryft1) : m_ryft1(ryft1)
 {
     ;
 }
@@ -27,6 +27,6 @@ AutoPtr<IBooleanExprHandler> R1OperationHandlerFactory::CreateFilterHandler(
     SharedPtr<DSIExtResultSet> in_table)
 {
     SharedPtr<R1Table> table(static_cast<R1Table*> (in_table.Get()));
-    return AutoPtr<IBooleanExprHandler>(new R1FilterHandler(table));
+    return AutoPtr<IBooleanExprHandler>(new R1FilterHandler(table, m_ryft1));
 }
 

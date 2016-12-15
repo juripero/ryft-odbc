@@ -492,7 +492,13 @@ public:
 
         if(strcmp(__cachedFile, __idxFilename)) {
             close(__cachedFD);
-            __cachedFD = open(__idxFilename, O_RDONLY);
+            // WORKWORK
+            if(strncmp(__idxFilename, "/ryftone", strlen("/ryftone"))) {
+                string path = string("/ryftone") + __idxFilename;
+                __cachedFD = open(path.c_str(), O_RDONLY);
+            }
+            else
+                __cachedFD = open(__idxFilename, O_RDONLY);
             strcpy(__cachedFile, __idxFilename);
         }
 
