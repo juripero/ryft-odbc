@@ -130,6 +130,9 @@ namespace RyftOne
 
     // Private =====================================================================================
     private:
+
+        virtual void DoReset();
+
         /// @brief Set the driver's default property values.
         /// 
         /// This function overrides some of the default connection properties specified in
