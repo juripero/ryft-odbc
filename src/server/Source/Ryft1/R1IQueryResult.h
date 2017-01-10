@@ -851,9 +851,19 @@ private:
         if(nrows == 0) 
             return false;
 
-        string tableName = prows[ncols+0];
-        __idxFile = prows[ncols+2];
-        __idxNumRows = atoi(prows[ncols+3]);
+        string tableName;
+        if(prows[ncols+0])
+            tableName = prows[ncols+0];
+        __idxFile.clear();
+        if(prows[ncols+2])
+            __idxFile = prows[ncols+2];
+        __idxNumRows = 0;
+        if(prows[ncols+3])
+            __idxNumRows = atoi(prows[ncols+3]);
+        if(tableName.empty() || __idxFile.empty() || __idxNumRows == 0) {
+            __dropTable(query);
+            return false;
+        }
         sqlite3_free_table(prows);
         sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\"", tableName.c_str());
         sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);

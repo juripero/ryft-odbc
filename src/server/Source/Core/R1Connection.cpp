@@ -182,6 +182,12 @@ void R1Connection::ToNativeSQL(const simba_wstring& in_string, simba_wstring& ou
 
 // Private =========================================================================================
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+void R1Connection::DoReset()
+{
+    // Do nothing.
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void R1Connection::SetConnectionPropertyValues()
 {
 	DSIPropertyUtilities::SetReadOnly(this, false);
