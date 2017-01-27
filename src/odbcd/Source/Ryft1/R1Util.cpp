@@ -199,6 +199,32 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         sprintf(formatSpec, "%c%c%c", currency, subitizer, decimal);
         out_formatCustom = formatSpec;
     }
+    else if(!strncasecmp(in_typeName.c_str(), "metavar", strlen("metavar"))) {
+        const char *paren = strchr(in_typeName.c_str(), '(');
+        format[0] = '\0';
+        if(paren) {
+            strcpy(format, paren+1);
+            format[strlen(format)-1] = '\0';
+        }
+        if (!strcasecmp(format, "file")) {
+            *out_sqlType = SQL_VARCHAR;
+            *out_typeCustom = TYPE_META_FILE;
+            charCols = FILENAME_MAX;
+            bufLength = FILENAME_MAX;
+        }
+        else if(!strcasecmp(format, "offset")) {
+            *out_sqlType = SQL_BIGINT;
+            *out_typeCustom = TYPE_META_OFFSET;
+            charCols = 20;
+            bufLength = 20;
+        }
+        else if(!strcasecmp(format, "length")) {
+            *out_sqlType = SQL_BIGINT;
+            *out_typeCustom = TYPE_META_LENGTH;
+            charCols = 20;
+            bufLength = 20;
+        }
+    }
     *out_charCols = charCols;
     *out_bufLength = bufLength;
 }

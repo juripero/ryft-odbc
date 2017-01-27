@@ -134,6 +134,10 @@ bool R1Table::RetrieveData(
         switch (sqlType) {
         case TDW_SQL_VARCHAR: {
             const char *colResult = m_result->GetStringValue(in_column);
+            if(!colResult) {
+                in_data->SetNull(true);
+                return false;
+            }
             return DSITypeUtilities::OutputVarCharStringData(
 			    colResult,
                 strlen(colResult),

@@ -383,7 +383,12 @@ public:
 
     const char * GetStringValue(int colIdx)
     {
-        return (const char *)sqlite3_column_text(__stmt, colIdx);
+        switch(__cols[colIdx].m_dtType) {
+        case TYPE_META_FILE:
+            return __idxFilename;
+        default:
+            return (const char *)sqlite3_column_text(__stmt, colIdx);
+        }
     }
 
     int GetIntValue(int colIdx)
@@ -393,7 +398,14 @@ public:
 
     long long GetInt64Value(int colIdx)
     {
-        return sqlite3_column_int64(__stmt, colIdx);
+        switch(__cols[colIdx].m_dtType) {
+        case TYPE_META_OFFSET:
+            return __offset;
+        case TYPE_META_LENGTH:
+            return __length;
+        default:
+            return sqlite3_column_int64(__stmt, colIdx);
+        }
     }
 
     double GetDoubleValue(int colIdx)
@@ -481,13 +493,18 @@ public:
 
     bool FetchNextIndexedResult()
     {
-        long long offset = 0, length = 0, surrounding = 0;
+        __idxFilename[0] = '\0';
+        char * offset = NULL;
+        char * length = NULL;
+        __offset = __length = __surrounding = 0;
 
         if(fgets(__idxLine, FILENAME_MAX, __idxFD)) {
             strcpy(__idxFilename, strtok(__idxLine, ","));
-            offset = strtoll(strtok(NULL, ","), NULL, 10);
-            length = strtoll(strtok(NULL, ","), NULL, 10);
-            surrounding = strtoll(strtok(NULL, "\n"), NULL, 10);
+            if(offset = strtok(NULL, ","))
+                __offset = strtoll(offset, NULL, 10);
+            if(length = strtok(NULL, ","))
+                __length = strtoll(length, NULL, 10);
+            __surrounding = strtoll(strtok(NULL, "\n"), NULL, 10);
         }
 
         if(strcmp(__cachedFile, __idxFilename)) {
@@ -502,9 +519,9 @@ public:
             strcpy(__cachedFile, __idxFilename);
         }
 
-        lseek(__cachedFD, offset, SEEK_SET);
+        lseek(__cachedFD, __offset, SEEK_SET);
         
-        __parse(__cachedFD, length, true, "");
+        __parse(__cachedFD, __length, true, "");
 
         __idxCurRow++;
         return true;
@@ -708,6 +725,9 @@ private:
     char * __cachedFile;
     char * __idxLine;
     char * __idxFilename;
+    long long __offset;
+    long long __length;
+    long long __surrounding;
 
     bool __initTable(string& query, string& tableName)
     {
