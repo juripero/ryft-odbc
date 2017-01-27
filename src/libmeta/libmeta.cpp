@@ -243,19 +243,6 @@ bool __catalog_entry__::_is_valid()
     if(rdf_config.file_glob.empty())
         return false;
 
-    // if the file type is XML match up rdftags with the metadata tags, there is no check for JSON files
-    if(rdf_config.data_type == __rdf_config__::dataType_XML) {
-        vector<__meta_config__::__meta_col__>::iterator colitr;
-        vector<__rdf_config__::__rdf_tag__>::iterator tagitr;
-        for(colitr = meta_config.columns.begin(); colitr != meta_config.columns.end(); colitr++) {
-            for(tagitr = rdf_config.tags.begin(); tagitr != rdf_config.tags.end(); tagitr++) {
-                if(!colitr->xml_tag.compare(tagitr->name))
-                    break;
-            }
-            if(tagitr == rdf_config.tags.end())
-                return false;
-        }
-    }
     return true;
 }
 

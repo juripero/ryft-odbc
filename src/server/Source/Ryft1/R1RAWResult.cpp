@@ -10,11 +10,13 @@
 
 RyftOne_Columns RyftOne_RAWResult::__getColumns(__meta_config__ meta_config)
 {
+
+    int idx;
     RyftOne_Column col;
     RyftOne_Columns cols;
-    vector<__meta_config__::__meta_col__>::iterator colItr = meta_config.columns.begin();
-    if(colItr != meta_config.columns.end()) {
-        col.m_ordinal = 1;
+    vector<__meta_config__::__meta_col__>::iterator colItr;
+    for(idx = 0, colItr = meta_config.columns.begin(); colItr != meta_config.columns.end(); colItr++, idx++) {
+        col.m_ordinal = idx+1;
         col.m_tableName = meta_config.table_name;
         col.m_colTag = "data";
         col.m_colName = colItr->name;

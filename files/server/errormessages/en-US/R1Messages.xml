@@ -21,5 +21,7 @@
         <Error Key="AuthorizationFailed" NativeErrorCode="2">Could not establish a connection. Authorization failed.</Error>
         <Error Key="RolException" NativeErrorCode="3" Params="1">An error occurred executing a RYFT One library call (%1%).</Error>
         <Error Key="UnstructuredSelectException" NativeErrorCode="4">Cannot execute unrestricted select on unstructured data.</Error>
+        <Error Key="InvalidSyntax" NativeErrorCode="5" Params="1">Encountered search syntax error processing %1%</Error>
+        <Error Key="InvalidOption" NativeErrorCode="6" Params="1">Invalid search option %1%</Error>
     </Package>
 </Messages>

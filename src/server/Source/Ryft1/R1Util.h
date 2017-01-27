@@ -39,6 +39,10 @@ using namespace std;
 #define TYPE_NUMBER                 21
 #define TYPE_CURRENCY               22
 
+#define TYPE_META_FILE              23
+#define TYPE_META_OFFSET            24
+#define TYPE_META_LENGTH            25
+
 using namespace std;
 
 class RyftOne_Util {

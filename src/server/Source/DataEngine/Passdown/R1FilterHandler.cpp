@@ -714,6 +714,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
 {
     wstring out_filter = L"\"";
     const wchar_t *pfilter;
+    const wchar_t *pOpt = NULL;
     size_t idx1, idx2;
     bool regex = false;
     int hamming = 0;
@@ -728,8 +729,10 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
         switch(*pfilter) {
         case L'-':
+            pOpt = pfilter;
             pfilter++;
             switch(*pfilter) {
+            /*** taking REGEX stuff out until it is available
             case L'r':
             case L'R': {
                 wstring inside = pfilter;
@@ -743,7 +746,8 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 }
                 break;
                 }
-            case L'h':
+            ***/
+            case L'h': // format -hddd(term)
             case L'H': {
                 wstring num_hamming;
                 for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= L'9'); pfilter++)
@@ -754,22 +758,23 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
                 idx2 = inside.find_last_of(L")");
-                if(idx1 != string::npos && idx2 != string::npos) {
-                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
-                    const wchar_t *psearch = search_string.c_str();
-                    for( ; *psearch; psearch++) {
-                        switch(*psearch) {
-                        case L'%':
-                        case L'_':
-                            out_filter += L"\"?\"";
-                            break;
-                        default:
-                            out_filter += *psearch;
-                            break;
-                        }
+                if(idx1 == string::npos || idx2 == string::npos) 
+                    R1THROWGEN1("InvalidSyntax", pOpt);
+
+                wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                const wchar_t *psearch = search_string.c_str();
+                for( ; *psearch; psearch++) {
+                    switch(*psearch) {
+                    case L'%':
+                    case L'_':
+                        out_filter += L"\"?\"";
+                        break;
+                    default:
+                        out_filter += *psearch;
+                        break;
                     }
-                    pfilter += idx2;
                 }
+                pfilter += idx2;
                 break;
                 }
             case L'e':
@@ -783,22 +788,23 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
                 idx2 = inside.find_last_of(L")");
-                if(idx1 != string::npos && idx2 != string::npos) {
-                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
-                    const wchar_t *psearch = search_string.c_str();
-                    for( ; *psearch; psearch++) {
-                        switch(*psearch) {
-                        case L'%':
-                        case L'_':
-                            out_filter += L"\"?\"";
-                            break;
-                        default:
-                            out_filter += *psearch;
-                            break;
-                        }
+                if(idx1 != string::npos && idx2 != string::npos) 
+                    R1THROWGEN1("InvalidSyntax", pOpt);
+                
+                wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                const wchar_t *psearch = search_string.c_str();
+                for( ; *psearch; psearch++) {
+                    switch(*psearch) {
+                    case L'%':
+                    case L'_':
+                        out_filter += L"\"?\"";
+                        break;
+                    default:
+                        out_filter += *psearch;
+                        break;
                     }
-                    pfilter += idx2;
                 }
+                pfilter += idx2;
                 break;
                 }
             case L'w':
@@ -818,9 +824,8 @@ void R1FilterHandler::ConstructStringComparisonFilter(
             case L'-':
                 out_filter += L"-";
                 break;
-            default:
-                // ignore any other switches
-                break;
+            default: 
+                R1THROWGEN1("InvalidOption", pOpt);
             }
             // skip whitespace after the filter
             for ( ; iswhitespace(*(pfilter+1)); pfilter++) ;
