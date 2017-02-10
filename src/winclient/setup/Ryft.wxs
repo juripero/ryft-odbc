@@ -28,7 +28,7 @@
       <Condition Level="1">TABLEAUSERVER</Condition>
     </Feature>
 
-    <Feature Id="VCRedist" Title="Visual C++ 10.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
+    <Feature Id="VCRedist" Title="Visual C++ 12.0 Runtime" AllowAdvertise="no" Display="hidden" Level="1">
       <MergeRef Id="VCRedist" />
     </Feature>
 
@@ -49,7 +49,7 @@
 
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
-      <Merge Id="VCRedist" SourceFile="$(var.ProductDirectory)\MergeModules\VC11\Microsoft_VC110_CRT_$(var.Platform).msm" DiskId="1" Language="0"/>
+      <Merge Id="VCRedist" SourceFile="$(var.ProductDirectory)\MergeModules\VC12\Microsoft_VC120_CRT_$(var.Platform).msm" DiskId="1" Language="0"/>
 
       <!-- Installation Directory -->
       <Directory Id="$(var.PlatformProgramFilesFolder)">
@@ -96,15 +96,16 @@
         <Component Id="ErrorMessages" Guid="$(var.ErrorMessagesGUID)" Directory="en_US">
             <File Id="ClientMessages" Name="ClientMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\ClientMessages.xml" KeyPath="yes"/>
             <File Id="CSCommonMessages" Name="CSCommonMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\CSCommonMessages.xml" />
+            <File Id="NetworkMessages" Name="NetworkMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\NetworkMessages.xml" />
             <File Id="ODBCMessages" Name="ODBCMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\ODBCMessages.xml"/>
         </Component>
 
           <Component Id="ThirdPartyLibraries" Guid="$(var.ThirdPartyLibGUID)" Directory="INSTALLFOLDER">
-          <File Id="ICUDT" Name="sbicudt53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicudt53_$(var.ICUSuffix).dll" KeyPath="yes"/>
-          <File Id="ICUIN" Name="sbicuin53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicuin53_$(var.ICUSuffix).dll"/>
-          <File Id="ICUUC" Name="sbicuuc53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2012\release$(var.ICUSuffix)md\lib\sbicuuc53_$(var.ICUSuffix).dll"/>
-          <File Id="LIBEA" Name="libeay32.dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\openssl\1.0.1\w2012r2\vs2012\release$(var.ICUSuffix)md\bin\libeay32.dll"/>
-          <File Id="SSLEA" Name="ssleay32.dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\openssl\1.0.1\w2012r2\vs2012\release$(var.ICUSuffix)md\bin\ssleay32.dll"/>
+          <File Id="ICUDT" Name="sbicudt53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2013\release$(var.ICUSuffix)md\lib\sbicudt53_$(var.ICUSuffix).dll" KeyPath="yes"/>
+          <File Id="ICUIN" Name="sbicuin53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2013\release$(var.ICUSuffix)md\lib\sbicuin53_$(var.ICUSuffix).dll"/>
+          <File Id="ICUUC" Name="sbicuuc53_$(var.ICUSuffix).dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\icu\53.1\w2012r2\vs2013\release$(var.ICUSuffix)md\lib\sbicuuc53_$(var.ICUSuffix).dll"/>
+          <File Id="LIBEA" Name="libeay32.dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\openssl\1.0.1\w2012r2\vs2013\release$(var.ICUSuffix)md\bin\libeay32.dll"/>
+          <File Id="SSLEA" Name="ssleay32.dll" Source="$(env.SIMBAENGINE_THIRDPARTY_DIR)\openssl\1.0.1\w2012r2\vs2013\release$(var.ICUSuffix)md\bin\ssleay32.dll"/>
       </Component>
 
       <Component Id="RegistryEntries" Guid="$(var.RegistryEntriesGUID)" Directory="INSTALLFOLDER">
