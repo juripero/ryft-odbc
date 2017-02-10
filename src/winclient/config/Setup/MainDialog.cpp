@@ -190,7 +190,7 @@ void MainDialog::DoTestDialogAction(HWND in_dialogHandle)
     simba_wstring PWD = GetEditText(in_dialogHandle, IDC_EDIT_PWD);
 
     WCHAR ConnStr[512];
-    wsprintf(ConnStr, L"Driver=%s;SERVERLIST=%s %s;UID=%s;PWD=%s;", Driver.GetAsPlatformWString().c_str(), URL.GetAsPlatformWString().c_str(),
+    wsprintf(ConnStr, L"Driver=%s;SERVERS=%s %s;UID=%s;PWD=%s;", Driver.GetAsPlatformWString().c_str(), URL.GetAsPlatformWString().c_str(),
         Port.GetAsPlatformWString().c_str(), UID.GetAsPlatformWString().c_str(), PWD.GetAsPlatformWString().c_str());
     
     CString header;
