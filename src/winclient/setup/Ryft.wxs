@@ -96,7 +96,6 @@
         <Component Id="ErrorMessages" Guid="$(var.ErrorMessagesGUID)" Directory="en_US">
             <File Id="ClientMessages" Name="ClientMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\ClientMessages.xml" KeyPath="yes"/>
             <File Id="CSCommonMessages" Name="CSCommonMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\CSCommonMessages.xml" />
-            <File Id="NetworkMessages" Name="NetworkMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\NetworkMessages.xml" />
             <File Id="ODBCMessages" Name="ODBCMessages.xml" Source="$(env.SIMBAENGINE_DIR)\ErrorMessages\en-US\ODBCMessages.xml"/>
         </Component>
 
