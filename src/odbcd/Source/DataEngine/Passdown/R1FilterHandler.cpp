@@ -788,7 +788,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
                 idx2 = inside.find_last_of(L")");
-                if(idx1 != string::npos && idx2 != string::npos) 
+                if(idx1 == string::npos || idx2 == string::npos) 
                     R1THROWGEN1("InvalidSyntax", pOpt);
                 
                 wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
