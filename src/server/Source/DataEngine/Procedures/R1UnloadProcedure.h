@@ -1,13 +1,13 @@
 // =================================================================================================
-///  @file R1QueryProcedure.h
+///  @file R1UnloadProcedure.h
 ///
-///  Definition of the Class R1QueryProcedure
+///  Definition of the Class R1UnloadProcedure
 ///
 ///  Copyright (C) 2010-2011 Simba Technologies Incorporated.
 // =================================================================================================
 
-#ifndef _R1QUERYPROCEDURE_H_
-#define _R1QUERYPROCEDURE_H_
+#ifndef _R1UnloadProcedure_H_
+#define _R1UnloadProcedure_H_
 
 #include "RyftOne.h"
 #include "R1Catalog.h"
@@ -29,11 +29,11 @@ namespace Support
 
 namespace RyftOne
 {
-    static const simba_wstring R1_PROC_CREATEADHOC(L"R1CreateAdhocTable");
+    static const simba_wstring R1_PROC_UNLOAD(L"R1Unload");
 
     /// @brief CodeBase sample stored procedure that has a return value, parameters,
     /// and a result set.
-    class R1QueryProcedure : public Simba::SQLEngine::DSIExtProcedure
+    class R1UnloadProcedure : public Simba::SQLEngine::DSIExtProcedure
     {
     // Public ======================================================================================
     public:
@@ -41,7 +41,7 @@ namespace RyftOne
         ///
         /// @param in_codebaseSettings  The settings for the connection. (NOT OWN)
         /// @param in_statement         The parent statement. (NOT OWN)  
-        R1QueryProcedure(
+        R1UnloadProcedure(
             RyftOne_Database *in_ryft1,
             Simba::DSI::IStatement* in_statement);
 
@@ -97,10 +97,8 @@ namespace RyftOne
         // The results that are returned from the procedure.
         AutoPtr<Simba::DSI::DSIResults> m_results;
 
-        string __adhoc_table;
-        string __file_glob;
+        string __table;
         string __search_term;
-        int __surrounding;
     };
 }
 #endif

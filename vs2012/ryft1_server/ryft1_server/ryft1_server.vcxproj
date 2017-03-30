@@ -82,7 +82,7 @@
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterResult.h" />
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.h" />
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\Procedures\R1ProcedureFactory.h" />
-    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Procedures\R1QueryProcedure.h" />
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Procedures\R1UnloadProcedure.h" />
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1DataEngine.h" />
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1QueryExecutor.h" />
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\R1Table.h" />
@@ -131,7 +131,7 @@
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1FilterResult.cpp" />
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp" />
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\Procedures\R1ProcedureFactory.cpp" />
-    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Procedures\R1QueryProcedure.cpp" />
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Procedures\R1UnloadProcedure.cpp" />
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1DataEngine.cpp" />
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1QueryExecutor.cpp" />
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\R1Table.cpp" />

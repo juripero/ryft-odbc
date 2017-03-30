@@ -176,9 +176,6 @@
     <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.h">
       <Filter>Source files\DataEngine\Metadata\Include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Procedures\R1QueryProcedure.h">
-      <Filter>Source files\DataEngine\Procedures\Include</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1IQueryResult.h">
       <Filter>Source files\Ryft1\Include</Filter>
     </ClInclude>
@@ -196,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1XMLResult.h">
       <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Procedures\R1UnloadProcedure.h">
+      <Filter>Source files\DataEngine\Procedures\Include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -307,9 +307,6 @@
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.cpp">
       <Filter>Source files\DataEngine\Metadata</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Procedures\R1QueryProcedure.cpp">
-      <Filter>Source files\DataEngine\Procedures</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\server\Source\Ryft1\R1JSONResult.cpp">
       <Filter>Source files\Ryft1</Filter>
     </ClCompile>
@@ -324,6 +321,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\server\Source\Ryft1\R1XMLResult.cpp">
       <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Procedures\R1UnloadProcedure.cpp">
+      <Filter>Source files\DataEngine\Procedures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

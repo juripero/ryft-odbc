@@ -7,7 +7,7 @@
 // =================================================================================================
 
 #include "R1ProcedureFactory.h"
-#include "R1QueryProcedure.h"
+#include "R1UnloadProcedure.h"
 #include "ILogger.h"
 #include "IStatement.h"
 #include "SEInvalidArgumentException.h"
@@ -52,10 +52,10 @@ SharedPtr<DSIExtProcedure> R1ProcedureFactory::CreateProcedure(
     ENTRANCE_LOG(
         m_statement->GetLog(), "RyftOne", "R1ProcedureFactory", "CreateProcedure");
 
-    if (in_procName.IsEqual(R1_PROC_CREATEADHOC, false))
+    if (in_procName.IsEqual(R1_PROC_UNLOAD, false))
     {
         return SharedPtr<DSIExtProcedure> (
-            new R1QueryProcedure(m_ryft1, m_statement));
+            new R1UnloadProcedure(m_ryft1, m_statement));
     }
 
     return SharedPtr<DSIExtProcedure>();
@@ -82,5 +82,5 @@ void R1ProcedureFactory::InitializeProcedures()
     ENTRANCE_LOG(
         m_statement->GetLog(), "RyftOne", "R1ProcedureFactory", "InitializeProcedures");
 
-    m_procedures.push_back(new R1QueryProcedure(m_ryft1, m_statement));
+    m_procedures.push_back(new R1UnloadProcedure(m_ryft1, m_statement));
 }

@@ -6,6 +6,7 @@ using namespace std;
 
 extern const char s_R1Catalog[];
 extern const char s_R1Results[];
+extern const char s_R1Unload[];
 extern const char s_TableMeta[];
 extern const char s_RyftUser[];
 
@@ -637,7 +638,7 @@ private:
 
 class XMLFile : public IFile, public XMLParser {
 public:
-    XMLFile(string output, string delim) : IFile(output), __delim(delim) { }
+    XMLFile(string output, string delim) : IFile(output), __delim(delim), __in_row(false) { }
 
 protected:
     // XML Parse
@@ -658,4 +659,5 @@ private:
     string  __delim;
     string  __field;
     string  __value;
+    bool    __in_row;
 };
