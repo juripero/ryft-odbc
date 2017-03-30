@@ -9,6 +9,7 @@
 
 const char s_R1Catalog[] = "/ryftone/ODBC";
 const char s_R1Results[] = "/ryftone/ODBC/.results";
+const char s_R1Unload[] = "/ryftone/ODBC/unload";
 const char s_TableMeta[] = ".meta.table";
 const char s_RyftUser[] = "ryftuser";
 
@@ -256,6 +257,9 @@ NodeAction XMLFile::StartRow( )
 
 NodeAction XMLFile::AddElement( std::string sName, const char **psAttribs, XMLElement **ppElement )
 {
+    if(!__in_row)
+        return ProcessNode;
+
     if(!__field.empty()) {
         outputField(__field, __value);
     }
@@ -300,6 +304,7 @@ bool XMLFile::startRecord( )
 { 
     if(__ffile) {
         fprintf(__ffile, "<%s>", __delim.c_str());
+        __in_row = true;
         return true; 
     }
     return false;
@@ -309,6 +314,7 @@ bool XMLFile::endRecord( )
 { 
     if(__ffile) {
         fprintf(__ffile, "</%s>\n", __delim.c_str());
+        __in_row = false;
         return true; 
     }
     return false;
@@ -329,6 +335,7 @@ bool XMLFile::copyFile( char *src_path )
     struct stat sb;
     if((ffile = open(src_path, O_RDONLY)) != -1) {
         fstat(ffile, &sb);
+        __in_row = false;
         XMLParse(ffile, sb.st_size, __delim, false);
         close(ffile);
         return true;

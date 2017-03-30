@@ -353,6 +353,39 @@ public:
         unlink(temp_path);
     }
 
+    int UnloadResults()
+    {
+        mkdir(s_R1Unload, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
+        struct passwd *pwd = getpwnam(s_RyftUser);
+        if(pwd != NULL)
+            chown(s_R1Unload, pwd->pw_uid, pwd->pw_gid);
+
+        time_t now = ::time(NULL);
+        tm *lt = localtime(&now);
+        char file_path[PATH_MAX];
+        IFile *formattedFile = NULL;
+        sprintf(file_path, "%s/%s_%04d%02d%02d.%s", 
+            s_R1Unload, __name.c_str(), 1900 + lt->tm_year, lt->tm_mon + 1, lt->tm_mday, __extension.c_str());
+        formattedFile = __createFormattedFile(file_path);
+        if(formattedFile == NULL)
+            return 0;
+        formattedFile->prolog();
+        int numrows = 0;
+        if(FetchFirst()) {
+            do {
+                formattedFile->startRecord();
+                for(int idx = 0; idx < __cols.size(); idx++) {
+                    formattedFile->outputField(__metaTags[idx].c_str(), GetStringValue(idx));
+                }
+                formattedFile->endRecord();
+                numrows++;
+            } while (FetchNext());
+        }
+        formattedFile->epilog();
+        delete formattedFile;
+        return numrows;
+    }
+
     bool FetchFirst() 
     {
         if(!__queryFinished)

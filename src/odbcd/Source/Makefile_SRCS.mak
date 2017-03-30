@@ -24,7 +24,7 @@ DataEngine/Passdown/R1OperationHandlerFactory.cpp \
 DataEngine/Passdown/R1FilterHandler.cpp \
 DataEngine/Passdown/R1FilterResult.cpp \
 DataEngine/Procedures/R1ProcedureFactory.cpp \
-DataEngine/Procedures/R1QueryProcedure.cpp \
+DataEngine/Procedures/R1UnloadProcedure.cpp \
 DataEngine/R1DataEngine.cpp \
 DataEngine/R1Table.cpp \
 Ryft1/R1Catalog.cpp \
