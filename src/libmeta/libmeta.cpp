@@ -132,6 +132,10 @@ void __meta_config__::write_meta_config(string path)
         config_setting_set_string(colElem, itr->description.c_str());
     }
     config_write_file(&tableMeta, config_path);
+    struct passwd *pwd = getpwnam(s_RyftUser);
+    if(pwd != NULL)
+        chown(config_path, pwd->pw_uid, pwd->pw_gid);
+
     config_destroy(&tableMeta);
 }
 
@@ -226,6 +230,9 @@ void __rdf_config__::write_rdf_config(string path)
     }
 
     config_write_file(&tableRdf, path.c_str());
+    struct passwd *pwd = getpwnam(s_RyftUser);
+    if(pwd != NULL)
+        chown(path.c_str(), pwd->pw_uid, pwd->pw_gid);
     config_destroy(&tableRdf);
 }
 
