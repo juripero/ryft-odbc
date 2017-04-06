@@ -227,22 +227,36 @@ bool R1Table::WriteData(
         m_result->PutStringValue(in_column, out_buf);
         break;
     case TDW_SQL_TYPE_DATE: {
-        TDWDate date = (*reinterpret_cast<TDWDate *> (in_data->GetBuffer()));
-        snprintf(out_buf, colSize+1, "%04d-%02d-%02d", date.Year, date.Month, date.Day);
-        m_result->PutStringValue(in_column, out_buf);
+        TDWDate tdwDate = (*reinterpret_cast<TDWDate *> (in_data->GetBuffer()));
+        struct tm date;
+        memset(&date, 0, sizeof(tm));
+        date.tm_year = tdwDate.Year;
+        date.tm_mon = tdwDate.Month;
+        date.tm_mday = tdwDate.Day;
+        m_result->PutDateValue(in_column, &date);
         break;
         }
     case TDW_SQL_TYPE_TIME: {
-        TDWTime time = (*reinterpret_cast<TDWTime *> (in_data->GetBuffer()));
-        snprintf(out_buf, colSize+1, "%02d:%02d:%02d", time.Hour, time.Minute, time.Second);
-        m_result->PutStringValue(in_column, out_buf);
+        TDWTime tdwTime = (*reinterpret_cast<TDWTime *> (in_data->GetBuffer()));
+        struct tm time;
+        memset(&time, 0, sizeof(tm));
+        time.tm_hour = tdwTime.Hour;
+        time.tm_min = tdwTime.Minute;
+        time.tm_sec = tdwTime.Second;
+        m_result->PutTimeValue(in_column, &time);
         break;
         }
     case TDW_SQL_TYPE_TIMESTAMP: {
-        TDWTimestamp timestamp = (*reinterpret_cast<TDWTimestamp *> (in_data->GetBuffer()));
-        snprintf(out_buf, colSize+1, "%04d-%02d-%02d %02d.%02d.%02d", timestamp.Year, timestamp.Month, timestamp.Day,
-            timestamp.Hour, timestamp.Minute, timestamp.Second);
-        m_result->PutStringValue(in_column, out_buf);
+        TDWTimestamp tdwTimestamp = (*reinterpret_cast<TDWTimestamp *> (in_data->GetBuffer()));
+        struct tm timestamp;
+        memset(&timestamp, 0, sizeof(tm));
+        timestamp.tm_year = tdwTimestamp.Year;
+        timestamp.tm_mon = tdwTimestamp.Month;
+        timestamp.tm_mday = tdwTimestamp.Day;
+        timestamp.tm_hour = tdwTimestamp.Hour;
+        timestamp.tm_min = tdwTimestamp.Minute;
+        timestamp.tm_sec = tdwTimestamp.Second;
+        m_result->PutDateTimeValue(in_column, &timestamp);
         break;
         }
     }
