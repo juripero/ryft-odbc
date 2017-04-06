@@ -341,8 +341,13 @@ void start(string path)
     put_lock_file(getpid(), path);
 
     // make the ODBC directory if its not already there
+    struct passwd *pwd = getpwnam(s_RyftUser);
     mkdir(s_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    if(pwd != NULL)
+        chown(s_R1Catalog, pwd->pw_uid, pwd->pw_gid);
     mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    if(pwd != NULL)
+        chown(s_R1Results, pwd->pw_uid, pwd->pw_gid);
 
     // make directory containing bin current directory
     chdir(epath.c_str());
