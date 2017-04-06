@@ -475,6 +475,21 @@ public:
         strcpy(__cursor.__row[colIdx].colResult.text, colValue.c_str());
     }
         
+    void PutDateValue(int colIdx, tm *date)
+    {
+        __date(colIdx, date);
+    }
+
+    void PutTimeValue(int colIdx, tm *time)
+    {
+        __time(colIdx, time);
+    }
+
+    void PutDateTimeValue(int colIdx, tm *datetime)
+    {
+        __datetime(colIdx, datetime);
+    }
+
     void GetTypeFormatSpecifier(int colIdx, unsigned *dtType, string& formatSpec)
     {
         *dtType = __cols[colIdx].m_dtType;
@@ -1094,6 +1109,27 @@ private:
         }
     }
 
+    void __date(int colIdx, struct tm *date)
+    {
+        switch(__cols[colIdx].m_dtType) {
+        case DATE_YYMMDD:
+        case DATE_YYYYMMDD:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                date->tm_year, date->tm_mon, date->tm_mday);
+            break;
+        case DATE_DDMMYY:
+        case DATE_DDMMYYYY:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                date->tm_mday, date->tm_mon, date->tm_year);
+            break;
+        case DATE_MMDDYY:
+        case DATE_MMDDYYYY:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                date->tm_mon, date->tm_mday, date->tm_year);
+            break;
+        }
+    }
+
     void __time(const char *timeStr, int colIdx, struct tm *time)
     {
         char ampm[16];
@@ -1104,11 +1140,28 @@ private:
             pampm = ampm;
             while (isspace(*pampm))
                 pampm++;
-            if(!strcasecmp(pampm, "pm"))
+            time->tm_hour = (time->tm_hour % 12);
+            if(!strcasecmp(pampm, "pm")) {
                 time->tm_hour += 12;
+            }
             break;
         case TIME_24MMSS:
             sscanf(timeStr, __cols[colIdx].m_formatSpec.c_str(), &(time->tm_hour), &(time->tm_min), &(time->tm_sec));
+            break;
+        }
+    }
+
+    void __time(int colIdx, struct tm *time)
+    {
+        int hour = time->tm_hour % 12;
+        switch(__cols[colIdx].m_dtType) {
+        case TIME_12MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                hour ? hour : 12, time->tm_min, time->tm_sec, (time->tm_hour < 12) ? "AM" : "PM");
+            break;
+        case TIME_24MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                time->tm_hour, time->tm_min, time->tm_sec);
             break;
         }
     }
@@ -1125,8 +1178,10 @@ private:
             pampm = ampm;
             while (isspace(*pampm))
                 pampm++;
-            if(!strcasecmp(pampm, "pm"))
+            datetime->tm_hour = (datetime->tm_hour % 12);
+            if(!strcasecmp(pampm, "pm")) {
                 datetime->tm_hour += 12;
+            }
             break;
         case DATETIME_DDMMYYYY_12MMSS:
         case DATETIME_DDMMYY_12MMSS:
@@ -1135,8 +1190,10 @@ private:
             pampm = ampm;
             while (isspace(*pampm))
                 pampm++;
-            if(!strcasecmp(pampm, "pm"))
+            datetime->tm_hour = (datetime->tm_hour % 12);
+            if(!strcasecmp(pampm, "pm")) {
                 datetime->tm_hour += 12;
+            }
             break;
         case DATETIME_MMDDYYYY_12MMSS:
         case DATETIME_MMDDYY_12MMSS:
@@ -1145,8 +1202,10 @@ private:
             pampm = ampm;
             while (isspace(*pampm))
                 pampm++;
-            if(!strcasecmp(pampm, "pm"))
+            datetime->tm_hour = (datetime->tm_hour % 12);
+            if(!strcasecmp(pampm, "pm")) {
                 datetime->tm_hour += 12;
+            }
             break;
         case DATETIME_YYYYMMDD_24MMSS:
         case DATETIME_YYMMDD_24MMSS:
@@ -1165,6 +1224,47 @@ private:
             break;
         }
     }
+
+    void __datetime(int colIdx, struct tm *datetime)
+    {
+        int hour = datetime->tm_hour % 12;
+        switch(__cols[colIdx].m_dtType) {
+        case DATETIME_YYYYMMDD_12MMSS:
+        case DATETIME_YYMMDD_12MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                datetime->tm_year, datetime->tm_mon, datetime->tm_mday,  hour ? hour : 12, datetime->tm_min, datetime->tm_sec, 
+                (datetime->tm_hour < 12) ? "AM" : "PM");
+            break;
+        case DATETIME_DDMMYYYY_12MMSS:
+        case DATETIME_DDMMYY_12MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                datetime->tm_mday, datetime->tm_mon, datetime->tm_year, hour ? hour : 12, datetime->tm_min, datetime->tm_sec, 
+                (datetime->tm_hour < 12) ? "AM" : "PM");
+            break;
+        case DATETIME_MMDDYYYY_12MMSS:
+        case DATETIME_MMDDYY_12MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                datetime->tm_mon, datetime->tm_mday, datetime->tm_year, hour ? hour : 12, datetime->tm_min, datetime->tm_sec, 
+                (datetime->tm_hour < 12) ? "AM" : "PM");
+            break;
+        case DATETIME_YYYYMMDD_24MMSS:
+        case DATETIME_YYMMDD_24MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                datetime->tm_year, datetime->tm_mon, datetime->tm_mday, datetime->tm_hour, datetime->tm_min, datetime->tm_sec);
+            break;
+        case DATETIME_DDMMYYYY_24MMSS:
+        case DATETIME_DDMMYY_24MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                datetime->tm_mday, datetime->tm_mon, datetime->tm_year, datetime->tm_hour, datetime->tm_min, datetime->tm_sec);
+            break;
+        case DATETIME_MMDDYYYY_24MMSS:
+        case DATETIME_MMDDYY_24MMSS:
+            sprintf(__cursor.__row[colIdx].colResult.text, __cols[colIdx].m_formatSpec.c_str(), 
+                datetime->tm_mon, datetime->tm_mday, datetime->tm_year, datetime->tm_hour, datetime->tm_min, datetime->tm_sec);
+            break;
+        }
+    }
+
 };
 
 struct vtab : public sqlite3_vtab

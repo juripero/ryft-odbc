@@ -580,9 +580,6 @@ public:
     IFile(string output) 
     {
         __ffile = fopen(output.c_str(), "w");
-        struct passwd *pwd = getpwnam(s_RyftUser);
-        if(pwd != NULL)
-            chown(output.c_str(), pwd->pw_uid, pwd->pw_gid);
     }
 
    ~IFile()
