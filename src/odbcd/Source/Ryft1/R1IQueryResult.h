@@ -639,7 +639,6 @@ protected:
 
     virtual bool __execute()
     {
-        const char *perr;
         char results[PATH_MAX];
         string query(__query);
         bool ret = false;
@@ -697,10 +696,21 @@ protected:
 
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
             CURLcode code = curl_easy_perform(curl);
+            long http_code = 0;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
 
             curl_easy_cleanup(curl);
             curl_global_cleanup();
             fclose(f);
+
+            if(code != CURLE_OK || http_code != 200) {
+                string perr = __getErrorMessage(results);
+                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "REST returned an error = %s", perr.c_str());
+                simba_wstring errorMsg(perr);
+                R1THROWGEN1(L"RolException", errorMsg.GetAsPlatformWString());
+                unlink(results);
+                return false;
+            }
 
             ret = __storeToSqlite(tableName, results);
             unlink(results);
@@ -1002,6 +1012,39 @@ private:
         return -1;
     }
 
+    string __getErrorMessage(char *jsonFile)
+    {
+        string message;
+
+        int fd;
+        struct stat sb;
+        if((fd = ::open(jsonFile, O_RDONLY)) == -1)
+            return message;
+        fstat(fd, &sb);
+
+        char *buffer = (char *)malloc(sb.st_size);
+        if(!buffer)
+            return message;
+
+        json_object *jobj;
+        json_tokener *jtok = json_tokener_new();
+        enum json_tokener_error jerr;
+
+        int read_count = read(fd, buffer, sb.st_size);
+        if(read_count == -1) {
+            free(buffer);
+            json_tokener_free(jtok);
+            return message;
+        }
+        jobj = json_tokener_parse_ex(jtok, buffer, read_count);
+        free(buffer);
+
+        jobj = json_object_object_get(jobj, "message");
+        message = json_object_get_string(jobj);
+        json_tokener_free(jtok);
+        return message;
+    }
+
     int __getRowCount(int fd, size_t stSize)
     {
         int matches = -1;
@@ -1026,6 +1069,7 @@ private:
 
         jobj = json_object_object_get(jobj, "matches");
         matches = json_object_get_int(jobj);
+        json_tokener_free(jtok);
         return matches;
     }
 
