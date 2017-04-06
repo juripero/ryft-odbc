@@ -350,6 +350,9 @@ public:
         char cpcmd[PATH_MAX];
         sprintf(cpcmd, "cp %s %s", temp_path, file_path);
         system(cpcmd);
+        struct passwd *pwd = getpwnam(s_RyftUser);
+        if(pwd != NULL)
+            chown(file_path, pwd->pw_uid, pwd->pw_gid);
         unlink(temp_path);
     }
 

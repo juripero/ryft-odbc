@@ -464,11 +464,16 @@ void add(string filespec)
         chunk = atoi(in.c_str());
 
     // make the ODBC directory if its not already there
+    struct passwd *pwd = getpwnam(s_RyftUser);
     mkdir(s_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    if(pwd != NULL)
+        chown(s_R1Catalog, pwd->pw_uid, pwd->pw_gid);
     strcpy(path, s_R1Catalog);
     strcat(path, "/");
     strcat(path, name.c_str());
     mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if(pwd != NULL)
+        chown(path, pwd->pw_uid, pwd->pw_gid);
 
     __meta_config__ metaconfig;
     metaconfig.table_name = name;
@@ -525,8 +530,12 @@ void add(string filespec)
     string filename = filespec.substr(0, filespec.find_last_of("."));
     if(filespec.find_last_of("/") != string::npos)
         filename = filespec.substr(filespec.find_last_of("/"), filespec.find_last_of("."));
-    sprintf(cpcmd, "cp %s %s/%s.%s", filespec.c_str(), path, filename.c_str(), name.c_str());
+    char newfile[PATH_MAX];
+    sprintf(newfile, "%s/%s.%s", path, filename.c_str(), name.c_str());
+    sprintf(cpcmd, "cp %s %s", filespec.c_str(), newfile);
     system(cpcmd);
+    if(pwd != NULL)
+        chown(newfile, pwd->pw_uid, pwd->pw_gid);
 }
 
 void del(string id)
