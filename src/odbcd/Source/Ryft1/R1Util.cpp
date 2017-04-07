@@ -52,64 +52,75 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
             if(format[11] == '1') {
                 *out_typeCustom = DATETIME_YYYYMMDD_12MMSS;
                 sprintf(formatSpec, "%%04d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[4], format[7], format[10], format[13], format[16]);
+                charCols = 22;
             }
             else {
                 *out_typeCustom = DATETIME_YYYYMMDD_24MMSS;
                 sprintf(formatSpec, "%%04d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[4], format[7], format[10], format[13], format[16]);
+                charCols = 19;
             }
         }
         else if(format[0] == 'Y') { // YY/MM/DD-HH:MM:SS
             if(format[11] == '1') {
                 *out_typeCustom = DATETIME_YYMMDD_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
+                charCols = 22;
             }
             else {
                 *out_typeCustom = DATETIME_YYMMDD_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
+                charCols = 19;
             }
         }
         else if (format[0] == 'D' && format[8] == 'Y') { // DD/MM/YYYY-HH:MM:SS
             if(format[11] == '1') {
                 *out_typeCustom = DATETIME_DDMMYYYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[10], format[13], format[16]);
+                charCols = 22;
             }
             else {
                 *out_typeCustom = DATETIME_DDMMYYYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
+                charCols = 19;
             }
         }
         else if (format[0] == 'D') { // DD/MM/YY-HH:MM:SS
             if(format[11] == '1') {
                 *out_typeCustom = DATETIME_DDMMYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
+                charCols = 22;
             }
             else {
                 *out_typeCustom = DATETIME_DDMMYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
+                charCols = 19;
             }
         }
         else if (format[0] == 'M' && format[8] == 'Y') { // MM/DD/YYYY-HH:MM:SS
             if(format[11] == '1') {
                 *out_typeCustom = DATETIME_MMDDYYYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[10], format[13], format[16]);
+                charCols = 22;
             }
             else {
                 *out_typeCustom = DATETIME_MMDDYYYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
+                charCols = 19;
             }
         }
         else if (format[0] == 'M') { // MM/DD/YY-HH:MM:SS
             if(format[11] == '1') {
                 *out_typeCustom = DATETIME_MMDDYY_12MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d %%s", format[2], format[5], format[8], format[11], format[14]);
+                charCols = 22;
             }
             else {
                 *out_typeCustom = DATETIME_MMDDYY_24MMSS;
                 sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[8], format[11], format[14]);
+                charCols = 19;
             }
         }
         out_formatCustom = formatSpec;
-        charCols = 19;
         bufLength = 16;
     }
     else if(!strncasecmp(in_typeName.c_str(), "date", strlen("date"))) {
@@ -163,13 +174,14 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         if(!strcmp(format, "24:MM:SS")) {
             *out_typeCustom = TIME_24MMSS;
             strcpy(formatSpec, "%02d:%02d:02d");
+            charCols = 8;
         }
         else {
             *out_typeCustom = TIME_12MMSS;
             strcpy(formatSpec, "%02d:%02d:02d %s");
+            charCols = 11;
         }
         out_formatCustom = formatSpec;
-        charCols = 8;
         bufLength = 6;
     }
     else if(!strncasecmp(in_typeName.c_str(), "varchar", strlen("varchar"))) {
