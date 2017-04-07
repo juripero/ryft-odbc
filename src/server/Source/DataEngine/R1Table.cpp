@@ -398,10 +398,11 @@ void R1Table::InitializeColumns(bool in_isODBCV3)
         if (sqlTypeMetadata->IsCharacterOrBinaryType()) 
             sqlTypeMetadata->SetLengthOrIntervalPrecision(ryft1col->m_charCols);
 
+        // timwells(04/06/17) - don't set precision since we don't support fractional seconds
         // TIMESTAMP_WITH_FRAC_PREC_DISPLAY_SIZE is 20, 19 for a timestamp with no seconds precision and +1 for the decimal point. 
         // So, set the precision is the length minus TIMESTAMP_WITH_FRAC_PREC_DISPLAY_SIZE.
-        if ((TDW_SQL_TYPE_TIMESTAMP == sqlTypeMetadata->GetTDWType()) && (TIMESTAMP_WITH_FRAC_PREC_DISPLAY_SIZE < ryft1col->m_charCols)) 
-            sqlTypeMetadata->SetPrecision(static_cast<simba_int16>(ryft1col->m_bufLength - TIMESTAMP_WITH_FRAC_PREC_DISPLAY_SIZE));
+        // if ((TDW_SQL_TYPE_TIMESTAMP == sqlTypeMetadata->GetTDWType()) && (TIMESTAMP_WITH_FRAC_PREC_DISPLAY_SIZE < ryft1col->m_charCols)) 
+        //     sqlTypeMetadata->SetPrecision(static_cast<simba_int16>(ryft1col->m_bufLength - TIMESTAMP_WITH_FRAC_PREC_DISPLAY_SIZE));
 
         columns->AddColumn(new DSIResultSetColumn(sqlTypeMetadata, columnMetadata.Detach()));
     }

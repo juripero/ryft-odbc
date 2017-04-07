@@ -416,13 +416,37 @@ bool R1FilterHandler::PassdownSimpleComparison(
          (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
          (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
     {
+        // capture the dateLiteral before it is altered.
+        simba_wstring dateLiteral = literalVal;
+
         // Construct the filter string for input to Ryft.
+        if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+           (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
+             m_filter += "( ";
+        }
         m_filter += "( ";
         ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
         m_filter += " AND ";
         literalVal.Remove(0,11);
         ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
         m_filter += " )";
+        if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+           (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
+            m_filter += " OR ";
+            TDWTimestamp tdwTS(dateLiteral);
+            if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE)) {
+                tdwTS = tdwTS + 1;
+            }
+            else 
+                tdwTS = tdwTS - 1;
+            dateLiteral = tdwTS.ToString();
+            if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE)) {
+                ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, dateLiteral, SE_COMP_GE, "CONTAINS");
+            }
+            else
+                ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, dateLiteral, SE_COMP_LE, "CONTAINS");
+            m_filter += " )";
+        }
 
         // Setting passdown flag so the filter result set is returned.
         m_isPassedDown = true;
@@ -1040,10 +1064,12 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
     case TIME_24MMSS:
         sprintf(outtime, formatSpec.c_str(), hour, min, sec);
         break;
-    case TIME_12MMSS:
-        sprintf(outtime, formatSpec.c_str(), hour % 12, min, sec);
+    case TIME_12MMSS: {
+        int twelve_hour = hour % 12;
+        sprintf(outtime, formatSpec.c_str(), twelve_hour ? twelve_hour : 12, min, sec);
         m_filter += "( ";
         break;
+        }
     }
 
     if(m_table->IsStructuredType()) {
@@ -1084,7 +1110,7 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
 
     if(in_typeCustom == TIME_12MMSS) {
         m_filter += " AND ( RECORD." + in_columnName + " CONTAINS \"";
-        m_filter += (hour / 12) ? "PM" : "AM";
+        m_filter += (hour < 12) ? "AM" : "PM";
         m_filter += "\" ) )";
     }
 }
