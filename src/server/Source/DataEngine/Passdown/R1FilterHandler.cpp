@@ -261,6 +261,12 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
     simba_wstring columnName;
     lColumn->GetLabel(columnName);
 
+    // ryftprim doesn't like the trailing .[] which can happen in a JSON array that contains unnamed elements
+    simba_wstring trailingArray = L".[]";
+    simba_int32 loc = columnName.Find(L".[]", columnName.GetLength() - trailingArray.GetLength());
+    if(loc != SIMBA_NPOS)
+        columnName.Remove(loc, trailingArray.GetLength());
+
     // Get the literal type of RHS of comparison expression.
     PSLiteralType exprLiteralType = rExpr->GetAsLiteral()->GetLiteralType();
     simba_int16 paramSqlType = rExpr->GetMetadata()->GetSqlType();
@@ -372,6 +378,12 @@ bool R1FilterHandler::PassdownSimpleComparison(
     // Get the column name.
     simba_wstring columnName;
     lColumn->GetLabel(columnName);
+
+    // ryftprim doesn't like the trailing .[] which can happen in a JSON array that contains unnamed elements
+    simba_wstring trailingArray = L".[]";
+    simba_int32 loc = columnName.Find(L".[]", columnName.GetLength() - trailingArray.GetLength());
+    if(loc != SIMBA_NPOS)
+        columnName.Remove(loc, trailingArray.GetLength());
 
     // Get the literal type of RHS of comparison expression.
     PSLiteralType exprLiteralType = in_rightExpr.first->GetLiteralType();
@@ -540,6 +552,12 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
     simba_wstring columnName;
     lColumn->GetLabel(columnName);
     
+    // ryftprim doesn't like the trailing .[] which can happen in a JSON array that contains unnamed elements
+    simba_wstring trailingArray = L".[]";
+    simba_int32 loc = columnName.Find(L".[]", columnName.GetLength() - trailingArray.GetLength());
+    if(loc != SIMBA_NPOS)
+        columnName.Remove(loc, trailingArray.GetLength());
+
     int literalIdx = 0;
     m_filter += "( ";
 

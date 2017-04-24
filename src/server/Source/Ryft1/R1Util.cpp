@@ -191,6 +191,13 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
             sscanf(paren, "(%d)", &charCols);
         bufLength = charCols;
     }
+    else if(!strncasecmp(in_typeName.c_str(), "list", strlen("list"))) {
+        *out_sqlType = SQL_VARCHAR;
+        const char * paren = strchr(in_typeName.c_str(), '(');
+        if(paren)
+            sscanf(paren, "(%d)", &charCols);
+        bufLength = charCols;
+    }
     else if(!strncasecmp(in_typeName.c_str(), "number", strlen("number"))) {
         *out_sqlType = SQL_VARCHAR;
         *out_typeCustom = TYPE_NUMBER;
