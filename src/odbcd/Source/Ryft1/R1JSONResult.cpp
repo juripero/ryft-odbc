@@ -34,9 +34,12 @@ NodeAction RyftOne_JSONResult::JSONAddElement( std::string sName, const char **p
             qualifiedName += ".";
         qualifiedName += (*itr);
     }
-    if(!qualifiedName.empty())
-        qualifiedName += ".";
-    qualifiedName += sName;
+    // sName will be empty when its enumerating LIST values
+    if(!sName.empty()) {
+        if(!qualifiedName.empty())
+            qualifiedName += ".";
+        qualifiedName += sName;
+    }
     __addElement(qualifiedName, NULL, NULL);
     return ProcessNode;
 }

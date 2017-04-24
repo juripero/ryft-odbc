@@ -13,6 +13,19 @@ const char s_R1Unload[] = "/ryftone/ODBC/unload";
 const char s_TableMeta[] = ".meta.table";
 const char s_RyftUser[] = "ryftuser";
 
+inline string to_name(const char *name)
+{
+    string __name = name;
+    size_t pos = 0;
+    while((pos = __name.find('*', pos)) != string::npos) {
+        char c;
+        c  = ((__name[pos+1] >= 'A') ? (__name[pos+1] - 'A' + 10) : (__name[pos+1] - '0') << 4);
+        c |=  (__name[pos+2] >= 'A') ? (__name[pos+2] - 'A' + 10) : (__name[pos+2] - '0');
+        __name.replace(pos, 3, 1, c);
+    }
+    return __name;
+}
+
 __meta_config__::__meta_config__() { }
 __meta_config__::__meta_config__(string& in_dir)
 {
@@ -71,29 +84,36 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
 
     colList = config_lookup(&in_table_meta, in_group.c_str());
     for(idx = 0; colList && (column = config_setting_get_elem(colList, idx)); idx++) {
-        col.json_tag = in_jsonroot + column->name;
-        col.xml_tag = column->name;
+        string name = to_name(column->name);
+        col.json_tag = in_jsonroot + name;
+        col.xml_tag = name;
         col.name = in_name + config_setting_get_string_elem(column, 0);
         col.type_def = config_setting_get_string_elem(column, 1);
         col.description = config_setting_get_string_elem(column, 2);
 
+        if(!strncasecmp(col.type_def.c_str(), "list", strlen("list"))) 
+            col.json_tag += ".[]";
         if(!strncasecmp(col.type_def.c_str(), "arrayof", strlen("arrayof"))) {
             char *arrayof = new char[col.type_def.length()+1];
             const char *paren = strchr(col.type_def.c_str(), '(');
+            arrayof[0] = '\0';
             if(paren) {
                 sscanf(paren, "(%s)", arrayof);
                 arrayof[strlen(arrayof)-1] = '\0';
             }
-            column_meta(in_table_meta, arrayof, col.name, col.json_tag + string(".[]"));
+            if(*arrayof)
+                column_meta(in_table_meta, arrayof, col.name, col.json_tag + string(".[]"));
         }
         else if(!strncasecmp(col.type_def.c_str(), "groupof", strlen("groupof"))) {
             char *groupof = new char[col.type_def.length()+1];
             const char *paren = strchr(col.type_def.c_str(), '(');
+            groupof[0] = '\0';
             if(paren) {
                 sscanf(paren, "(%s)", groupof);
                 groupof[strlen(groupof)-1] = '\0';
             }
-            column_meta(in_table_meta, groupof, col.name, col.json_tag);
+            if(*groupof)
+                column_meta(in_table_meta, groupof, col.name, col.json_tag);
         }
         else
             columns.push_back(col);

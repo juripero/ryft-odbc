@@ -525,7 +525,7 @@ private:
                     json_parse(jvalue, NULL, iLevel+1);
                 }
                 else {
-                    json_value(key, jvalue);
+                    json_value("", jvalue);
                 }
             }
         }
