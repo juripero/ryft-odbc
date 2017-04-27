@@ -436,7 +436,21 @@ void RyftOne_Database::__loadCatalog()
     __catalog.clear();
     if(d = opendir(s_R1Catalog)) {
         while((dir = readdir(d)) != NULL) {
-            if((dir->d_type == DT_DIR) && (strcmp(dir->d_name, ".") != 0)) {
+
+            /* Skip the names "." and ".." as we don't want to recurse on them. */
+            if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
+                continue;
+
+            if(dir->d_type == DT_UNKNOWN) {
+                char path[PATH_MAX];
+                struct stat statbuf;
+                snprintf(path, PATH_MAX, "%s/%s", s_R1Catalog, dir->d_name);
+                if (!stat(path, &statbuf)) {
+                    if (S_ISDIR(statbuf.st_mode)) 
+                        dir->d_type = DT_DIR;
+                }
+            }
+            if(dir->d_type == DT_DIR) {
                 __catalog_entry__ cat_ent(dir->d_name);
                 if(cat_ent._is_valid())
                     __catalog.push_back(cat_ent);
@@ -525,48 +539,38 @@ vector<__catalog_entry__>::iterator RyftOne_Database::__findTable(string& in_tab
 
 int RyftOne_Database::__remove_directory(const char *path)
 {
-   DIR *d = opendir(path);
-   size_t path_len = strlen(path);
-   int r = -1;
+    DIR *d = opendir(path);
+    size_t path_len = strlen(path);
+    int r = -1;
 
-   if (d) {
-      struct dirent *p;
+    if (d) {
+        struct dirent *p;
 
-      r = 0;
-      while (!r && (p=readdir(d)))
-      {
-          int r2 = -1;
-          char *buf;
-          size_t len;
+        r = 0;
+        while (!r && (p=readdir(d))) {
+            int r2 = -1;
+            char file_path[PATH_MAX];
 
-          /* Skip the names "." and ".." as we don't want to recurse on them. */
-          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-             continue;
+            /* Skip the names "." and ".." as we don't want to recurse on them. */
+            if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+                continue;
 
-          len = path_len + strlen(p->d_name) + 2; 
-          buf = (char *)malloc(len);
-
-          if (buf) {
-             struct stat statbuf;
-
-             snprintf(buf, len, "%s/%s", path, p->d_name);
-             if (!stat(buf, &statbuf)) {
+            snprintf(file_path, PATH_MAX, "%s/%s", path, p->d_name);
+            struct stat statbuf;
+            if (!stat(file_path, &statbuf)) {
                 if (S_ISDIR(statbuf.st_mode)) {
-                   r2 = __remove_directory(buf);
+                    r2 = __remove_directory(file_path);
                 }
                 else
-                   r2 = unlink(buf);
-             }
-             free(buf);
-          }
-          r = r2;
-      }
-      closedir(d);
-   }
+                    r2 = unlink(file_path);
+            }
+            r = r2;
+        }
+        closedir(d);
+    }
 
-   if (!r) {
-      r = rmdir(path);
-   }
+    if (!r) 
+        r = rmdir(path);
 
-   return r;
+    return r;
 }
