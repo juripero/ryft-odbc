@@ -278,6 +278,7 @@ bool __catalog_entry__::_is_valid()
 
 NodeAction XMLFile::StartRow( )
 {
+    __field.clear();
     startRecord();
     return ProcessNode;
 }
