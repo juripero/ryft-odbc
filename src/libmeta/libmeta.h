@@ -153,6 +153,27 @@ protected:
 // Element objects will be stored on a stack by parsers:
 typedef std::deque<XMLElement *> ElementStack;
 
+static size_t __stripControlChars(char *pbuf1, char *pbuf2, size_t siz)
+{
+    size_t out_siz = 0;
+    for(size_t i = 0; i < siz; i++) {
+        if(pbuf1[i] > 0 && pbuf1[i] <= 0x1F) {
+            switch(pbuf1[i]) {
+            case 0x09:
+            case 0x0A:
+            case 0x0D:
+                pbuf2[out_siz++] = pbuf1[i];
+                break;
+            default:
+                break;
+            }
+        }
+        else
+            pbuf2[out_siz++] = pbuf1[i];
+    }
+    return out_siz;
+}
+
 class XMLParser : public XMLElement
 {
 public:
@@ -191,7 +212,8 @@ public:
                     XML_Parse( parser, "<xml_start>", strlen("<xml_start>"), false);
 
                 char * pbBuffer = (char *)malloc(PARSER_WINDOW_SIZE);
-                if(!pbBuffer) {
+                char * pbBuffer2 = (char *)malloc(PARSER_WINDOW_SIZE);
+                if(!pbBuffer || !pbBuffer2) {
                     XML_ParserFree( parser );
                     return false;
                 }
@@ -203,10 +225,12 @@ public:
                     if(readThisLoop == -1) 
                     {
                         free(pbBuffer);
+                        free(pbBuffer2);
                         XML_ParserFree( parser );
                         return false;
                     }
-                    if( XML_STATUS_OK != XML_Parse( parser, (const char *)( pbBuffer ), readThisLoop, bLast ) ) 
+                    readThisLoop = __stripControlChars(pbBuffer, pbBuffer2, readThisLoop);
+                    if( XML_STATUS_OK != XML_Parse( parser, (const char *)( pbBuffer2 ), readThisLoop, bLast ) ) 
                     {
                         enum XML_Error code = XML_GetErrorCode(parser);
                         break;
@@ -215,6 +239,7 @@ public:
                         m_bParsed = true;
                 }
                 free(pbBuffer);
+                free(pbBuffer2);
             }
             catch(...)
             {
