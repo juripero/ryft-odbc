@@ -10,7 +10,7 @@
 #define _RYFTONE_R1STATEMENT_H_
 
 #include "RyftOne.h"
-#include "ryft1_catalog.h"
+#include "R1Catalog.h"
 #include "DSIStatement.h"
 
 namespace RyftOne

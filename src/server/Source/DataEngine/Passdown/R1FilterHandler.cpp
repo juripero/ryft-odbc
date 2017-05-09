@@ -125,13 +125,11 @@ simba_wstring GetParameterValue(AEParameter* in_parameter)
 // Public ==========================================================================================
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 R1FilterHandler::R1FilterHandler(
-    SharedPtr<R1Table> in_table) :
+    SharedPtr<R1Table> in_table, RyftOne_Database *ryft1) :
+    m_ryft1(ryft1),
     m_table(in_table),
     m_isPassedDown(false),
-    m_negate(false),
-    m_hamming(0),
-    m_edit(0),
-    m_caseSensitive(true)
+    m_negate(false)
 {
     assert(!in_table.IsNull());
 }
@@ -158,7 +156,7 @@ SharedPtr<DSIExtResultSet> R1FilterHandler::TakeResult()
     }
 
     // Return filter result.
-    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter, m_hamming, m_edit, m_caseSensitive));
+    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter));
 }
 
 // Protected =======================================================================================
@@ -221,28 +219,37 @@ bool R1FilterHandler::PassdownOr(AEOr* in_node)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node) 
 {
-    // Try and handle parameters here.
+    bool negate = false;
+    int count = in_node->GetChildCount();
+
     AEValueExpr* lExpr = in_node->GetLeftOperand();
     AEValueExpr* rExpr = in_node->GetRightOperand();
 
-    //  Only handle two cases: 
-    //   - <column_reference> LIKE <literal>
-    //   - <literal> <LIKE> <column_reference>
-    if ((AE_NT_VX_COLUMN != lExpr->GetNodeType()) || 
-        (AE_NT_VX_LITERAL != rExpr->GetNodeType())) {
-        if ((AE_NT_VX_COLUMN == rExpr->GetNodeType()) &&
-            (AE_NT_VX_LITERAL == lExpr->GetNodeType())) {
-            // Swap the pointers, so the expressions are always in the form of
-            // <column_reference> <compOp> <parameter>.
-            std::swap(lExpr, rExpr);
-        }
-        else
-            return false;
+    AENodeType lType = lExpr->GetNodeType();
+    AENodeType rType = rExpr->GetNodeType();
+
+    if(lType != AE_NT_VX_COLUMN) {
+        std::swap(lExpr, rExpr);
+        std::swap(lType, rType);
     }
+
+    if(rType == AE_NT_VX_NEGATE) {
+        rExpr = (AEValueExpr*)rExpr->GetChild(0);
+        rType = rExpr->GetNodeType();
+        negate = true;
+    }
+
+    if(lType != AE_NT_VX_COLUMN && rType != AE_NT_VX_LITERAL)
+        return false;
 
     DSIExtColumnRef colRef;
     if(!GetTableColRef(lExpr, colRef))
         return false;
+
+    simba_wstring relationalOp;
+    if(m_negate)
+        relationalOp = "NOT_";
+    relationalOp += "CONTAINS";
 
     // Get information about the column in the table that the filter is applied to.
     IColumns* tableColumns = colRef.m_table->GetSelectColumns();
@@ -251,27 +258,102 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
     SqlTypeMetadata* columnMetadata = lColumn->GetMetadata();
     simba_int16 columnSqlType = columnMetadata->GetSqlType();
 
+    simba_wstring columnName;
+    lColumn->GetLabel(columnName);
+
+    // ryftprim doesn't like the trailing .[] which can happen in a JSON array that contains unnamed elements
+    simba_wstring trailingArray = L".[]";
+    simba_int32 loc = columnName.Find(L".[]", columnName.GetLength() - trailingArray.GetLength());
+    if(loc != SIMBA_NPOS)
+        columnName.Remove(loc, trailingArray.GetLength());
+
     // Get the literal type of RHS of comparison expression.
+    PSLiteralType exprLiteralType = rExpr->GetAsLiteral()->GetLiteralType();
     simba_int16 paramSqlType = rExpr->GetMetadata()->GetSqlType();
-    SqlDataTypeUtilities* dataTypeUtils = SqlDataTypeUtilitiesSingleton::GetInstance();
-    if(dataTypeUtils->IsIntegerType(paramSqlType) || dataTypeUtils->IsExactNumericType(paramSqlType) ||
-        dataTypeUtils->IsApproximateNumericType(paramSqlType) || dataTypeUtils->IsAnyCharacterType(paramSqlType)) {
 
-        simba_wstring literalVal = rExpr->GetAsLiteral()->GetLiteralValue();
-        if(literalVal.IsNull())
-            return false;
+    // Get the literal and prepend it with '-' if it's been negated.
+    simba_wstring literalVal = rExpr->GetAsLiteral()->GetLiteralValue();
 
-        // Get the column name and comparison type.
-        simba_wstring columnName;
-        lColumn->GetLabel(columnName);
+    unsigned typeSpecial = TYPE_NONE;
+    string formatSpecial;
+    m_table->GetTypeFormatSpecifier(colRef.m_colIndex, &typeSpecial, formatSpecial);
 
-        // Construct the filter string for input to CodeBase.
-        ConstructLikeFilter(columnName, columnSqlType, paramSqlType, literalVal);
+    if((exprLiteralType == PS_LITERAL_DATE) && 
+        ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
+            (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP))) 
+    {
+        // Construct the filter string for input to Ryft.
+        ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
 
         // Setting passdown flag so the filter result set is returned.
         m_isPassedDown = true;
         return true;
     }
+    else if((exprLiteralType == PS_LITERAL_TIME) && 
+        ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME) || 
+            (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
+    {
+        ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
+        ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
+    {
+        // Construct the filter string for input to Ryft.
+        m_filter += "( ";
+        ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
+        m_filter += " AND ";
+        literalVal.Remove(0,11);
+        ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
+        m_filter += " )";
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+        (typeSpecial == TYPE_NUMBER))
+    {
+        if(negate)
+            literalVal = "-" + rExpr->GetAsLiteral()->GetLiteralValue();
+
+        // Construct the filter string for input to Ryft.
+        ConstructNumberComparisonFilter(columnName, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+        (typeSpecial == TYPE_CURRENCY))
+    {
+        if(negate)
+            literalVal = "-" + rExpr->GetAsLiteral()->GetLiteralValue();
+
+        // Construct the filter string for input to Ryft.
+        ConstructCurrencyComparisonFilter(columnName, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+        (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)))
+    {
+        if(negate)
+            literalVal = "--" + rExpr->GetAsLiteral()->GetLiteralValue();
+
+        // Construct the filter string for input to Ryft.
+        ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, relationalOp);
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+
     return false;
 }
 
@@ -293,29 +375,140 @@ bool R1FilterHandler::PassdownSimpleComparison(
     SqlTypeMetadata* columnMetadata = lColumn->GetMetadata();
     simba_int16 columnSqlType = columnMetadata->GetSqlType();
 
+    // Get the column name.
+    simba_wstring columnName;
+    lColumn->GetLabel(columnName);
+
+    // ryftprim doesn't like the trailing .[] which can happen in a JSON array that contains unnamed elements
+    simba_wstring trailingArray = L".[]";
+    simba_int32 loc = columnName.Find(L".[]", columnName.GetLength() - trailingArray.GetLength());
+    if(loc != SIMBA_NPOS)
+        columnName.Remove(loc, trailingArray.GetLength());
+
     // Get the literal type of RHS of comparison expression.
     PSLiteralType exprLiteralType = in_rightExpr.first->GetLiteralType();
-            
-    // Supported literal types: Unsigned Integer, Decimal, Character String, and Date
-    if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+
+    // Get the literal and prepend it with '-' if it's been negated.
+    simba_wstring literalVal = in_rightExpr.first->GetLiteralValue();
+
+    unsigned typeSpecial = TYPE_NONE;
+    string formatSpecial;
+    m_table->GetTypeFormatSpecifier(in_leftExpr.m_colIndex, &typeSpecial, formatSpecial);
+
+    if((exprLiteralType == PS_LITERAL_DATE) && 
+        ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
+            (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        // Construct the filter string for input to Ryft.
+        ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if((exprLiteralType == PS_LITERAL_TIME) && 
+        ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME) || 
+            (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
+        ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        // capture the dateLiteral before it is altered.
+        simba_wstring dateLiteral = literalVal;
+
+        // Construct the filter string for input to Ryft.
+        if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+           (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
+             m_filter += "( ";
+        }
+        m_filter += "( ";
+        ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
+        m_filter += " AND ";
+        literalVal.Remove(0,11);
+        ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
+        m_filter += " )";
+        if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+           (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
+            m_filter += " OR ";
+            TDWTimestamp tdwTS(dateLiteral);
+            if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE)) {
+                tdwTS = tdwTS + 1;
+            }
+            else 
+                tdwTS = tdwTS - 1;
+            dateLiteral = tdwTS.ToString();
+            if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE)) {
+                ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, dateLiteral, SE_COMP_GE, "CONTAINS");
+            }
+            else
+                ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, dateLiteral, SE_COMP_LE, "CONTAINS");
+            m_filter += " )";
+        }
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+        (typeSpecial == TYPE_NUMBER) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        if (in_rightExpr.second) 
+            literalVal = "-" + in_rightExpr.first->GetLiteralValue();
+
+        // Construct the filter string for input to Ryft.
+        ConstructNumberComparisonFilter(columnName, formatSpecial, literalVal, in_compOp, "CONTAINS");
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+        (typeSpecial == TYPE_CURRENCY) &&
+        ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
+         (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+         (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
+    {
+        if (in_rightExpr.second) 
+            literalVal = "-" + in_rightExpr.first->GetLiteralValue();
+
+        // Construct the filter string for input to Ryft.
+        ConstructCurrencyComparisonFilter(columnName, formatSpecial, literalVal, in_compOp, "CONTAINS");
+
+        // Setting passdown flag so the filter result set is returned.
+        m_isPassedDown = true;
+        return true;
+    }
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
         (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE)))
     {
-        // Get the column name.
-        simba_wstring columnName;
-        lColumn->GetLabel(columnName);
+        if (in_rightExpr.second) 
+            literalVal = "--" + in_rightExpr.first->GetLiteralValue();
 
-        // Get the literal and prepend it with '-' if it's been negated.
-        simba_wstring literalVal;
-        if (in_rightExpr.second) {
-            literalVal = "-" + in_rightExpr.first->GetLiteralValue();
+        // Construct the filter string for input to Ryft.
+        if(in_compOp == SE_COMP_NE) {
+            ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, "NOT_EQUALS");
         }
         else
-            literalVal = in_rightExpr.first->GetLiteralValue();
-
-        // Construct the filter string for input to CodeBase.
-        ConstructComparisonFilter(columnName, columnSqlType, in_rightExpr.first->GetMetadata()->GetSqlType(), 
-            literalVal, in_compOp);
+            ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, "EQUALS");
 
         // Setting passdown flag so the filter result set is returned.
         m_isPassedDown = true;
@@ -330,7 +523,7 @@ bool R1FilterHandler::PassdownSimpleComparison(
     DSIExtColumnRef& in_rightExpr,
     SEComparisonType in_compOp)
 {
-    // CodebaseDSII does not support passdown comparison operations where the left and right
+    // Do not support passdown comparison operations where the left and right
     // operands are column references.
     UNUSED(in_leftExpr);
     UNUSED(in_rightExpr);
@@ -344,11 +537,196 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
     DSIExtColumnRef& in_column, 
     LiteralVector& in_literals)
 {
-    // not supported
-    UNUSED(in_column);
-    UNUSED(in_literals);
+    assert(!in_column.m_table.IsNull());
 
-    return false;
+    SE_CHK_INVALID_ARG(in_column.m_table.Get() != m_table.Get());
+
+    // Get information about the column in the table that the filter is applied to.
+    IColumns* tableColumns = in_column.m_table->GetSelectColumns();
+    assert(tableColumns);
+    IColumn *lColumn = tableColumns->GetColumn(in_column.m_colIndex);
+    SqlTypeMetadata* columnMetadata = lColumn->GetMetadata();
+    simba_int16 columnSqlType = columnMetadata->GetSqlType();
+
+    // Get the column name.
+    simba_wstring columnName;
+    lColumn->GetLabel(columnName);
+    
+    // ryftprim doesn't like the trailing .[] which can happen in a JSON array that contains unnamed elements
+    simba_wstring trailingArray = L".[]";
+    simba_int32 loc = columnName.Find(L".[]", columnName.GetLength() - trailingArray.GetLength());
+    if(loc != SIMBA_NPOS)
+        columnName.Remove(loc, trailingArray.GetLength());
+
+    int literalIdx = 0;
+    m_filter += "( ";
+
+    LiteralVector::iterator literalItr;
+    for(literalItr = in_literals.begin(); literalItr != in_literals.end(); literalItr++) {
+        char *ptok;
+        char *column = NULL;
+        char *table = NULL;
+        simba_wstring literalVal = literalItr->first->GetLiteralValue();
+        string literalAsString = literalVal.GetAsPlatformString();
+        char * literal_first = new char[literalAsString.length()+1];
+        char * literal_last = NULL;
+        strcpy(literal_first, literalAsString.c_str());
+
+        // search literal for wildcard
+        if(ptok = strchr(literal_first, '%')) {
+            *ptok++ = '\0';
+            literal_last = strchr(ptok, '%');
+            if(literal_last)
+                *literal_last++ = '\0';
+            table = ptok;
+            if(column = strchr(ptok, '.')) 
+                *column++ = '\0';
+        }
+
+        string lformatSpecial;
+        unsigned ltypeSpecial = TYPE_NONE;
+        m_table->GetTypeFormatSpecifier(in_column.m_colIndex, &ltypeSpecial, lformatSpecial);
+
+        if(table) {
+            string tableAsString = table;
+            IQueryResult *result = m_ryft1->OpenTable(tableAsString);
+            RyftOne_Columns columns = m_ryft1->GetColumns(tableAsString);
+            int colIdx;
+            RyftOne_Columns::iterator colItr;
+            for(colIdx = 0, colItr = columns.begin(); colItr != columns.end(); colItr++, colIdx++) {
+                if(!colItr->m_colName.compare(column))
+                    break;
+            }
+            if(colItr == columns.end())
+                continue;
+
+            string rformatSpecial;
+            unsigned rtypeSpecial = TYPE_NONE;
+            result->GetTypeFormatSpecifier(colIdx, &rtypeSpecial, rformatSpecial);
+
+            string subquery;
+            bool bFetch = result->FetchFirst();
+            for (; bFetch; bFetch = result->FetchNext()) {
+                if(literalIdx++) 
+                    m_filter += " OR ";
+
+                char dateLiteral[11];
+                char timeLiteral[11];
+                if(((colItr->m_dataType == SQL_TYPE_DATE) || (colItr->m_dataType == SQL_DATE)) &&
+                    ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE))) 
+                {
+                    struct tm tmDate = result->GetDateValue(colIdx);
+                    snprintf(dateLiteral, sizeof(dateLiteral), "%04d-%02d-%02d", tmDate.tm_year, tmDate.tm_mon, tmDate.tm_mday);
+                    literalVal.SetFromUTF8(dateLiteral);
+                    ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                }
+                else if(((colItr->m_dataType == SQL_TYPE_TIME) || (colItr->m_dataType == SQL_TIME)) &&
+                    ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME))) 
+                {
+                    struct tm tmTime = result->GetTimeValue(colIdx);
+                    snprintf(dateLiteral, sizeof(timeLiteral), "%04d:%02d:%02d", tmTime.tm_hour, tmTime.tm_min, tmTime.tm_sec);
+                    literalVal.SetFromUTF8(dateLiteral);
+                    ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                }
+                else if(((colItr->m_dataType == SQL_TYPE_TIMESTAMP) || (colItr->m_dataType == SQL_TIMESTAMP)) &&
+                    ((columnSqlType == SQL_TYPE_TIMESTAMP) || (columnSqlType == SQL_TIMESTAMP))) 
+                {
+                    m_filter += "( ";
+                    struct tm tmDatetime = result->GetDateTimeValue(colIdx);
+
+                    snprintf(dateLiteral, sizeof(dateLiteral), "%04d-%02d-%02d", tmDatetime.tm_year, tmDatetime.tm_mon, tmDatetime.tm_mday);
+                    literalVal.SetFromUTF8(dateLiteral);
+                    ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+
+                    m_filter += " AND ";
+
+                    snprintf(dateLiteral, sizeof(timeLiteral), "%04d:%02d:%02d", tmDatetime.tm_hour, tmDatetime.tm_min, tmDatetime.tm_sec);
+                    literalVal.SetFromUTF8(dateLiteral);
+                    ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+
+                    m_filter += " )";
+                }
+                else if((ltypeSpecial == TYPE_NUMBER) && (rtypeSpecial == TYPE_NUMBER)) 
+                {
+                    literalVal.SetFromUTF8(result->GetStringValue(colIdx));
+                    ConstructNumberComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                }
+                else if((ltypeSpecial == TYPE_CURRENCY) && (rtypeSpecial == TYPE_CURRENCY)) 
+                {
+                    literalVal.SetFromUTF8(result->GetStringValue(colIdx));
+                    ConstructCurrencyComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                }
+                else 
+                {
+                    subquery = literal_first;
+                    subquery += result->GetStringValue(colIdx);
+                    subquery += literal_last;
+                    literalVal.SetFromUTF8(subquery);
+
+                    // Construct the filter string for input to Ryft.
+                    ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, "CONTAINS");
+                }
+            }
+            delete result;
+            delete literal_first;
+        }
+        else {
+            if(literalIdx++)
+                m_filter += " OR ";
+
+            // Get the literal type of RHS of comparison expression.
+            PSLiteralType exprLiteralType = literalItr->first->GetLiteralType();
+
+            if((exprLiteralType == PS_LITERAL_DATE) && 
+                ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
+                    (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
+            {
+                ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+            }
+            else if((exprLiteralType == PS_LITERAL_TIME) && 
+                ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME) || 
+                    (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
+            {
+                ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+            }
+            else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
+                ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
+            {
+                m_filter += "( ";
+                ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                m_filter += " AND ";
+                literalVal.Remove(0,11);
+                ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                m_filter += " )";
+            }
+            else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+                (ltypeSpecial == TYPE_NUMBER))
+            {
+                if (literalItr->second) 
+                    literalVal = "-" + literalItr->first->GetLiteralValue();
+
+                // Construct the filter string for input to Ryft.
+                ConstructNumberComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+            }
+            else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+                (ltypeSpecial == TYPE_CURRENCY))
+            {
+                if (literalItr->second) 
+                    literalVal = "-" + literalItr->first->GetLiteralValue();
+
+                // Construct the filter string for input to Ryft.
+                ConstructCurrencyComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+            }
+            else
+                ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, "CONTAINS");
+        }
+    }
+
+    m_filter += " )";
+
+    // Setting passdown flag so the filter result set is returned.
+    m_isPassedDown = true;
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -370,30 +748,51 @@ static const wchar_t whitespace_chars[] = L" \f\n\r\t\v";
 #define iswhitespace(c) \
     ((c) && wcschr(whitespace_chars, (c)))
 
-void R1FilterHandler::ConstructComparisonFilter(
+void R1FilterHandler::ConstructStringComparisonFilter(
     simba_wstring in_columnName,
     simba_int16 in_columnSqlType,
-    simba_int16 in_exprSqlType,
     const simba_wstring& in_exprValue,
-    SEComparisonType in_compOp)
+    simba_wstring in_RelationalOp)
 {
     wstring out_filter = L"\"";
     const wchar_t *pfilter;
+    const wchar_t *pOpt = NULL;
     size_t idx1, idx2;
+    bool regex = false;
     int hamming = 0;
     int edit = 0;
-    bool case_sensitive = true;
+    int width = 0;
+    char distance[10];
+    char surrounding[10];
+    string case_sensitive = "true";
+    bool no_caseless = true;
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();
     for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
         switch(*pfilter) {
         case L'-':
+            pOpt = pfilter;
             pfilter++;
             switch(*pfilter) {
-            case L'h':
+            /*** taking REGEX stuff out until it is available
+            case L'r':
+            case L'R': {
+                wstring inside = pfilter;
+                idx1 = inside.find_first_of(L"(");
+                idx2 = inside.find_last_of(L")");
+                if(idx1 != string::npos && idx2 != string::npos) {
+                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                    out_filter += search_string;
+                    pfilter += idx2;
+                    regex = true;
+                }
+                break;
+                }
+            ***/
+            case L'h': // format -hddd(term)
             case L'H': {
                 wstring num_hamming;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= L'9'); pfilter++)
                     num_hamming += *pfilter;
                 swscanf(num_hamming.c_str(), L"%d", &hamming);
                 edit = 0;
@@ -401,28 +800,29 @@ void R1FilterHandler::ConstructComparisonFilter(
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
                 idx2 = inside.find_last_of(L")");
-                if(idx1 != string::npos && idx2 != string::npos) {
-                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
-                    const wchar_t *psearch = search_string.c_str();
-                    for( ; *psearch; psearch++) {
-                        switch(*psearch) {
-                        case L'%':
-                        case L'_':
-                            out_filter += L"\"?\"";
-                            break;
-                        default:
-                            out_filter += *psearch;
-                            break;
-                        }
+                if(idx1 == string::npos || idx2 == string::npos) 
+                    R1THROWGEN1("InvalidSyntax", pOpt);
+
+                wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                const wchar_t *psearch = search_string.c_str();
+                for( ; *psearch; psearch++) {
+                    switch(*psearch) {
+                    case L'%':
+                    case L'_':
+                        out_filter += L"\"?\"";
+                        break;
+                    default:
+                        out_filter += *psearch;
+                        break;
                     }
-                    pfilter += idx2;
                 }
+                pfilter += idx2;
                 break;
                 }
             case L'e':
             case L'E': {
                 wstring num_edit;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
+                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= L'9'); pfilter++)
                     num_edit += *pfilter;
                 swscanf(num_edit.c_str(), L"%d", &edit);
                 hamming = 0;
@@ -430,34 +830,44 @@ void R1FilterHandler::ConstructComparisonFilter(
                 wstring inside = pfilter;
                 idx1 = inside.find_first_of(L"(");
                 idx2 = inside.find_last_of(L")");
-                if(idx1 != string::npos && idx2 != string::npos) {
-                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
-                    const wchar_t *psearch = search_string.c_str();
-                    for( ; *psearch; psearch++) {
-                        switch(*psearch) {
-                        case L'%':
-                        case L'_':
-                            out_filter += L"\"?\"";
-                            break;
-                        default:
-                            out_filter += *psearch;
-                            break;
-                        }
+                if(idx1 == string::npos || idx2 == string::npos) 
+                    R1THROWGEN1("InvalidSyntax", pOpt);
+                
+                wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+                const wchar_t *psearch = search_string.c_str();
+                for( ; *psearch; psearch++) {
+                    switch(*psearch) {
+                    case L'%':
+                    case L'_':
+                        out_filter += L"\"?\"";
+                        break;
+                    default:
+                        out_filter += *psearch;
+                        break;
                     }
-                    pfilter += idx2;
                 }
+                pfilter += idx2;
+                break;
+                }
+            case L'w':
+            case L'W': {
+                wstring num_width;
+                for(idx1 = 1; pfilter[idx1] && (pfilter[idx1] >= L'0' && pfilter[idx1] <= L'9'); idx1++)
+                    num_width += pfilter[idx1];
+                swscanf(num_width.c_str(), L"%d", &width);
+                pfilter += idx1-1;
                 break;
                 }
             case L'i':
             case L'I':
-                case_sensitive = false;
+                case_sensitive = "false";
+                no_caseless = false;
                 break;
             case L'-':
                 out_filter += L"-";
                 break;
-            default:
-                // ignore any other switches
-                break;
+            default: 
+                R1THROWGEN1("InvalidOption", pOpt);
             }
             // skip whitespace after the filter
             for ( ; iswhitespace(*(pfilter+1)); pfilter++) ;
@@ -473,139 +883,347 @@ void R1FilterHandler::ConstructComparisonFilter(
     }
     out_filter += L"\"";
 
-    m_filter += "( RECORD." + in_columnName;
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
+
+    m_filter += " ";
+    m_filter += in_RelationalOp;
+    m_filter += " ";
+
+    if(regex) {
+        m_filter += "REGEX(\"";
+        m_filter += out_filter.c_str();
+        m_filter += "\",";
+        if(no_caseless) {
+            m_filter += "NO_CASELESS)";
+        }
+        else 
+            m_filter += "CASELESS)";
+    }
+    else {
+        if(edit) {
+            m_filter += "FEDS(";
+            sprintf(distance, "%d", edit);
+        }
+        else {
+            m_filter += "FHS(";
+            sprintf(distance, "%d", hamming);
+        }
+        m_filter += out_filter.c_str();
+        m_filter += ",CS=" + case_sensitive;
+        m_filter += ",DIST=" + string(distance);
+        sprintf(surrounding, "%d", width);
+        m_filter += ",WIDTH=" + string(surrounding);
+        m_filter += "))";
+    }
+}
+
+#include <algorithm>
+void R1FilterHandler::ConstructDateComparisonFilter(
+    simba_wstring in_columnName,
+    unsigned in_typeCustom,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp,
+    simba_wstring in_RelationalOp)
+{
+    int year = 1970, mon = 1, day = 1;
+    string in_dateLiteral = in_exprValue.GetAsPlatformString();
+    if(in_dateLiteral.length())
+        sscanf(in_dateLiteral.c_str(), "%04d-%02d-%02d", &year, &mon, &day);
+
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
+
+    m_filter += " ";
+    m_filter += in_RelationalOp;
+    m_filter += " DATE(";
+
+    unsigned typeCustom = in_typeCustom;
+    string formatSpec = in_formatCustom.substr(0,14);
+    switch(in_typeCustom) {
+    case DATETIME_YYYYMMDD_12MMSS:
+    case DATETIME_YYYYMMDD_24MMSS:
+        typeCustom = DATE_YYYYMMDD;
+        break;
+    case DATETIME_YYMMDD_12MMSS:
+    case DATETIME_YYMMDD_24MMSS:
+        typeCustom = DATE_YYMMDD;
+        break;
+    case DATETIME_DDMMYYYY_12MMSS:
+    case DATETIME_DDMMYYYY_24MMSS:
+        typeCustom = DATE_DDMMYYYY;
+        break;
+    case DATETIME_DDMMYY_12MMSS:
+    case DATETIME_DDMMYY_24MMSS:
+        typeCustom = DATE_DDMMYY;
+        break;
+    case DATETIME_MMDDYYYY_12MMSS:
+    case DATETIME_MMDDYYYY_24MMSS:
+        typeCustom = DATE_MMDDYYYY;
+        break;
+    case DATETIME_MMDDYY_12MMSS:
+    case DATETIME_MMDDYY_24MMSS:
+        typeCustom = DATE_MMDDYY;
+        break;
+    }
+
+    char outdate[11];
+    string outfmt;
+    switch(typeCustom) {
+    case DATE_YYMMDD:
+    case DATE_YYYYMMDD:
+        sprintf(outdate, formatSpec.c_str(), 1111, 22, 33);
+        outfmt = outdate;
+        std::replace(outfmt.begin(), outfmt.end(), '1', 'Y');
+        std::replace(outfmt.begin(), outfmt.end(), '2', 'M');
+        std::replace(outfmt.begin(), outfmt.end(), '3', 'D');
+        sprintf(outdate, formatSpec.c_str(), year, mon, day);
+        break;
+    case DATE_DDMMYY:
+    case DATE_DDMMYYYY:
+        sprintf(outdate, formatSpec.c_str(), 11, 22, 3333);
+        outfmt = outdate;
+        std::replace(outfmt.begin(), outfmt.end(), '1', 'D');
+        std::replace(outfmt.begin(), outfmt.end(), '2', 'M');
+        std::replace(outfmt.begin(), outfmt.end(), '3', 'Y');
+        sprintf(outdate, formatSpec.c_str(), day, mon, year);
+        break;
+    case DATE_MMDDYY:
+    case DATE_MMDDYYYY:
+        sprintf(outdate, formatSpec.c_str(), 11, 22, 3333);
+        outfmt = outdate;
+        std::replace(outfmt.begin(), outfmt.end(), '1', 'M');
+        std::replace(outfmt.begin(), outfmt.end(), '2', 'D');
+        std::replace(outfmt.begin(), outfmt.end(), '3', 'Y');
+        sprintf(outdate, formatSpec.c_str(), mon, day, year);
+        break;
+    }
+
+    m_filter += outfmt.c_str();
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
     case SE_COMP_EQ:
-        m_filter += " EQUALS ";
+        m_filter += " = ";
         break;
     case SE_COMP_NE:
-        m_filter += " NOT_EQUALS ";
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
         break;
     }
 
-    m_filter += out_filter.c_str();
-    m_filter += " )";
-    m_hamming = hamming;
-    m_edit = edit;
-    m_caseSensitive = case_sensitive;
+    m_filter += outdate;
+    m_filter += ") )";
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-void R1FilterHandler::ConstructLikeFilter(
+void R1FilterHandler::ConstructTimeComparisonFilter(
     simba_wstring in_columnName,
-    simba_int16 in_columnSqlType,
-    simba_int16 in_exprSqlType,
-    const simba_wstring& in_exprValue)
+    unsigned in_typeCustom,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp,
+    simba_wstring in_RelationalOp)
 {
-    wstring out_filter = L"\"";
-    const wchar_t *pfilter;
-    size_t idx1, idx2;
-    int hamming = 0;
-    int edit = 0;
-    bool case_sensitive = true;
+    int hour = 0, min = 0, sec = 0;
+    string in_dateLiteral = in_exprValue.GetAsPlatformString();
+    if(in_dateLiteral.length())
+        sscanf(in_dateLiteral.c_str(), "%04d:%02d:%02d", &hour, &min, &sec);
 
-    wstring in_filter = in_exprValue.GetAsPlatformWString();
-    for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
-        switch(*pfilter) {
-        case L'-':
-            pfilter++;
-            switch(*pfilter) {
-            case L'h':
-            case L'H': {
-                wstring num_hamming;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
-                    num_hamming += *pfilter;
-                swscanf(num_hamming.c_str(), L"%d", &hamming);
-                edit = 0;
+    unsigned typeCustom = in_typeCustom;
+    string formatSpec = in_formatCustom.substr(0,14);
+    switch(in_typeCustom) {
+    case DATETIME_YYYYMMDD_24MMSS:
+    case DATETIME_DDMMYYYY_24MMSS:
+    case DATETIME_MMDDYYYY_24MMSS:
+    case DATETIME_YYMMDD_24MMSS:
+    case DATETIME_DDMMYY_24MMSS:
+    case DATETIME_MMDDYY_24MMSS:
+        in_typeCustom = TIME_24MMSS;
+        formatSpec = in_formatCustom.substr(15,14);
+        break;
+    case DATETIME_YYYYMMDD_12MMSS:
+    case DATETIME_YYMMDD_12MMSS:
+    case DATETIME_DDMMYYYY_12MMSS:
+    case DATETIME_DDMMYY_12MMSS:
+    case DATETIME_MMDDYYYY_12MMSS:
+    case DATETIME_MMDDYY_12MMSS:
+        in_typeCustom = TIME_12MMSS;
+        formatSpec = in_formatCustom.substr(15,14);
+        break;
+    }
 
-                wstring inside = pfilter;
-                idx1 = inside.find_first_of(L"(");
-                idx2 = inside.find_last_of(L")");
-                if(idx1 != string::npos && idx2 != string::npos) {
-                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
-                    const wchar_t *psearch = search_string.c_str();
-                    for( ; *psearch; psearch++) {
-                        switch(*psearch) {
-                        case L'%':
-                        case L'_':
-                            out_filter += L"\"?\"";
-                            break;
-                        default:
-                            out_filter += *psearch;
-                            break;
-                        }
-                    }
-                    pfilter += idx2;
-                }
-                break;
-                }
-            case L'e':
-            case L'E': {
-                wstring num_edit;
-                for(pfilter++; *pfilter && (*pfilter >= L'0' && *pfilter <= '9'); pfilter++)
-                    num_edit += *pfilter;
-                swscanf(num_edit.c_str(), L"%d", &edit);
-                hamming = 0;
+    char outtime[9];
+    string outfmt;
+    sprintf(outtime, formatSpec.c_str(), 11, 22, 33);
+    outfmt = outtime;
+    std::replace(outfmt.begin(), outfmt.end(), '1', 'H');
+    std::replace(outfmt.begin(), outfmt.end(), '2', 'M');
+    std::replace(outfmt.begin(), outfmt.end(), '3', 'S');
 
-                wstring inside = pfilter;
-                idx1 = inside.find_first_of(L"(");
-                idx2 = inside.find_last_of(L")");
-                if(idx1 != string::npos && idx2 != string::npos) {
-                    wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
-                    const wchar_t *psearch = search_string.c_str();
-                    for( ; *psearch; psearch++) {
-                        switch(*psearch) {
-                        case L'%':
-                        case L'_':
-                            out_filter += L"\"?\"";
-                            break;
-                        default:
-                            out_filter += *psearch;
-                            break;
-                        }
-                    }
-                    pfilter += idx2;
-                }
-                break;
-                }
-            case L'i':
-            case L'I':
-                case_sensitive = false;
-                break;
-            case '-':
-                out_filter += L"-";
-                break;
-            default:
-                // ignore any other switches
-                break;
-            }
-            // skip whitespace after the filter
-            for ( ; iswhitespace(*(pfilter+1)); pfilter++) ;
-            break;
-        case L'%':
-        case L'_':
-            out_filter += L"\"?\"";
-            break;
-        default:
-            out_filter += *pfilter;
-            break;
+    switch(in_typeCustom) {
+    case TIME_24MMSS:
+        sprintf(outtime, formatSpec.c_str(), hour, min, sec);
+        break;
+    case TIME_12MMSS: {
+        int twelve_hour = hour % 12;
+        sprintf(outtime, formatSpec.c_str(), twelve_hour ? twelve_hour : 12, min, sec);
+        m_filter += "( ";
+        break;
         }
     }
-    out_filter += L"\"";
 
-    m_filter += "( RECORD." + in_columnName;
-
-    if(m_negate) {
-        m_filter += " NOT_CONTAINS ";
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
     }
-    else
-        m_filter += " CONTAINS ";
+    else 
+        m_filter += "( RAW_TEXT";
 
-    m_filter += out_filter.c_str();
-    m_filter += " )";
-    m_hamming = hamming;
-    m_edit = edit;
-    m_caseSensitive = case_sensitive;
+    m_filter += " ";
+    m_filter += in_RelationalOp;
+    m_filter += " TIME(";
+    m_filter += outfmt.c_str();
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " = ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += outtime;
+    m_filter += ") )";
+
+    if(in_typeCustom == TIME_12MMSS) {
+        m_filter += " AND ( RECORD." + in_columnName + " CONTAINS \"";
+        m_filter += (hour < 12) ? "AM" : "PM";
+        m_filter += "\" ) )";
+    }
+}
+
+void R1FilterHandler::ConstructNumberComparisonFilter(
+    simba_wstring in_columnName,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp,
+    simba_wstring in_RelationalOp)
+{
+    string numLiteral = in_exprValue.GetAsPlatformString();
+
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
+
+    m_filter += " ";
+    m_filter += in_RelationalOp;
+    m_filter += " NUMBER(NUM";
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " = ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += "\"" + numLiteral + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(0,1) + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(1,1) + "\"";
+    m_filter += ") )";
+}
+
+void R1FilterHandler::ConstructCurrencyComparisonFilter(
+    simba_wstring in_columnName,
+    string& in_formatCustom,
+    const simba_wstring& in_exprValue,
+    SEComparisonType in_compOp,
+    simba_wstring in_RelationalOp)
+{
+    string numLiteral = in_exprValue.GetAsPlatformString();
+
+    if(m_table->IsStructuredType()) {
+        m_filter += "( RECORD." + in_columnName;
+    }
+    else 
+        m_filter += "( RAW_TEXT";
+
+    m_filter += " ";
+    m_filter += in_RelationalOp;
+    m_filter += " CURRENCY(CUR";
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " = ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += "\"" + in_formatCustom.substr(0,1) + numLiteral + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(0,1) + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(1,1) + "\", ";
+    m_filter += "\"" + in_formatCustom.substr(2,1) + "\"";
+    m_filter += ") )";
 }

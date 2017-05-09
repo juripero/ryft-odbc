@@ -11,7 +11,7 @@
 #include "R1Driver.h"
 
 #ifdef SERVERTARGET
-#include "SimbaServer.h"
+#include "CppServerAPI.h"
 #endif
 
 #include <unistd.h>

@@ -10,7 +10,7 @@
 #define _RYFTONE_R1CONNECTION_H_
 
 #include "RyftOne.h"
-#include "ryft1_catalog.h"
+#include "R1Catalog.h"
 #include "DSIConnection.h"
 
 namespace RyftOne
@@ -130,6 +130,9 @@ namespace RyftOne
 
     // Private =====================================================================================
     private:
+
+        virtual void DoReset();
+
         /// @brief Set the driver's default property values.
         /// 
         /// This function overrides some of the default connection properties specified in

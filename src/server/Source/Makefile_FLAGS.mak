@@ -14,6 +14,7 @@ COMMON_CFLAGS = $(DMFLAGS) \
 -I./DataEngine \
 -I./DataEngine/Metadata \
 -I./DataEngine/Passdown \
+-I./DataEngine/Procedures \
 -I./Ryft1 \
 -I../../libmeta \
 -I../../libsqlite \
@@ -26,6 +27,8 @@ COMMON_CFLAGS = $(DMFLAGS) \
 -I$(SIMBAENGINE_DIR)/Include/SQLEngine/AETree \
 -I$(SIMBAENGINE_DIR)/Include/SQLEngine/Parser \
 -I$(SIMBAENGINE_DIR)/Include/SQLEngine/DSIExt \
+-I$(SIMBAENGINE_DIR)/Include/SQLEngine/Executor \
+-I$(SIMBAENGINE_DIR)/Include/SQLEngine/Executor/ETree \
 -I$(SIMBAENGINE_DIR)/Include/Server \
 -I$(SIMBAENGINE_THIRDPARTY_DIR)/Expat/2.0.1 \
 -I/usr/include/glib-2.0 \
@@ -51,7 +54,8 @@ SIMBA_LIBS = $(SIMBA_LIB_PATH)/libSimbaDSI_<TARGET>.a,$(SIMBA_LIB_PATH)/libSimba
 
 ifeq ($(BUILDSERVER),exe)
 
-SIMBA_LIBS := $(SIMBA_LIBS),$(SIMBA_LIB_PATH)/libSimbaCommunications_<TARGET>.a,$(SIMBA_LIB_PATH)/libSimbaMessages_<TARGET>.a,$(SIMBA_LIB_PATH)/libSimbaServer_<TARGET>.a
+#SIMBA_LIBS := $(SIMBA_LIBS),$(SIMBA_LIB_PATH)/libSimbaCommunications_<TARGET>.a,$(SIMBA_LIB_PATH)/libSimbaMessages_<TARGET>.a,$(SIMBA_LIB_PATH)/libSimbaServer_<TARGET>.a
+SIMBA_LIBS := $(SIMBA_LIBS),$(SIMBA_LIB_PATH)/libSimbaCSCommon_<TARGET>.a,$(SIMBA_LIB_PATH)/libSimbaServer_<TARGET>.a,$(SIMBA_LIB_PATH)/libSimbaServerMain_<TARGET>.a
 
 else # BUILDSERVER != exe
 
@@ -161,7 +165,7 @@ SIMBA_LIBS_RELEASE = $(subst _<TARGET>,,$(SIMBA_LIBS))
 SONAME_RELEASE=$(notdir $(TARGET_SO_RELEASE))
 SONAME_DEBUG=$(notdir $(TARGET_SO_DEBUG))
 
-COMMON_LDFLAGS = -L$(ICULIB_PATH) $(ICU_LIBS) $(EXPORT_DEF) -ldl -lconfig -lglib-2.0 -lldap -lryftone -lcrypt -luuid -ljson
+COMMON_LDFLAGS = -L$(ICULIB_PATH) $(ICU_LIBS) $(EXPORT_DEF) -lconfig -lglib-2.0 -lldap -lryftone -lcrypt -luuid -ljson -lcurl
 
 ifeq ($(BUILDSERVER),exe)
 COMMON_LDFLAGS := -L$(OPENSSLLIB_PATH) $(OPENSSL_LIBS) $(COMMON_LDFLAGS)
@@ -174,10 +178,10 @@ endif
 ifeq ($(BUILDSERVER),exe)
 BIN_LDFLAGS = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive $(COMMON_LDFLAGS) \
               -Wl,--no-whole-archive,../../libmeta/Release/libmeta.a \
-              -Wl,--no-whole-archive,../../libsqlite/Release/libsqlite.a
+              -Wl,--no-whole-archive,../../libsqlite/Release/libsqlite.a -ldl
 BIN_LDFLAGS_DEBUG = -Wl,--whole-archive,$(SIMBA_LIBS_DEBUG) -Wl,--no-whole-archive $(COMMON_LDFLAGS) \
                     -Wl,--no-whole-archive,../../libmeta/Debug/libmeta.a \
-                    -Wl,--no-whole-archive,../../libsqlite/Debug/libsqlite.a
+                    -Wl,--no-whole-archive,../../libsqlite/Debug/libsqlite.a -ldl
 else
 SO_LDFLAGS       = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive \
                  -Wl,--soname=$(SONAME_RELEASE) \

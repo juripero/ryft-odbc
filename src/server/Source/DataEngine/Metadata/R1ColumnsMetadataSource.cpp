@@ -30,7 +30,7 @@ R1ColumnsMetadataSource::R1ColumnsMetadataSource(DSIMetadataRestrictions& in_res
         table = itr->second; 
 
     string table_str = table.GetAsPlatformString();
-    m_columns = in_ryft1->getColumns(table_str);
+    m_columns = in_ryft1->GetColumns(table_str);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

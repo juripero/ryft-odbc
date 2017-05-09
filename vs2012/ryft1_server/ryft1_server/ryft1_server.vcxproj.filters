@@ -68,6 +68,12 @@
     <Filter Include="Files">
       <UniqueIdentifier>{0a0627aa-891c-4d83-8152-7965f2ff71f3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source files\DataEngine\Procedures">
+      <UniqueIdentifier>{987304fb-4367-4e0b-ac61-87ac2aa14e50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Procedures\Include">
+      <UniqueIdentifier>{8a8ea312-0895-47af-8900-e55536325833}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\server\Source\Config\ConfigMessageSource.h">
@@ -161,14 +167,35 @@
       <Filter>Source files\DataEngine\Passdown\Include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\server\Source\RyftOne.h" />
-    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_util.h">
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ProceduresMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Procedures\R1ProcedureFactory.h">
+      <Filter>Source files\DataEngine\Procedures\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1IQueryResult.h">
       <Filter>Source files\Ryft1\Include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_result.h">
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1JSONResult.h">
       <Filter>Source files\Ryft1\Include</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\server\Source\Ryft1\ryft1_catalog.h">
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1RAWResult.h">
       <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1Catalog.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1Util.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\Ryft1\R1XMLResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\server\Source\DataEngine\Procedures\R1UnloadProcedure.h">
+      <Filter>Source files\DataEngine\Procedures\Include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -271,14 +298,32 @@
     <ClCompile Include="..\..\..\src\server\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp">
       <Filter>Source files\DataEngine\Passdown</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_util.cpp">
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ProceduresMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Procedures\R1ProcedureFactory.cpp">
+      <Filter>Source files\DataEngine\Procedures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\R1JSONResult.cpp">
       <Filter>Source files\Ryft1</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_result.cpp">
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\R1RAWResult.cpp">
       <Filter>Source files\Ryft1</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\server\Source\Ryft1\ryft1_catalog.cpp">
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\R1Catalog.cpp">
       <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\R1Util.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\Ryft1\R1XMLResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\server\Source\DataEngine\Procedures\R1UnloadProcedure.cpp">
+      <Filter>Source files\DataEngine\Procedures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -6,16 +6,19 @@ using namespace std;
 
 extern const char s_R1Catalog[];
 extern const char s_R1Results[];
+extern const char s_R1Unload[];
 extern const char s_TableMeta[];
+extern const char s_RyftUser[];
 
 class __meta_config__ {
 public:
-    __meta_config__(string& in_table);
+    __meta_config__(string& in_dir);
     __meta_config__();
 
     class __meta_col__ {
     public:
-        string rdf_name;
+        string json_tag;
+        string xml_tag;
         string name;
         string type_def;
         string description;
@@ -74,7 +77,7 @@ public:
 
 class __catalog_entry__ {
 public:
-    __catalog_entry__(string in_table);
+    __catalog_entry__(string in_dir);
     __meta_config__ meta_config;
     __rdf_config__ rdf_config;
     string path;
@@ -150,6 +153,27 @@ protected:
 // Element objects will be stored on a stack by parsers:
 typedef std::deque<XMLElement *> ElementStack;
 
+static size_t __stripControlChars(char *pbuf1, char *pbuf2, size_t siz)
+{
+    size_t out_siz = 0;
+    for(size_t i = 0; i < siz; i++) {
+        if(pbuf1[i] > 0 && pbuf1[i] <= 0x1F) {
+            switch(pbuf1[i]) {
+            case 0x09:
+            case 0x0A:
+            case 0x0D:
+                pbuf2[out_siz++] = pbuf1[i];
+                break;
+            default:
+                break;
+            }
+        }
+        else
+            pbuf2[out_siz++] = pbuf1[i];
+    }
+    return out_siz;
+}
+
 class XMLParser : public XMLElement
 {
 public:
@@ -161,7 +185,7 @@ public:
 
     // The auto-magic parse function.  This processes relationships and then
     // parses the main XML file associated with the object:
-    bool XMLParse(int fd, unsigned long dwSize, std::string delim, bool no_top)
+    bool XMLParse(int fd, size_t stSize, std::string delim, bool no_top)
     {
         // Open parse path XML file:
         m_sniffing = false;
@@ -181,29 +205,32 @@ public:
             // Parse:
             try 
             {
-                unsigned long dwCurr, dwRemain;
+                size_t stCurr, stRemain;
                 int readThisLoop;
                 bool bLast;
                 if(no_top)
                     XML_Parse( parser, "<xml_start>", strlen("<xml_start>"), false);
 
                 char * pbBuffer = (char *)malloc(PARSER_WINDOW_SIZE);
-                if(!pbBuffer) {
+                char * pbBuffer2 = (char *)malloc(PARSER_WINDOW_SIZE);
+                if(!pbBuffer || !pbBuffer2) {
                     XML_ParserFree( parser );
                     return false;
                 }
-                for( dwCurr = 0; dwCurr < dwSize; dwCurr += PARSER_WINDOW_SIZE )
+                for( stCurr = 0; stCurr < stSize; stCurr += PARSER_WINDOW_SIZE )
                 {
-                    dwRemain = dwSize - dwCurr;
-                    bLast = dwRemain < PARSER_WINDOW_SIZE;
-                    readThisLoop = read(fd, pbBuffer, bLast ? dwRemain : PARSER_WINDOW_SIZE);
+                    stRemain = stSize - stCurr;
+                    bLast = stRemain < PARSER_WINDOW_SIZE;
+                    readThisLoop = read(fd, pbBuffer, bLast ? stRemain : PARSER_WINDOW_SIZE);
                     if(readThisLoop == -1) 
                     {
                         free(pbBuffer);
+                        free(pbBuffer2);
                         XML_ParserFree( parser );
                         return false;
                     }
-                    if( XML_STATUS_OK != XML_Parse( parser, (const char *)( pbBuffer ), readThisLoop, bLast ) ) 
+                    readThisLoop = __stripControlChars(pbBuffer, pbBuffer2, readThisLoop);
+                    if( XML_STATUS_OK != XML_Parse( parser, (const char *)( pbBuffer2 ), readThisLoop, bLast ) ) 
                     {
                         enum XML_Error code = XML_GetErrorCode(parser);
                         break;
@@ -212,6 +239,7 @@ public:
                         m_bParsed = true;
                 }
                 free(pbBuffer);
+                free(pbBuffer2);
             }
             catch(...)
             {
@@ -224,7 +252,7 @@ public:
         return m_bParsed;
     }
 
-    bool XMLSniff(int fd, unsigned long dwSize, string& record_tag) 
+    bool XMLSniff(int fd, size_t stSize, string& record_tag) 
     {
         m_sniffing = true;
         XML_Parser parser = XML_ParserCreate( NULL );
@@ -241,7 +269,6 @@ public:
             // Parse:
             try 
             {
-                unsigned long dwCurr, dwRemain;
                 int readThisLoop;
                 bool bLast;
 
@@ -251,9 +278,8 @@ public:
                     return false;
                 }
 
-                dwRemain = dwSize - dwCurr;
-                bLast = dwRemain < PARSER_SNIFF_SIZE;
-                readThisLoop = read(fd, pbBuffer, bLast ? dwRemain : PARSER_SNIFF_SIZE);
+                bLast = stSize < PARSER_SNIFF_SIZE;
+                readThisLoop = read(fd, pbBuffer, bLast ? stSize : PARSER_SNIFF_SIZE);
                 if(readThisLoop == -1) 
                 {
                     free(pbBuffer);
@@ -410,48 +436,93 @@ protected:
 class JSONParser : public JSONElement {
 public:
 
-    bool JSONParse(int fd, unsigned long dwSize, bool no_top) 
+    bool JSONParse(int fd, size_t stSize, bool no_top, string top_object) 
     {
-        unsigned long lRead = 0;
-        char *buffer = (char *)mmap(NULL, dwSize, PROT_READ, MAP_PRIVATE, fd, 0);
-        if(!buffer) {
+        size_t stRead = 0;
+        size_t stCurr = 0;
+        size_t stRemain;
+        int readThisLoop;
+        bool bLast;
+        char *buffer = (char *)malloc(PARSER_WINDOW_SIZE);
+        if(!buffer)
             return false;
-        }
+
         json_object *jobj;
         json_tokener *jtok = json_tokener_new();
-        while(jobj = json_tokener_parse_ex(jtok, buffer + lRead, dwSize - lRead)) {
-            lRead += jtok->char_offset;
-            if(no_top) {
+        enum json_tokener_error jerr;
+
+        do {
+            stRemain = stSize - stCurr;
+            bLast = stRemain < PARSER_WINDOW_SIZE;
+            readThisLoop = read(fd, buffer, bLast ? stRemain : PARSER_WINDOW_SIZE);
+            if(readThisLoop == -1) {
+                free(buffer);
+                json_tokener_free(jtok);
+                return false;
+            }
+            stCurr += readThisLoop;
+
+            stRead = 0;
+            while((jobj = json_tokener_parse_ex(jtok, buffer + stRead, readThisLoop - stRead)) && no_top) {
+                stRead += jtok->char_offset;
                 json_parse(jobj, NULL, 1);
             }
-            else
-                json_parse_array(jobj, NULL, 0);
+        } 
+        while(((jerr = json_tokener_get_error(jtok)) == json_tokener_continue) && (stCurr < stSize));
+
+        free(buffer);
+
+        if(jobj && !no_top) {
+            if(!top_object.empty()) {
+                jobj = json_object_object_get(jobj, top_object.c_str());
+            }
+            json_parse_array(jobj, NULL, 0);
         }
         json_tokener_free(jtok);
-        munmap(buffer, dwSize);
         return true;
     }
 
-    bool JSONHasTop(int fd, unsigned long dwSize)
+    bool JSONHasTop(int fd, size_t stSize)
     {
-        unsigned long lRead = 0;
-        char *buffer = (char *)mmap(NULL, dwSize, PROT_READ, MAP_PRIVATE, fd, 0);
-        if(!buffer) {
+        size_t stCurr = 0;
+        size_t stRemain;
+        int readThisLoop;
+        bool bLast;
+        char *buffer = (char *)malloc(PARSER_WINDOW_SIZE);
+        if(!buffer)
             return false;
-        }
+
         json_object *jobj;
         json_tokener *jtok = json_tokener_new();
-        jobj = json_tokener_parse_ex(jtok, buffer + lRead, dwSize - lRead);
+        enum json_tokener_error jerr;
+
+        do {
+            stRemain = stSize - stCurr;
+            bLast = stRemain < PARSER_WINDOW_SIZE;
+            readThisLoop = read(fd, buffer, bLast ? stRemain : PARSER_WINDOW_SIZE);
+            if(readThisLoop == -1) {
+                free(buffer);
+                json_tokener_free(jtok);
+                return false;
+            }
+            stCurr += readThisLoop;
+            jobj = json_tokener_parse_ex(jtok, buffer, readThisLoop);
+        } 
+        while(((jerr = json_tokener_get_error(jtok)) == json_tokener_continue) && (stCurr < stSize));
+
+        free(buffer);
+
         enum json_type type = json_object_get_type(jobj);
         bool hasTop = false;
         if(type == json_type_array) {
             hasTop = true;
         }
         json_tokener_free(jtok);
-        munmap(buffer, dwSize);
         return hasTop;
     }
+
 private:
+
     void json_value(char *key, json_object *jvalue)
     {
         JSONAddElement(key, NULL, NULL);
@@ -479,7 +550,7 @@ private:
                     json_parse(jvalue, NULL, iLevel+1);
                 }
                 else {
-                    json_value(key, jvalue);
+                    json_value("", jvalue);
                 }
             }
         }
@@ -525,9 +596,11 @@ private:
 };
 
 #include <stdio.h>
+#include <pwd.h>
 
 class IFile {
-    friend class RyftOne_Result;
+    friend class IQueryResult;
+
 public:
     IFile(string output) 
     {
@@ -587,7 +660,7 @@ private:
 
 class XMLFile : public IFile, public XMLParser {
 public:
-    XMLFile(string output, string delim) : IFile(output), __delim(delim) { }
+    XMLFile(string output, string delim) : IFile(output), __delim(delim), __in_row(false) { }
 
 protected:
     // XML Parse
@@ -608,4 +681,5 @@ private:
     string  __delim;
     string  __field;
     string  __value;
+    bool    __in_row;
 };

@@ -14,6 +14,9 @@
 #include "DSIExtResultSet.h"
 #include "DSIResults.h"
 
+#include "R1ProcedureFactory.h"
+#include "R1ProceduresMetadataSource.h"
+#include "R1ProcedureColumnsMetadataSource.h"
 #include "R1OperationHandlerFactory.h"
 #include "R1CatalogOnlyMetadataSource.h"
 #include "R1ColumnsMetadataSource.h"
@@ -30,6 +33,9 @@ using namespace Simba::SQLEngine;
 R1DataEngine::R1DataEngine(IStatement* in_statement, RyftOne_Database *ryft1) : 
     DSIExtSqlDataEngine(in_statement), m_ryft1(ryft1)
 {
+    m_procedureFactory = AutoPtr<R1ProcedureFactory>(
+        new R1ProcedureFactory(m_ryft1, m_statement));
+
     ENTRANCE_LOG(GetLog(), "RyftOne", "R1DataEngine", "R1DataEngine");
 }
 
@@ -48,8 +54,7 @@ AutoPtr<DSIExtOperationHandlerFactory> R1DataEngine::CreateOperationHandlerFacto
         "R1DataEngine", 
         "CreateOperationHandlerFactory");
 
-    //return AutoPtr<DSIExtOperationHandlerFactory>(NULL);
-    return AutoPtr<DSIExtOperationHandlerFactory>(new R1OperationHandlerFactory());
+    return AutoPtr<DSIExtOperationHandlerFactory>(new R1OperationHandlerFactory(m_ryft1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -130,6 +135,22 @@ DSIMetadataSource* R1DataEngine::MakeNewMetadataTable(
             return new R1TypeInfoMetadataSource(in_restrictions, IsODBCVersion3());
         }
 
+        case DSI_PROCEDURES_METADATA:
+        {
+            return new R1ProceduresMetadataSource(
+                in_restrictions,
+                m_procedureFactory.Get());
+            break;
+        }
+
+        case DSI_PROCEDURES_COLUMNS_METADATA:
+        {
+            return new R1ProcedureColumnsMetadataSource(
+                in_restrictions,
+                m_procedureFactory.Get());
+            break;
+        }
+
         default:
         {
             return new DSIEmptyMetadataSource(in_restrictions);
@@ -182,7 +203,7 @@ void R1DataEngine::CreateTable(const SharedPtr<TableSpecification> in_specificat
         ryft_columns.push_back(ryft_column);
     }
 
-    m_ryft1->createTable(tableName, ryft_columns);
+    m_ryft1->CreateTable(tableName, ryft_columns);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +213,7 @@ bool R1DataEngine::DoesTableExist(
     const simba_wstring& in_tableName)
 {
     string tableName = in_tableName.GetAsPlatformString();
-    return m_ryft1->tableExists(tableName);
+    return m_ryft1->TableExists(tableName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +224,16 @@ void R1DataEngine::DropTable(
     Simba::SQLEngine::DSIExtTableDropOption in_dropOption)
 {
     string tableName = in_tableName.GetAsPlatformString();
-    m_ryft1->dropTable(tableName);
+    m_ryft1->DropTable(tableName);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+SharedPtr<DSIExtProcedure> R1DataEngine::OpenProcedure(
+    const simba_wstring& in_catalogName,
+    const simba_wstring& in_schemaName,
+    const simba_wstring& in_procName)
+{
+    return m_procedureFactory->CreateProcedure(in_procName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -216,14 +246,15 @@ SharedPtr<DSIExtResultSet> R1DataEngine::OpenTable(
     ENTRANCE_LOG(GetLog(), "RyftOne", "R1DataEngine", "OpenTable");
 
     SharedPtr<DSIExtResultSet> table;
-
-    table = new R1Table(
-        GetLog(),
-        in_tableName,
-        m_ryft1,
-        m_statement->GetWarningListener(),
-        IsODBCVersion3());
-
+    if(DoesTableExist(in_catalogName, in_schemaName, in_tableName)) {
+        string tableName = in_tableName.GetAsPlatformString();
+        table = new R1Table(
+            GetLog(),
+            in_tableName,
+            m_ryft1,
+            m_statement->GetWarningListener(),
+            IsODBCVersion3());
+    }
     return table;
 }
 
