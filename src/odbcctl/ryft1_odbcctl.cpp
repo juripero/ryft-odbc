@@ -209,7 +209,7 @@ __pid_t get_lock_file(string& exepath)
     if(lfp < 0) 
         return -1;
     char str[10];
-    __pid_t pid;
+    __pid_t pid = -1;
     read(lfp, str, sizeof(str));
     sscanf(str, "%d", &pid);
     close(lfp);
@@ -341,8 +341,13 @@ void start(string path)
     put_lock_file(getpid(), path);
 
     // make the ODBC directory if its not already there
+    struct passwd *pwd = getpwnam(s_RyftUser);
     mkdir(s_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    if(pwd != NULL)
+        chown(s_R1Catalog, pwd->pw_uid, pwd->pw_gid);
     mkdir(s_R1Results, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    if(pwd != NULL)
+        chown(s_R1Results, pwd->pw_uid, pwd->pw_gid);
 
     // make directory containing bin current directory
     chdir(epath.c_str());
@@ -434,7 +439,7 @@ void add(string filespec)
     else {
         data_type = __rdf_config__::dataType_JSON;
         bool hasTop = guess.JSONHasTop(fd, sb.st_size);
-        if(!guess.JSONParse(fd, sb.st_size, !hasTop)) {
+        if(!guess.JSONParse(fd, sb.st_size, !hasTop, "")) {
             cerr << "Could not read input file \"" << filespec << "\" (" << errno << ")\n";
             return;
         }
@@ -459,11 +464,16 @@ void add(string filespec)
         chunk = atoi(in.c_str());
 
     // make the ODBC directory if its not already there
+    struct passwd *pwd = getpwnam(s_RyftUser);
     mkdir(s_R1Catalog, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); 
+    if(pwd != NULL)
+        chown(s_R1Catalog, pwd->pw_uid, pwd->pw_gid);
     strcpy(path, s_R1Catalog);
     strcat(path, "/");
     strcat(path, name.c_str());
     mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    if(pwd != NULL)
+        chown(path, pwd->pw_uid, pwd->pw_gid);
 
     __meta_config__ metaconfig;
     metaconfig.table_name = name;
@@ -475,7 +485,7 @@ void add(string filespec)
     __meta_config__::__meta_col__ metacol;
     __columns cols = guess.getCols();
     for(itr = cols.begin(); itr != cols.end(); itr++) {
-        metacol.rdf_name = itr->_colName;
+        metacol.xml_tag = itr->_colName;
         metacol.name = itr->_colName;
         metacol.type_def = getColumnType(*itr);
         metaconfig.columns.push_back(metacol);
@@ -520,8 +530,12 @@ void add(string filespec)
     string filename = filespec.substr(0, filespec.find_last_of("."));
     if(filespec.find_last_of("/") != string::npos)
         filename = filespec.substr(filespec.find_last_of("/"), filespec.find_last_of("."));
-    sprintf(cpcmd, "cp %s %s/%s.%s", filespec.c_str(), path, filename.c_str(), name.c_str());
+    char newfile[PATH_MAX];
+    sprintf(newfile, "%s/%s.%s", path, filename.c_str(), name.c_str());
+    sprintf(cpcmd, "cp %s %s", filespec.c_str(), newfile);
     system(cpcmd);
+    if(pwd != NULL)
+        chown(newfile, pwd->pw_uid, pwd->pw_gid);
 }
 
 void del(string id)
@@ -561,7 +575,7 @@ void version(string exepath)
     char cat[PATH_MAX];
     size_t idx1 = exepath.rfind("/");
     string version(exepath.substr(0, idx1));
-    version.append("/../../VERSION");
+    version.append("/.version");
     sprintf(cat, "cat %s", version.c_str());
     system(cat);
 }

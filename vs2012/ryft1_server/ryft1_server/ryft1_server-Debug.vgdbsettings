@@ -38,7 +38,7 @@
     <BuildCommand>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>192.168.56.101</HostName>
+        <HostName>172.16.13.3</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
@@ -53,11 +53,11 @@
           </Record>
           <Record>
             <VariableName>SIMBAENGINE_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/9.5/DataAccessComponents</Value>
+            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents</Value>
           </Record>
           <Record>
             <VariableName>SIMBAENGINE_THIRDPARTY_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/9.5/DataAccessComponents/ThirdParty</Value>
+            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty</Value>
           </Record>
         </Records>
       </Environment>
@@ -65,7 +65,7 @@
     <CleanCommand>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>192.168.56.101</HostName>
+        <HostName>172.16.13.3</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
@@ -80,11 +80,11 @@
           </Record>
           <Record>
             <VariableName>SIMBAENGINE_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/9.5/DataAccessComponents</Value>
+            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents</Value>
           </Record>
           <Record>
             <VariableName>SIMBAENGINE_THIRDPARTY_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/9.5/DataAccessComponents/ThirdParty</Value>
+            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty</Value>
           </Record>
         </Records>
       </Environment>

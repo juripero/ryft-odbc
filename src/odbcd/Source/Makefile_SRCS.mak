@@ -18,14 +18,20 @@ DataEngine/Metadata/R1ColumnsMetadataSource.cpp \
 DataEngine/Metadata/R1SchemaOnlyMetadataSource.cpp \
 DataEngine/Metadata/R1TablesMetadataSource.cpp \
 DataEngine/Metadata/R1TypeInfoMetadataSource.cpp \
+DataEngine/Metadata/R1ProceduresMetadataSource.cpp \
+DataEngine/Metadata/R1ProcedureColumnsMetadataSource.cpp \
 DataEngine/Passdown/R1OperationHandlerFactory.cpp \
 DataEngine/Passdown/R1FilterHandler.cpp \
 DataEngine/Passdown/R1FilterResult.cpp \
+DataEngine/Procedures/R1ProcedureFactory.cpp \
+DataEngine/Procedures/R1UnloadProcedure.cpp \
 DataEngine/R1DataEngine.cpp \
 DataEngine/R1Table.cpp \
-Ryft1/ryft1_catalog.cpp \
-Ryft1/ryft1_result.cpp \
-Ryft1/ryft1_util.cpp \
+Ryft1/R1Catalog.cpp \
+Ryft1/R1JSONResult.cpp \
+Ryft1/R1XMLResult.cpp \
+Ryft1/R1RAWResult.cpp \
+Ryft1/R1Util.cpp \
 
 ##--------------------------------------------------------------------------------------------------
 ## There are no platform specific sources.

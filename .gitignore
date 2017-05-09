@@ -186,3 +186,4 @@ FakesAssemblies/
 SourceCache.dat
 *.msm
 SimbaEngineSDK.lic
+vs2012/ryft1_linuxclient/example/*

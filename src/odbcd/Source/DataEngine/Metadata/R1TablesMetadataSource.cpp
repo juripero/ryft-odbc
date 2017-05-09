@@ -37,7 +37,7 @@ R1TablesMetadataSource::R1TablesMetadataSource(DSIMetadataRestrictions& in_restr
     else
         type = "%";
 
-    m_tables = in_ryft1->getTables(table.GetAsPlatformString(), type.GetAsPlatformString());
+    m_tables = in_ryft1->GetTables(table.GetAsPlatformString(), type.GetAsPlatformString());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

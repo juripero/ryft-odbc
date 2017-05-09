@@ -5,4 +5,4 @@ Driver=_INSTALLDIR_/bin/x8664/libSimbaClient.so
 Locale=en-US
 SSLCertFile=
 UseSsl=0
-Servers=_IPADDR_ _PORT_
+ServerList=_IPADDR_ _PORT_

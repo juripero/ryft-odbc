@@ -10,6 +10,7 @@
 #define _RYFTONE_R1OPERATIONALHANDLERFACTORY_H_
 
 #include "RyftOne.h"
+#include "R1Catalog.h"
 #include "DSIExtOperationHandlerFactory.h"
 
 namespace RyftOne
@@ -20,7 +21,7 @@ namespace RyftOne
     // Public ======================================================================================
     public:
         /// @brief Constructor.
-        R1OperationHandlerFactory();
+        R1OperationHandlerFactory(RyftOne_Database *ryft1);
 
         /// @brief Destructor.
         virtual ~R1OperationHandlerFactory() {}
@@ -36,6 +37,7 @@ namespace RyftOne
 
     // Private =====================================================================================
     private:
+        RyftOne_Database *m_ryft1;
     };
 }
 

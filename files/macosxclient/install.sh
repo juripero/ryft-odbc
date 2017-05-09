@@ -31,10 +31,10 @@ if [ ! -d "$fullpath" ]; then
 	mkdir $fullpath
 fi
 
-echo -n "What is the IP address of the Ryft ODBC Server [127.0.0.0]? "
+echo -n "What is the IP address of the Ryft ODBC Server [127.0.0.1]? "
 read ipaddr
 if [ "$ipaddr" == "" ]; then
-	ipaddr="127.0.0.0"
+	ipaddr="127.0.0.1"
 fi 
 
 echo -n "What is the IP port of the Ryft ODBC Server [7409]? "
