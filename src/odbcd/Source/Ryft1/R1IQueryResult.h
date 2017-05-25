@@ -547,15 +547,19 @@ public:
         __idxFilename[0] = '\0';
         char * offset = NULL;
         char * length = NULL;
+        char * surrounding = NULL;
+        char * saveptr = NULL;
         __offset = __length = __surrounding = 0;
 
         if(fgets(__idxLine, FILENAME_MAX, __idxFD)) {
-            strcpy(__idxFilename, strtok(__idxLine, ","));
-            if(offset = strtok(NULL, ","))
+            saveptr = __idxLine;
+            strcpy(__idxFilename, strtok_r(__idxLine, ",", &saveptr));
+            if(offset = strtok_r(NULL, ",", &saveptr))
                 __offset = strtoll(offset, NULL, 10);
-            if(length = strtok(NULL, ","))
+            if(length = strtok_r(NULL, ",", &saveptr))
                 __length = strtoll(length, NULL, 10);
-            __surrounding = strtoll(strtok(NULL, "\n"), NULL, 10);
+            if(surrounding = strtok_r(NULL, "\n", &saveptr))
+                __surrounding = strtoll(surrounding, NULL, 10);
         }
 
         if(strcmp(__cachedFile, __idxFilename)) {
