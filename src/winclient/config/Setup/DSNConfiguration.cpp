@@ -374,7 +374,7 @@ void DSNConfiguration::Save()
         // Write the Servers registry key for Simba
         wchar_t servers[512];
         _snwprintf(servers, 512, L"%s %s,", GetURL().GetAsPlatformWString().c_str(), GetPort().GetAsPlatformWString().c_str());
-        SQLWritePrivateProfileStringW(dsn.c_str(), L"SERVERLIST", servers, L"ODBC.INI");
+        SQLWritePrivateProfileStringW(dsn.c_str(), L"SERVERS", servers, L"ODBC.INI");
 
         // Write the Servers registry key for Simba
         wchar_t connectionDialog[MAX_PATH];
