@@ -715,7 +715,7 @@ protected:
             __odbcRoot(resultsPath);
             strcat(resultsPath, s_R1Results);
 
-            mkdir(resultsPath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
+            mkdir(resultsPath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH);
             struct passwd *pwd = getpwnam(s_RyftUser);
             if(pwd != NULL)
                 chown(resultsPath, pwd->pw_uid, pwd->pw_gid);
@@ -741,7 +741,47 @@ protected:
                 unlink(results);
                 return false;
             }
+// revisit with cluster implementation
+#if 0   
+            // copy the index file locally
+            char index[PATH_MAX];
 
+            curl_global_init(CURL_GLOBAL_DEFAULT);
+            curl = curl_easy_init();
+
+            if(!__restToken.empty()) {
+                struct curl_slist *header = NULL;
+                string auth = "Authorization: Basic " + __restToken;
+                header = curl_slist_append(header, auth.c_str());
+                curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+            }
+
+            url = __restServer + "/file?";
+            url += "file=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
+            url += "&local=true";
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+            char copyPath[PATH_MAX];
+            strcpy(copyPath, __path.c_str());
+            strcat(copyPath, s_R1Caches);
+
+            mkdir(copyPath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
+            if(pwd != NULL)
+                chown(copyPath, pwd->pw_uid, pwd->pw_gid);
+
+            sprintf(index, "%s/%s.txt", copyPath, tableName.c_str());
+            f = fopen(index, "w+");
+
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
+            code = curl_easy_perform(curl);
+            http_code = 0;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+            curl_easy_cleanup(curl);
+            curl_global_cleanup();
+            fclose(f);
+#endif
             ret = __storeToSqlite(tableName, results);
             unlink(results);
             if(!ret) {

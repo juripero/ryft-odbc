@@ -148,19 +148,9 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
     for(idx = 0; colList && (column = config_setting_get_elem(colList, idx)); idx++) {
         string name = to_name(column->name);
         col.json_tag = in_jsonroot + name;
-        // in version 1, the xml tag will be mapped from the rdf, in version 2 it must be provided 
-        // as the 4th element of the columns list
-        if(version == 1) {
-            col.xml_tag = name;
-        }
-        else {
-            col.xml_tag = config_setting_get_string_elem(column, 3);
-            idx1 = col.xml_tag.find("<");
-            idx2 = col.xml_tag.find(">");
-            if(idx1 != string::npos && idx2 != string::npos) 
-                col.xml_tag = col.xml_tag.substr(idx1+1, idx2-idx1-1);
-        }
-
+        // in version 1, the xml tag will be mapped from the rdf, in version 2 we assume
+        // the xml tag is equal to the name 
+        col.xml_tag = name;
         col.name = in_name + config_setting_get_string_elem(column, 0);
         col.type_def = config_setting_get_string_elem(column, 1);
         col.description = config_setting_get_string_elem(column, 2);
