@@ -66,6 +66,11 @@ private:
     vector<__catalog_entry__>::iterator __findTable(string& in_table);
     int __remove_directory(const char *path);
 
+    inline void __odbcRoot(char *path) {
+        strcpy(path, __rootPath.c_str());
+        strcat(path, s_R1Catalog);
+    }
+
     vector<__catalog_entry__> __catalog;
 
     int __authType;
@@ -80,6 +85,7 @@ private:
     string __restToken;
     string __restExpire;
     string __restPath;
+    string __rootPath;
 
     // Reference to the ILogger. (NOT OWN)
     ILogger* __log;

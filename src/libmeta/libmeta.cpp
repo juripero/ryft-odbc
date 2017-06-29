@@ -7,9 +7,11 @@
 
 #include "libmeta.h"
 
-const char s_R1Catalog[] = "/ryftone/ODBC";
-const char s_R1Results[] = "/ryftone/ODBC/.results";
-const char s_R1Unload[] = "/ryftone/ODBC/unload";
+const char s_R1Root[] = "/ryftone";
+const char s_R1Catalog[] = "/ODBC";
+const char s_R1Results[] = "/.results";
+const char s_R1Unload[] = "/unload";
+const char s_R1Caches[] = "/.caches";
 const char s_TableMeta[] = ".meta.table";
 const char s_RyftUser[] = "ryftuser";
 
@@ -26,8 +28,8 @@ inline string to_name(const char *name)
     return __name;
 }
 
-__meta_config__::__meta_config__() { }
-__meta_config__::__meta_config__(string& in_dir)
+__meta_config__::__meta_config__() : data_type(dataType_None) { }
+__meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
 {
     config_t tableMeta;
     char path[PATH_MAX];
@@ -35,29 +37,88 @@ __meta_config__::__meta_config__(string& in_dir)
     config_setting_t *viewList;
     __meta_view__ v;
     const char *result;
+    int value;
     int idx;
 
-    strcpy(path, s_R1Catalog);
-    strcat(path, "/");
-    strcat(path, in_dir.c_str());
+    strcpy(path, in_dir.c_str());
     strcat(path, "/");
     strcat(path, s_TableMeta);
 
     config_init(&tableMeta);
     if(CONFIG_TRUE == config_read_file(&tableMeta, path)) {
+
+        // common to both versions
         if(CONFIG_TRUE == config_lookup_string(&tableMeta, "table_name", &result)) 
-            table_name = in_dir;
+            table_name = result;
         if(CONFIG_TRUE == config_lookup_string(&tableMeta, "table_remarks", &result))
             table_remarks = result;
-        if(CONFIG_TRUE == config_lookup_string(&tableMeta, "rdf", &result)) 
-            rdf_path = result;
         delimiter = "|";
         if(CONFIG_TRUE == config_lookup_string(&tableMeta, "delimiter", &result))
             delimiter = result;
 
-        string name, rdfname;
-        column_meta(tableMeta, "columns", name, rdfname);
+        version = 1;
+        if(CONFIG_TRUE == config_lookup_int(&tableMeta, "version", &value))
+            version = value;
 
+        string name, jsonroot;
+        column_meta(tableMeta, "columns", name, jsonroot);
+
+        switch(version) {
+        default:
+        case 1: {
+            if(CONFIG_TRUE == config_lookup_string(&tableMeta, "rdf", &result)) 
+                rdf_path = result;
+
+            // load and copy required parameters from the RDF
+            __rdf_config__ rdf_config(rdf_path);
+            data_type = rdf_config.data_type;
+            file_glob = rdf_config.file_glob;
+            record_tag = rdf_config.record_start;
+            no_top = rdf_config.no_top;
+
+            // map xml tags to columns
+            size_t idx1, idx2;
+            vector<__meta_config__::__meta_col__>::iterator colItr;
+            vector<__rdf_config__::__rdf_tag__>::iterator rdfItr;
+            for(colItr = columns.begin(); colItr != columns.end(); colItr++) {
+                for(rdfItr = rdf_config.tags.begin(); rdfItr != rdf_config.tags.end(); rdfItr++) {
+                    if(rdfItr->name == colItr->xml_tag) {
+                        idx1 = rdfItr->start_tag.find("<");
+                        idx2 = rdfItr->start_tag.find(">");
+                        colItr->xml_tag = rdfItr->start_tag.substr(idx1+1, idx2-idx1-1);
+                    }
+                }
+            }
+            break;
+        }
+        case 2:
+            if(CONFIG_TRUE == config_lookup_string(&tableMeta, "data_type", &result)) {
+                if(!strcasecmp(result, "JSON")) {
+                    data_type = dataType_JSON;
+                }
+                else if(!strcasecmp(result, "XML")) {
+                    data_type = dataType_XML;
+                }
+            }
+            if(CONFIG_TRUE == config_lookup_string(&tableMeta, "file_glob", &result)) 
+                file_glob = result;
+
+            no_top = false;
+            switch(data_type) {
+            case dataType_XML:
+                if(CONFIG_TRUE == config_lookup_string(&tableMeta, "record_tag", &result))
+                    record_tag = result;
+                break;
+            case dataType_JSON:
+                if(CONFIG_TRUE == config_lookup_string(&tableMeta, "record_path", &result)) {
+                    if(!strcmp(result, "."))
+                        no_top = true;
+                }
+                break;
+            }
+            break;
+        }
+        
         viewList = config_lookup(&tableMeta, "views");
         for(idx=0; viewList && (view = config_setting_get_elem(viewList, idx)); idx++) {
             v.id = view->name;
@@ -75,6 +136,7 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
     config_setting_t *colList;
     config_setting_t *column;
     __meta_col__ col;
+    size_t idx1, idx2;
     int idx;
 
     if(!in_name.empty())
@@ -86,7 +148,19 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
     for(idx = 0; colList && (column = config_setting_get_elem(colList, idx)); idx++) {
         string name = to_name(column->name);
         col.json_tag = in_jsonroot + name;
-        col.xml_tag = name;
+        // in version 1, the xml tag will be mapped from the rdf, in version 2 it must be provided 
+        // as the 4th element of the columns list
+        if(version == 1) {
+            col.xml_tag = name;
+        }
+        else {
+            col.xml_tag = config_setting_get_string_elem(column, 3);
+            idx1 = col.xml_tag.find("<");
+            idx2 = col.xml_tag.find(">");
+            if(idx1 != string::npos && idx2 != string::npos) 
+                col.xml_tag = col.xml_tag.substr(idx1+1, idx2-idx1-1);
+        }
+
         col.name = in_name + config_setting_get_string_elem(column, 0);
         col.type_def = config_setting_get_string_elem(column, 1);
         col.description = config_setting_get_string_elem(column, 2);
@@ -256,19 +330,14 @@ void __rdf_config__::write_rdf_config(string path)
     config_destroy(&tableRdf);
 }
 
-__catalog_entry__::__catalog_entry__(string in_dir) : meta_config(in_dir), rdf_config(meta_config.rdf_path) 
+__catalog_entry__::__catalog_entry__(string in_dir) : meta_config(in_dir) 
 {
-    path = s_R1Catalog;
-    path += "/";
-    path += in_dir;
+    __path = in_dir;
 }
 
 bool __catalog_entry__::_is_valid()
 {
-    if(meta_config.table_name.empty())
-        return false;
-
-    if(rdf_config.file_glob.empty())
+    if(meta_config.table_name.empty() || meta_config.file_glob.empty())
         return false;
 
     return true;

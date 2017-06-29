@@ -414,7 +414,7 @@ void add(string filespec)
     char rdf_path[PATH_MAX];
     char rdf_glob[PATH_MAX];
     int chunk = 64;
-    __rdf_config__::DataType data_type = __rdf_config__::dataType_None;
+    DataType data_type = dataType_None;
 
     int fd;
     struct stat sb;
@@ -432,12 +432,12 @@ void add(string filespec)
         if(!in.empty())
             delim = in;
 
-        data_type = __rdf_config__::dataType_XML;
+        data_type = dataType_XML;
         lseek(fd, 0, SEEK_SET);
         guess.XMLParse(fd, sb.st_size, delim, false);
     }
     else {
-        data_type = __rdf_config__::dataType_JSON;
+        data_type = dataType_JSON;
         bool hasTop = guess.JSONHasTop(fd, sb.st_size);
         if(!guess.JSONParse(fd, sb.st_size, !hasTop, "")) {
             cerr << "Could not read input file \"" << filespec << "\" (" << errno << ")\n";

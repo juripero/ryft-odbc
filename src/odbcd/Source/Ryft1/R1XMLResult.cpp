@@ -69,34 +69,27 @@ void RyftOne_XMLResult::__loadTable(string& in_name, vector<__catalog_entry__>::
     glob_t glob_results;
     char **relpaths;
     vector<__meta_config__::__meta_col__>::iterator colItr;
-    vector<__rdf_config__::__rdf_tag__>::iterator rdfItr;
 
     __name = in_name;
-    __path = in_itr->path;
+    __path = in_itr->__path;
 
-    idx1 = in_itr->rdf_config.record_start.find("<");
-    idx2 = in_itr->rdf_config.record_start.find(">");
-    m_delim = in_itr->rdf_config.record_start;
+    idx1 = in_itr->meta_config.record_tag.find("<");
+    idx2 = in_itr->meta_config.record_tag.find(">");
+    m_delim = in_itr->meta_config.record_tag;
     if(idx1 != string::npos && idx2 != string::npos) 
-        m_delim = in_itr->rdf_config.record_start.substr(idx1+1, idx2-idx1-1);
+        m_delim = in_itr->meta_config.record_tag.substr(idx1+1, idx2-idx1-1);
 
-    for(colItr = in_itr->meta_config.columns.begin(); colItr != in_itr->meta_config.columns.end(); colItr++) {
-        for(rdfItr = in_itr->rdf_config.tags.begin(); rdfItr != in_itr->rdf_config.tags.end(); rdfItr++) {
-            if(rdfItr->name == colItr->xml_tag) {
-                idx1 = rdfItr->start_tag.find("<");
-                idx2 = rdfItr->start_tag.find(">");
-                __metaTags.push_back(rdfItr->start_tag.substr(idx1+1, idx2-idx1-1));
-            }
-        }
+    for(colItr = in_itr->meta_config.columns.begin(); (colItr != in_itr->meta_config.columns.end()); colItr++) {
+        __metaTags.push_back(colItr->xml_tag);
     }
 
     path = __path;
     path += "/";
-    path += in_itr->rdf_config.file_glob;
+    path += in_itr->meta_config.file_glob;
 
-    idx1 = in_itr->rdf_config.file_glob.find(".");
+    idx1 = in_itr->meta_config.file_glob.find(".");
     if(idx1 != string::npos) 
-        __extension = in_itr->rdf_config.file_glob.substr(idx1+1);
+        __extension = in_itr->meta_config.file_glob.substr(idx1+1);
 
     glob(path.c_str(), GLOB_TILDE, NULL, &glob_results);
     relpaths = new char *[glob_results.gl_pathc];
@@ -105,7 +98,7 @@ void RyftOne_XMLResult::__loadTable(string& in_name, vector<__catalog_entry__>::
     }
     globfree(&glob_results);
 
-    __no_top = in_itr->rdf_config.no_top;
+    __no_top = in_itr->meta_config.no_top;
 
     __delimiter = in_itr->meta_config.delimiter;
 }
