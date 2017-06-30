@@ -4,11 +4,19 @@
 #include <string>
 using namespace std;
 
+extern const char s_R1Root[];
 extern const char s_R1Catalog[];
 extern const char s_R1Results[];
 extern const char s_R1Unload[];
+extern const char s_R1Caches[];
 extern const char s_TableMeta[];
 extern const char s_RyftUser[];
+
+enum DataType {
+    dataType_None = 0,
+    dataType_XML,
+    dataType_JSON
+};
 
 class __meta_config__ {
 public:
@@ -32,12 +40,22 @@ public:
         string description;
     };
 
+    // common
+    int version;
     string table_name;
     string table_remarks;
-    string rdf_path;
     string delimiter;
     vector<__meta_col__> columns;
     vector<__meta_view__> views;
+    
+    // version 1
+    string rdf_path;
+
+    // version 2
+    DataType data_type; 
+    string file_glob;
+    string record_tag;
+    bool no_top;
 
     void write_meta_config(string path);
 
@@ -47,12 +65,6 @@ private:
 
 class __rdf_config__ {
 public:
-    enum DataType {
-        dataType_None = 0,
-        dataType_XML,
-        dataType_JSON
-    };
-
     __rdf_config__(string& in_path);
     __rdf_config__();
 
@@ -79,8 +91,8 @@ class __catalog_entry__ {
 public:
     __catalog_entry__(string in_dir);
     __meta_config__ meta_config;
-    __rdf_config__ rdf_config;
-    string path;
+    
+    string __path;
 
     bool _is_valid( );
 };

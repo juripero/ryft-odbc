@@ -158,16 +158,17 @@ public:
    }
 
     void OpenQuery(string& in_name, vector<__catalog_entry__>::iterator in_catentry, 
-        string in_server, string in_token, string in_path)
+        string in_server, string in_token, string in_restPath, string in_rootPath)
     {
         __query.clear();
 
         __restServer = in_server;
         __restToken = in_token;
-        __restPath = in_path;
+        __restRoot = in_restPath;
+        __rootPath = in_rootPath;
 
         // JSON, XML, Unstructured
-        __dataType = in_catentry->rdf_config.data_type;
+        __dataType = in_catentry->meta_config.data_type;
 
         __loadTable(in_name, in_catentry);
 
@@ -205,7 +206,7 @@ public:
         }
 
         string dbpath = __path;
-        dbpath += "/.caches";
+        dbpath += s_R1Caches;
         mkdir(dbpath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH);
         struct passwd *pwd = getpwnam(s_RyftUser);
         if(pwd != NULL)
@@ -358,17 +359,20 @@ public:
 
     int UnloadResults()
     {
-        mkdir(s_R1Unload, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
+        char unloadPath[PATH_MAX];
+        __odbcRoot(unloadPath);
+        strcat(unloadPath, s_R1Unload);
+        mkdir(unloadPath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
         struct passwd *pwd = getpwnam(s_RyftUser);
         if(pwd != NULL)
-            chown(s_R1Unload, pwd->pw_uid, pwd->pw_gid);
+            chown(unloadPath, pwd->pw_uid, pwd->pw_gid);
 
         time_t now = ::time(NULL);
         tm *lt = localtime(&now);
         char file_path[PATH_MAX];
         IFile *formattedFile = NULL;
         sprintf(file_path, "%s/%s_%04d%02d%02d.%s", 
-            s_R1Unload, __name.c_str(), 1900 + lt->tm_year, lt->tm_mon + 1, lt->tm_mday, __extension.c_str());
+            unloadPath, __name.c_str(), 1900 + lt->tm_year, lt->tm_mon + 1, lt->tm_mday, __extension.c_str());
         formattedFile = __createFormattedFile(file_path);
         if(formattedFile == NULL)
             return 0;
@@ -564,13 +568,13 @@ public:
 
         if(strcmp(__cachedFile, __idxFilename)) {
             close(__cachedFD);
-            // WORKWORK
-            if(strncmp(__idxFilename, "/ryftone", strlen("/ryftone"))) {
-                string path = string("/ryftone") + __idxFilename;
-                __cachedFD = open(path.c_str(), O_RDONLY);
+            // path in index file is relative to restRoot, not our root, so adjust
+            string relPath = __idxFilename;
+            if(!strncmp(__idxFilename, __restRoot.c_str() , __restRoot.length())) {
+                relPath = __idxFilename + __restRoot.length();
             }
-            else
-                __cachedFD = open(__idxFilename, O_RDONLY);
+            string localPath = __rootPath + relPath;
+            __cachedFD = open(localPath.c_str(), O_RDONLY);
             strcpy(__cachedFile, __idxFilename);
         }
 
@@ -699,7 +703,7 @@ protected:
             }
 
             string url = __restServer + "/count?query=" + RyftOne_Util::UrlEncode(query);
-            string relPath = RyftOne_Util::UrlEncode(__path.c_str() + __restPath.length());
+            string relPath = RyftOne_Util::UrlEncode(__path.c_str() + __rootPath.length());
 
             url += "&files=" + relPath + RyftOne_Util::UrlEncode("/") + "*." + __extension; 
             url += "&index=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
@@ -707,12 +711,16 @@ protected:
 
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
-            mkdir(s_R1Results, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
+            char resultsPath[PATH_MAX];
+            __odbcRoot(resultsPath);
+            strcat(resultsPath, s_R1Results);
+
+            mkdir(resultsPath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH);
             struct passwd *pwd = getpwnam(s_RyftUser);
             if(pwd != NULL)
-                chown(s_R1Results, pwd->pw_uid, pwd->pw_gid);
+                chown(resultsPath, pwd->pw_uid, pwd->pw_gid);
 
-            sprintf(results, "%s/results.%08x", s_R1Results, pthread_self());
+            sprintf(results, "%s/results.%08x", resultsPath, pthread_self());
 
             FILE *f = fopen(results, "w+");
 
@@ -733,7 +741,47 @@ protected:
                 unlink(results);
                 return false;
             }
+// revisit with cluster implementation
+#if 0   
+            // copy the index file locally
+            char index[PATH_MAX];
 
+            curl_global_init(CURL_GLOBAL_DEFAULT);
+            curl = curl_easy_init();
+
+            if(!__restToken.empty()) {
+                struct curl_slist *header = NULL;
+                string auth = "Authorization: Basic " + __restToken;
+                header = curl_slist_append(header, auth.c_str());
+                curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
+            }
+
+            url = __restServer + "/file?";
+            url += "file=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
+            url += "&local=true";
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+
+            char copyPath[PATH_MAX];
+            strcpy(copyPath, __path.c_str());
+            strcat(copyPath, s_R1Caches);
+
+            mkdir(copyPath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH); 
+            if(pwd != NULL)
+                chown(copyPath, pwd->pw_uid, pwd->pw_gid);
+
+            sprintf(index, "%s/%s.txt", copyPath, tableName.c_str());
+            f = fopen(index, "w+");
+
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, f);
+            code = curl_easy_perform(curl);
+            http_code = 0;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+            curl_easy_cleanup(curl);
+            curl_global_cleanup();
+            fclose(f);
+#endif
             ret = __storeToSqlite(tableName, results);
             unlink(results);
             if(!ret) {
@@ -767,13 +815,19 @@ private:
 
     string __restServer;
     string __restToken;
-    string __restPath;
+    string __restRoot;
+    string __rootPath;
+
+    inline void __odbcRoot(char *path) {
+        strcpy(path, __rootPath.c_str());
+        strcat(path, s_R1Catalog);
+    }
 
     bool __queryFinished;
 
     RyftOne_Columns __cols;
 
-    __rdf_config__::DataType __dataType;
+    DataType __dataType;
 
     sqlite3 *__sqlite;
     sqlite3_stmt *__stmt;
@@ -1010,7 +1064,7 @@ private:
         fstat(fd, &sb);
 
         int matches = __getRowCount(fd, sb.st_size);
-        string idxPath = __path + "/.caches/" + tableName + ".txt";
+        string idxPath = __path + s_R1Caches + "/" + tableName + ".txt";
 
         char * errp;
         char * sql = sqlite3_mprintf("UPDATE \"__DIRECTORY__\" SET IDX_FILE = '%s', NUM_ROWS = %d WHERE ID = '%s'", idxPath.c_str(), matches, tableName.c_str());
