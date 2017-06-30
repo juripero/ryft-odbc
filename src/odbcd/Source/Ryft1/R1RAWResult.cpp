@@ -47,15 +47,15 @@ void RyftOne_RAWResult::__loadTable(string& in_name, vector<__catalog_entry__>::
     vector<__meta_config__::__meta_col__>::iterator colItr;
 
     __name = in_name;
-    __path = in_itr->path;
+    __path = in_itr->__path;
 
     path = __path;
     path += "/";
-    path += in_itr->rdf_config.file_glob;
+    path += in_itr->meta_config.file_glob;
 
-    idx1 = in_itr->rdf_config.file_glob.find(".");
+    idx1 = in_itr->meta_config.file_glob.find(".");
     if(idx1 != string::npos) 
-        __extension = in_itr->rdf_config.file_glob.substr(idx1+1);
+        __extension = in_itr->meta_config.file_glob.substr(idx1+1);
 
     glob(path.c_str(), GLOB_TILDE, NULL, &glob_results);
     relpaths = new char *[glob_results.gl_pathc];

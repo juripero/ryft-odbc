@@ -96,6 +96,17 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
         }
         if(error != NULL)
             g_clear_error(&error);
+
+        // ODBC root path
+        __rootPath = s_R1Root;
+        gchar *rootString;
+        rootString = g_key_file_get_string(keyfile, "Server", "RootPath", &error);
+        if(rootString) {
+            __rootPath = rootString;
+            free(rootString);
+        }
+        if(error != NULL)
+            g_clear_error(&error);
     }
     if(error != NULL)
         g_clear_error(&error);
@@ -214,7 +225,7 @@ RyftOne_Columns RyftOne_Database::GetColumns(string& in_table)
         for(idx=0, colItr = itr->meta_config.columns.begin(); colItr != itr->meta_config.columns.end(); colItr++, idx++) {
             col.m_ordinal = idx+1;
             col.m_tableName = itr->meta_config.table_name;
-            if(itr->rdf_config.data_type == __rdf_config__::dataType_XML) {
+            if(itr->meta_config.data_type == dataType_XML) {
                 col.m_colTag = colItr->xml_tag;
             }
             else
@@ -243,18 +254,18 @@ IQueryResult *RyftOne_Database::OpenTable(string& in_table)
             if(basic64)
                 free(basic64);
         }
-        switch(itr->rdf_config.data_type) {
-        case __rdf_config__::dataType_JSON:
+        switch(itr->meta_config.data_type) {
+        case dataType_JSON:
             result = new RyftOne_JSONResult(__log);
             break;
-        case __rdf_config__::dataType_XML:
+        case dataType_XML:
             result = new RyftOne_XMLResult(__log);
             break;
         default:
             result = new RyftOne_RAWResult(__log);
             break;
         }
-        result->OpenQuery(in_table, itr, __restServer, auth, __restPath);
+        result->OpenQuery(in_table, itr, __restServer, auth, __restPath, __rootPath);
     }
     return result;
 }
@@ -275,8 +286,9 @@ void RyftOne_Database::CreateTable(string& in_table, RyftOne_Columns& in_columns
     char rdf_path[PATH_MAX];
     char rdf_glob[PATH_MAX];
 
-    strcpy(path, s_R1Catalog);
+    __odbcRoot(path);
     strcat(path, "/");
+    // TODO: schema?
     strcat(path, in_table.c_str());
     mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
@@ -359,7 +371,7 @@ void RyftOne_Database::CreateTable(string& in_table, RyftOne_Columns& in_columns
 void RyftOne_Database::DropTable(string& in_table)
 {
     char path[PATH_MAX];
-    strcpy(path, s_R1Catalog);
+    __odbcRoot(path);
     strcat(path, "/");
     strcat(path, in_table.c_str());
     __remove_directory(path);
@@ -378,7 +390,7 @@ size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata
 
 bool RyftOne_Database::__logonToREST()
 {
-    __restPath = "/ryftone";
+    __restPath = s_R1Root;
 
     // if no user specified run without authenticating
     if(__restUser.empty())
@@ -421,11 +433,6 @@ bool RyftOne_Database::__logonToREST()
             __restExpire = json_object_get_string(expire);
     }
 
-    //
-    // Get path from JSON response?
-    if(!__restToken.empty())
-        __restPath = s_R1Catalog;
-
     return !__restToken.empty();
 }
 
@@ -434,24 +441,28 @@ void RyftOne_Database::__loadCatalog()
     DIR *d;
     struct dirent *dir;
     __catalog.clear();
-    if(d = opendir(s_R1Catalog)) {
+
+    char odbcRoot[PATH_MAX];
+    __odbcRoot(odbcRoot);
+    if(d = opendir(odbcRoot)) {
         while((dir = readdir(d)) != NULL) {
 
             /* Skip the names "." and ".." as we don't want to recurse on them. */
             if (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, ".."))
                 continue;
 
+            char path[PATH_MAX];
+            struct stat statbuf;
+            snprintf(path, PATH_MAX, "%s/%s", odbcRoot, dir->d_name);
+
             if(dir->d_type == DT_UNKNOWN) {
-                char path[PATH_MAX];
-                struct stat statbuf;
-                snprintf(path, PATH_MAX, "%s/%s", s_R1Catalog, dir->d_name);
                 if (!stat(path, &statbuf)) {
                     if (S_ISDIR(statbuf.st_mode)) 
                         dir->d_type = DT_DIR;
                 }
             }
             if(dir->d_type == DT_DIR) {
-                __catalog_entry__ cat_ent(dir->d_name);
+                __catalog_entry__ cat_ent(path);
                 if(cat_ent._is_valid())
                     __catalog.push_back(cat_ent);
             }
