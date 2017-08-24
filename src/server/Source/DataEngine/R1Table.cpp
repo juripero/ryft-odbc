@@ -382,7 +382,7 @@ void R1Table::InitializeColumns(bool in_isODBCV3)
         columnMetadata->m_schemaName.Clear();
         columnMetadata->m_tableName = ryft1col->m_tableName;
         columnMetadata->m_name = ryft1col->m_colName;
-        columnMetadata->m_label = ryft1col->m_colTag;
+        columnMetadata->m_label = ryft1col->m_colAlias;
         columnMetadata->m_unnamed = false;
         columnMetadata->m_charOrBinarySize = ryft1col->m_charCols;
         columnMetadata->m_nullable = DSI_NULLABLE;

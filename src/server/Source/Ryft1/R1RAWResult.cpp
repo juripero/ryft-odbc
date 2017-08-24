@@ -18,7 +18,7 @@ RyftOne_Columns RyftOne_RAWResult::__getColumns(__meta_config__ meta_config)
     for(idx = 0, colItr = meta_config.columns.begin(); colItr != meta_config.columns.end(); colItr++, idx++) {
         col.m_ordinal = idx+1;
         col.m_tableName = meta_config.table_name;
-        col.m_colTag = "data";
+        col.m_colAlias = "data";
         col.m_colName = colItr->name;
         col.m_typeName = colItr->type_def;
         RyftOne_Util::RyftToSqlType(col.m_typeName, &col.m_dataType, &col.m_charCols, &col.m_bufLength, col.m_formatSpec, &col.m_dtType);
