@@ -392,7 +392,7 @@ size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata
 
 bool RyftOne_Database::__logonToREST()
 {
-    __restPath = s_R1Root;
+    __restPath = __rootPath;
 
     // if no user specified run without authenticating
     if(__restUser.empty())
@@ -435,10 +435,9 @@ bool RyftOne_Database::__logonToREST()
             __restExpire = json_object_get_string(expire);
     }
 
-    //
-    // Get path from JSON response?
-    // if(!__restToken.empty())
-    //    __restPath += s_R1Catalog;
+    // WORKWORK MAKING A BAD ASSUMPTION THAT ANYTIME WE ARE LOGGED IN THAT THE PATH IS /RYFTONE/ODBC
+    if(!__restToken.empty())
+        __restPath += s_R1Catalog;
 
     return !__restToken.empty();
 }
