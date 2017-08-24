@@ -735,6 +735,10 @@ protected:
 
             if(code != CURLE_OK || http_code != 200) {
                 string perr = __getErrorMessage(results);
+                if(http_code == 401) {
+                    // special case unauthorized 
+                    perr = "HTTP Response - 401 Unauthorized";
+                }
                 INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "REST returned an error = %s", perr.c_str());
                 simba_wstring errorMsg(perr);
                 R1THROWGEN1(L"RolException", errorMsg.GetAsPlatformWString());
@@ -1097,6 +1101,9 @@ private:
         if((fd = ::open(jsonFile, O_RDONLY)) == -1)
             return message;
         fstat(fd, &sb);
+
+        if(sb.st_size == 0)
+            return message;
 
         char *buffer = (char *)malloc(sb.st_size);
         if(!buffer)
