@@ -117,8 +117,8 @@ typedef struct _Cursor {
 typedef struct _RyftOne_Column {
     unsigned m_ordinal;
     string m_tableName;
-    string m_colTag;
     string m_colName;
+    string m_colAlias;
     string m_description;
     unsigned m_dataType;
     string m_typeName;

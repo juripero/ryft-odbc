@@ -25,11 +25,11 @@ public:
 
     class __meta_col__ {
     public:
-        string json_tag;
-        string xml_tag;
         string name;
         string type_def;
         string description;
+        string meta_name;
+        string json_or_xml_tag;
     };
 
     class __meta_view__ {
