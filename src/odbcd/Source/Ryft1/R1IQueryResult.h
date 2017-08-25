@@ -212,7 +212,9 @@ public:
         if(pwd != NULL)
             chown(dbpath.c_str(), pwd->pw_uid, pwd->pw_gid);
 
-        dbpath += "/caches.bin";
+        __metafile_stat = in_catentry->meta_config.metafile_stat;
+
+        dbpath += "/caches_v2.bin";
         int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
 
         char *errp = NULL;
@@ -790,6 +792,7 @@ private:
     sqlite3 *__sqlite;
     sqlite3_stmt *__stmt;
     sqlite3_module __vtab_mod;
+    struct stat __metafile_stat;
 
     Cursor __cursor;
 
@@ -842,8 +845,17 @@ private:
         if(sqlret != SQLITE_OK) 
             return false;
 
-        sql = sqlite3_mprintf("CREATE TABLE \"__FGLOB_STAT_%s__\" (\"__ST_DEV\" INTEGER, \"__ST_INO\" INTEGER, \"__ST_MTIME\" INTEGER)", 
+        sql = sqlite3_mprintf("CREATE TABLE \"__FGLOB_STAT_%s__\" (\"__ST_DEV\" INTEGER, \"__ST_INO\" INTEGER, \"__ST_MTIME\" INTEGER, \"__METAFILE_STAT\" INTEGER )", 
             tableName.c_str());
+        sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
+        sqlite3_free(sql);
+        if(errp)
+            sqlite3_free(errp);
+        if(sqlret != SQLITE_OK) 
+            return false;
+
+        // store fstat for .meta.table
+        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%d,%d,%d,1)", tableName.c_str(), __metafile_stat.st_dev, __metafile_stat.st_ino, __metafile_stat.st_mtime);
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -860,7 +872,7 @@ private:
                 return false;
             fstat(fd, &sb);
             close(fd);
-            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%d,%d,%d)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
+            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%d,%d,%d,0)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
             sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
             sqlite3_free(sql);
             if(errp)
@@ -903,7 +915,6 @@ private:
             return;
 
         string tableName = prows[ncols+0];
-        sqlite3_free_table(prows);
         sql = sqlite3_mprintf("DROP TABLE \"__FGLOB_STAT_%s__\"", tableName.c_str());
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
@@ -922,6 +933,10 @@ private:
         if(errp)
             sqlite3_free(errp);
 
+        // delete the stored index file
+        unlink(prows[ncols+2]);
+
+        sqlite3_free_table(prows);
     }
 
     bool __loadFromSqlite(string& query)
@@ -962,7 +977,33 @@ private:
             return false;
         }
         sqlite3_free_table(prows);
-        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\"", tableName.c_str());
+
+        // check stat against .meta.table
+        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = 1", tableName.c_str());
+        sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
+        sqlite3_free(sql);
+        if(errp)
+            sqlite3_free(errp);
+        if(sqlret != SQLITE_OK) {
+            __dropTable(query);
+            return false;
+        }
+        if((nrows) != 1) {
+            sqlite3_free_table(prows);
+            __dropTable(query);
+            return false;
+        }
+        if( (atoi((const char *)prows[(ncols) + 0]) != __metafile_stat.st_dev) || 
+            (atoi((const char *)prows[(ncols) + 1]) != __metafile_stat.st_ino) ||
+            (atoi((const char *)prows[(ncols) + 2]) != __metafile_stat.st_mtime)) {
+
+            sqlite3_free_table(prows);
+            __dropTable(query);
+            return false;
+        }
+        sqlite3_free_table(prows);
+
+        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = 0", tableName.c_str());
         sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -1112,6 +1153,10 @@ private:
 
     void __date(const char *dateStr, int colIdx, struct tm *date)
     {
+        memset(date, 0, sizeof(struct tm));
+        if(!dateStr)
+            return;
+
         switch(__cols[colIdx].m_dtType) {
         case DATE_YYMMDD:
         case DATE_YYYYMMDD:
@@ -1153,6 +1198,11 @@ private:
     {
         char ampm[16];
         char *pampm;
+
+        memset(time, 0, sizeof(struct tm));
+        if(!timeStr)
+            return;
+
         switch(__cols[colIdx].m_dtType) {
         case TIME_12MMSS:
             sscanf(timeStr, __cols[colIdx].m_formatSpec.c_str(), &(time->tm_hour), &(time->tm_min), &(time->tm_sec), ampm);
@@ -1189,6 +1239,11 @@ private:
     {
         char ampm[16];
         char *pampm;
+
+        memset(datetime, 0, sizeof(struct tm));
+        if(!datetimeStr)
+            return;
+
         switch(__cols[colIdx].m_dtType) {
         case DATETIME_YYYYMMDD_12MMSS:
         case DATETIME_YYMMDD_12MMSS:
