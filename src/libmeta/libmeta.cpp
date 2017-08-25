@@ -44,6 +44,12 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
     strcat(path, "/");
     strcat(path, s_TableMeta);
 
+    int fd = open(path, O_RDONLY);
+    if(fd != -1) {
+        fstat(fd, &metafile_stat);
+        close(fd);
+    }
+
     config_init(&tableMeta);
     if(CONFIG_TRUE == config_read_file(&tableMeta, path)) {
 

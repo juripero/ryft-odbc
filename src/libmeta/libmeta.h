@@ -47,6 +47,7 @@ public:
     string delimiter;
     vector<__meta_col__> columns;
     vector<__meta_view__> views;
+    struct stat metafile_stat;
     
     // version 1
     string rdf_path;
