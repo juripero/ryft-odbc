@@ -485,7 +485,7 @@ void add(string filespec)
     __meta_config__::__meta_col__ metacol;
     __columns cols = guess.getCols();
     for(itr = cols.begin(); itr != cols.end(); itr++) {
-        metacol.xml_tag = itr->_colName;
+        metacol.json_or_xml_tag = itr->_colName;
         metacol.name = itr->_colName;
         metacol.type_def = getColumnType(*itr);
         metaconfig.columns.push_back(metacol);
