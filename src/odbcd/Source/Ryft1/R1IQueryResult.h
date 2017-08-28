@@ -742,6 +742,7 @@ protected:
                 unlink(results);
                 return false;
             }
+
             ret = __storeToSqlite(tableName, results);
             unlink(results);
             if(!ret) {
@@ -845,7 +846,7 @@ private:
         if(sqlret != SQLITE_OK) 
             return false;
 
-        sql = sqlite3_mprintf("CREATE TABLE \"__FGLOB_STAT_%s__\" (\"__ST_DEV\" INTEGER, \"__ST_INO\" INTEGER, \"__ST_MTIME\" INTEGER, \"__METAFILE_STAT\" INTEGER )", 
+        sql = sqlite3_mprintf("CREATE TABLE \"__FGLOB_STAT_%s__\" (\"__ST_DEV\" BIGINT, \"__ST_INO\" BIGINT, \"__ST_MTIME\" BIGINT, \"__METAFILE_STAT\" INTEGER )", 
             tableName.c_str());
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
@@ -855,7 +856,7 @@ private:
             return false;
 
         // store fstat for .meta.table
-        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%d,%d,%d,1)", tableName.c_str(), __metafile_stat.st_dev, __metafile_stat.st_ino, __metafile_stat.st_mtime);
+        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,1)", tableName.c_str(), __metafile_stat.st_dev, __metafile_stat.st_ino, __metafile_stat.st_mtime);
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -872,7 +873,7 @@ private:
                 return false;
             fstat(fd, &sb);
             close(fd);
-            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%d,%d,%d,0)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
+            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,0)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
             sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
             sqlite3_free(sql);
             if(errp)
@@ -993,9 +994,9 @@ private:
             __dropTable(query);
             return false;
         }
-        if( (atoi((const char *)prows[(ncols) + 0]) != __metafile_stat.st_dev) || 
-            (atoi((const char *)prows[(ncols) + 1]) != __metafile_stat.st_ino) ||
-            (atoi((const char *)prows[(ncols) + 2]) != __metafile_stat.st_mtime)) {
+        if( (atoll((const char *)prows[(ncols) + 0]) != (long long)__metafile_stat.st_dev) || 
+            (atoll((const char *)prows[(ncols) + 1]) != (long long)__metafile_stat.st_ino) ||
+            (atoll((const char *)prows[(ncols) + 2]) != (long long)__metafile_stat.st_mtime)) {
 
             sqlite3_free_table(prows);
             __dropTable(query);
@@ -1029,9 +1030,10 @@ private:
             close(fd);
 
             for(idx = 1; idx <= nrows; idx++) {
-                if( (atoi((const char *)prows[(idx*ncols) + 0]) == sb.st_dev) && 
-                    (atoi((const char *)prows[(idx*ncols) + 1]) == sb.st_ino) &&
-                    (atoi((const char *)prows[(idx*ncols) + 2]) == sb.st_mtime))
+
+                if( (atoll((const char *)prows[(idx*ncols) + 0]) == (long long)sb.st_dev) && 
+                    (atoll((const char *)prows[(idx*ncols) + 1]) == (long long)sb.st_ino) &&
+                    (atoll((const char *)prows[(idx*ncols) + 2]) == (long long)sb.st_mtime))
                         break;
             }
             if(idx == nrows + 1) {
@@ -1058,8 +1060,10 @@ private:
     {
         int fd;
         struct stat sb;
-        if((fd = ::open(count_file, O_RDONLY)) == -1)
+        if((fd = ::open(count_file, O_RDONLY)) == -1) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__storeToSqlite", "Could not open results file.");
             return false;
+        }
         fstat(fd, &sb);
 
         int matches = __getRowCount(fd, sb.st_size);
@@ -1069,9 +1073,10 @@ private:
         char * sql = sqlite3_mprintf("UPDATE \"__DIRECTORY__\" SET IDX_FILE = '%s', NUM_ROWS = %d WHERE ID = '%s'", idxPath.c_str(), matches, tableName.c_str());
         int sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
-        if(sqlret != SQLITE_OK) 
+        if(sqlret != SQLITE_OK) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__storeToSqlite", "failed to update __DIRECTORY__ (%s).", errp);
             return false;
-
+        }
         close(fd);
         return true;
     }
