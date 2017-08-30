@@ -77,7 +77,7 @@ RyftOne_Columns RyftOne_JSONResult::__getColumns(__meta_config__ meta_config)
     for(idx = 0, colItr = meta_config.columns.begin(); colItr != meta_config.columns.end(); colItr++, idx++) {
         col.m_ordinal = idx+1;
         col.m_tableName = meta_config.table_name;
-        col.m_colTag = colItr->json_tag;
+        col.m_colAlias = colItr->json_or_xml_tag;
         col.m_colName = colItr->name;
         col.m_typeName = colItr->type_def;
         RyftOne_Util::RyftToSqlType(col.m_typeName, &col.m_dataType, &col.m_charCols, &col.m_bufLength, col.m_formatSpec, &col.m_dtType);
@@ -130,9 +130,8 @@ void RyftOne_JSONResult::__loadTable(string& in_name, vector<__catalog_entry__>:
 
     __no_top = in_itr->meta_config.no_top;
 
-    for(colItr = in_itr->meta_config.columns.begin(); (colItr != in_itr->meta_config.columns.end()); colItr++) {
-        __metaTags.push_back(colItr->json_tag);
-    }
+    for(colItr = in_itr->meta_config.columns.begin(); (colItr != in_itr->meta_config.columns.end()); colItr++) 
+        __metaTags.push_back(colItr->json_or_xml_tag);
 
     __delimiter = in_itr->meta_config.delimiter;
 }

@@ -44,6 +44,12 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
     strcat(path, "/");
     strcat(path, s_TableMeta);
 
+    int fd = open(path, O_RDONLY);
+    if(fd != -1) {
+        fstat(fd, &metafile_stat);
+        close(fd);
+    }
+
     config_init(&tableMeta);
     if(CONFIG_TRUE == config_read_file(&tableMeta, path)) {
 
@@ -82,10 +88,10 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
             vector<__rdf_config__::__rdf_tag__>::iterator rdfItr;
             for(colItr = columns.begin(); colItr != columns.end(); colItr++) {
                 for(rdfItr = rdf_config.tags.begin(); rdfItr != rdf_config.tags.end(); rdfItr++) {
-                    if(rdfItr->name == colItr->xml_tag) {
+                    if(rdfItr->name == colItr->json_or_xml_tag) {
                         idx1 = rdfItr->start_tag.find("<");
                         idx2 = rdfItr->start_tag.find(">");
-                        colItr->xml_tag = rdfItr->start_tag.substr(idx1+1, idx2-idx1-1);
+                        colItr->json_or_xml_tag = rdfItr->start_tag.substr(idx1+1, idx2-idx1-1);
                     }
                 }
             }
@@ -147,16 +153,16 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
     colList = config_lookup(&in_table_meta, in_group.c_str());
     for(idx = 0; colList && (column = config_setting_get_elem(colList, idx)); idx++) {
         string name = to_name(column->name);
-        col.json_tag = in_jsonroot + name;
-        // in version 1, the xml tag will be mapped from the rdf, in version 2 we assume
-        // the xml tag is equal to the name 
-        col.xml_tag = name;
         col.name = in_name + config_setting_get_string_elem(column, 0);
         col.type_def = config_setting_get_string_elem(column, 1);
         col.description = config_setting_get_string_elem(column, 2);
+        col.meta_name = name;
+        // in version 1, the xml tag will be mapped from the rdf, in version 2 we assume
+        // the xml tag is equal to the meta_name 
+        col.json_or_xml_tag = in_jsonroot + name;
 
         if(!strncasecmp(col.type_def.c_str(), "list", strlen("list"))) 
-            col.json_tag += ".[]";
+            col.json_or_xml_tag += ".[]";
         if(!strncasecmp(col.type_def.c_str(), "arrayof", strlen("arrayof"))) {
             char *arrayof = new char[col.type_def.length()+1];
             const char *paren = strchr(col.type_def.c_str(), '(');
@@ -166,7 +172,7 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
                 arrayof[strlen(arrayof)-1] = '\0';
             }
             if(*arrayof)
-                column_meta(in_table_meta, arrayof, col.name, col.json_tag + string(".[]"));
+                column_meta(in_table_meta, arrayof, col.name, col.json_or_xml_tag + string(".[]"));
         }
         else if(!strncasecmp(col.type_def.c_str(), "groupof", strlen("groupof"))) {
             char *groupof = new char[col.type_def.length()+1];
@@ -177,7 +183,7 @@ void __meta_config__::column_meta(config_t in_table_meta, string in_group, strin
                 groupof[strlen(groupof)-1] = '\0';
             }
             if(*groupof)
-                column_meta(in_table_meta, groupof, col.name, col.json_tag);
+                column_meta(in_table_meta, groupof, col.name, col.json_or_xml_tag);
         }
         else
             columns.push_back(col);
@@ -207,7 +213,7 @@ void __meta_config__::write_meta_config(string path)
     config_setting_t *colList = config_setting_add(root, "columns", CONFIG_TYPE_GROUP);
     vector<__meta_col__>::iterator itr;
     for(itr = columns.begin(); itr != columns.end(); itr++) {
-        colListEntry = config_setting_add(colList, itr->xml_tag.c_str(), CONFIG_TYPE_LIST);
+        colListEntry = config_setting_add(colList, itr->json_or_xml_tag.c_str(), CONFIG_TYPE_LIST);
         config_setting_t *colElem = config_setting_add(colListEntry, "", CONFIG_TYPE_STRING);
         config_setting_set_string(colElem, itr->name.c_str());
         colElem = config_setting_add(colListEntry, "", CONFIG_TYPE_STRING);

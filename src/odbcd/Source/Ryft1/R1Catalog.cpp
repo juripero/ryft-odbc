@@ -226,10 +226,12 @@ RyftOne_Columns RyftOne_Database::GetColumns(string& in_table)
             col.m_ordinal = idx+1;
             col.m_tableName = itr->meta_config.table_name;
             if(itr->meta_config.data_type == dataType_XML) {
-                col.m_colTag = colItr->xml_tag;
+                // xml uses the RDF field name (assumed to equal the xml tag name in searches without an RDF)
+                col.m_colAlias = colItr->meta_name;
             }
             else
-                col.m_colTag = colItr->json_tag;
+                // JSON will use the fully qualified JSON path (e.g. parent.[].child) which is built during table load
+                col.m_colAlias = colItr->json_or_xml_tag;
             col.m_colName = colItr->name;
             col.m_typeName = colItr->type_def;
             RyftOne_Util::RyftToSqlType(col.m_typeName, &col.m_dataType, &col.m_charCols, &col.m_bufLength, col.m_formatSpec, &col.m_dtType);
@@ -390,7 +392,7 @@ size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata
 
 bool RyftOne_Database::__logonToREST()
 {
-    __restPath = s_R1Root;
+    __restPath = __rootPath;
 
     // if no user specified run without authenticating
     if(__restUser.empty())
@@ -432,6 +434,10 @@ bool RyftOne_Database::__logonToREST()
         if(expire)
             __restExpire = json_object_get_string(expire);
     }
+
+    // WORKWORK MAKING A BAD ASSUMPTION THAT ANYTIME WE ARE LOGGED IN THAT THE PATH IS /RYFTONE/ODBC
+    if(!__restToken.empty())
+        __restPath += s_R1Catalog;
 
     return !__restToken.empty();
 }
