@@ -25,11 +25,11 @@ public:
 
     class __meta_col__ {
     public:
-        string json_tag;
-        string xml_tag;
         string name;
         string type_def;
         string description;
+        string meta_name;
+        string json_or_xml_tag;
     };
 
     class __meta_view__ {
@@ -47,6 +47,7 @@ public:
     string delimiter;
     vector<__meta_col__> columns;
     vector<__meta_view__> views;
+    struct stat metafile_stat;
     
     // version 1
     string rdf_path;
