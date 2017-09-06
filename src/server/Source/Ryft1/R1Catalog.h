@@ -18,6 +18,7 @@ namespace Support
 }
 }
 
+#include <limits.h>
 #include <string.h>
 #include <string>
 #include <vector>
@@ -34,6 +35,10 @@ using namespace std;
 #define AUTH_NONE   0
 #define AUTH_SYSTEM 1
 #define AUTH_LDAP   2
+
+#define LRU_NONE        0
+#define LRU_NORMAL      10
+#define LRU_ALL         INT_MAX 
 
 typedef struct _RyftOne_Table {
     string m_tableName;
@@ -86,6 +91,8 @@ private:
     string __restExpire;
     string __restPath;
     string __rootPath;
+
+    int __lruMaxDepth;
 
     // Reference to the ILogger. (NOT OWN)
     ILogger* __log;

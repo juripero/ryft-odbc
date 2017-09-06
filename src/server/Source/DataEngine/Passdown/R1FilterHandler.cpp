@@ -762,10 +762,10 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     int hamming = 0;
     int edit = 0;
     int width = 0;
+    bool line = false;
     char distance[10];
     char surrounding[10];
-    string case_sensitive = "true";
-    bool no_caseless = true;
+    bool case_sensitive = 1;
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();
     for(pfilter = in_filter.c_str(); *pfilter; pfilter++) {
@@ -774,7 +774,6 @@ void R1FilterHandler::ConstructStringComparisonFilter(
             pOpt = pfilter;
             pfilter++;
             switch(*pfilter) {
-            /*** taking REGEX stuff out until it is available
             case L'r':
             case L'R': {
                 wstring inside = pfilter;
@@ -788,7 +787,6 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 }
                 break;
                 }
-            ***/
             case L'h': // format -hddd(term)
             case L'H': {
                 wstring num_hamming;
@@ -858,10 +856,13 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 pfilter += idx1-1;
                 break;
                 }
+            case L'l':
+            case L'L': 
+                line = true;
+                break;
             case L'i':
             case L'I':
-                case_sensitive = "false";
-                no_caseless = false;
+                case_sensitive = false;
                 break;
             case L'-':
                 out_filter += L"-";
@@ -894,14 +895,8 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     m_filter += " ";
 
     if(regex) {
-        m_filter += "REGEX(\"";
+        m_filter += "PCRE2(";
         m_filter += out_filter.c_str();
-        m_filter += "\",";
-        if(no_caseless) {
-            m_filter += "NO_CASELESS)";
-        }
-        else 
-            m_filter += "CASELESS)";
     }
     else {
         if(edit) {
@@ -913,12 +908,18 @@ void R1FilterHandler::ConstructStringComparisonFilter(
             sprintf(distance, "%d", hamming);
         }
         m_filter += out_filter.c_str();
-        m_filter += ",CS=" + case_sensitive;
-        m_filter += ",DIST=" + string(distance);
+        m_filter += ",DISTANCE=" + string(distance);
+    }
+    if(!case_sensitive) 
+        m_filter += ",CASE=FALSE";
+    if(width) {
         sprintf(surrounding, "%d", width);
         m_filter += ",WIDTH=" + string(surrounding);
-        m_filter += "))";
     }
+    if(line)
+        m_filter += ",LINE=TRUE";
+
+    m_filter += "))";
 }
 
 #include <algorithm>

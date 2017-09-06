@@ -107,6 +107,21 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
         }
         if(error != NULL)
             g_clear_error(&error);
+
+        // Cache control
+        __lruMaxDepth = LRU_NORMAL;
+        gchar *cacheString;
+        cacheString = g_key_file_get_string(keyfile, "Server", "UseCache", &error);
+        if(cacheString && !strcmp(cacheString, "none")) {
+            __lruMaxDepth = LRU_NONE;            
+        }
+        else if(cacheString && !strcmp(cacheString, "all")) {
+            __lruMaxDepth = LRU_ALL;
+        }
+        if(cacheString) 
+            free(cacheString);
+        if(error != NULL)
+            g_clear_error(&error);
     }
     if(error != NULL)
         g_clear_error(&error);
@@ -267,7 +282,7 @@ IQueryResult *RyftOne_Database::OpenTable(string& in_table)
             result = new RyftOne_RAWResult(__log);
             break;
         }
-        result->OpenQuery(in_table, itr, __restServer, auth, __restPath, __rootPath);
+        result->OpenQuery(in_table, itr, __restServer, auth, __restPath, __rootPath, __lruMaxDepth);
     }
     return result;
 }
