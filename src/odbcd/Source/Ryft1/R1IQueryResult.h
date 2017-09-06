@@ -32,6 +32,7 @@ using namespace RyftOne;
 #include <curl/curl.h>
 #include <cctype>
 #include <pwd.h>
+#include <time.h>
 #include <json/json.h>
 
 #include "R1Util.h"
@@ -158,7 +159,7 @@ public:
    }
 
     void OpenQuery(string& in_name, vector<__catalog_entry__>::iterator in_catentry, 
-        string in_server, string in_token, string in_restPath, string in_rootPath)
+        string in_server, string in_token, string in_restPath, string in_rootPath, int in_lruMaxDepth)
     {
         __query.clear();
 
@@ -166,6 +167,7 @@ public:
         __restToken = in_token;
         __restPath = in_restPath;
         __rootPath = in_rootPath;
+        __lruMaxDepth = in_lruMaxDepth;
 
         // JSON, XML, Unstructured
         __dataType = in_catentry->meta_config.data_type;
@@ -214,11 +216,11 @@ public:
 
         __metafile_stat = in_catentry->meta_config.metafile_stat;
 
-        dbpath += "/caches_v2.bin";
+        dbpath += "/caches_v3.bin";
         int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
 
         char *errp = NULL;
-        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT, IDX_FILE TEXT, NUM_ROWS INTEGER)", NULL, NULL, &errp);
+        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT, IDX_FILE TEXT, NUM_ROWS INTEGER, LRU_TIME BIGINT)", NULL, NULL, &errp);
         if(errp)
             sqlite3_free(errp);
 
@@ -674,6 +676,8 @@ protected:
 
         if(!(ret = __loadFromSqlite(query))) {
 
+            __freeCacheEntry();
+
             vector<string>::iterator globItr;
 
             uuid_t id;
@@ -743,7 +747,7 @@ protected:
                 return false;
             }
 
-            ret = __storeToSqlite(tableName, results);
+            ret = __storeToSqlite(tableName, results, __query.empty());
             unlink(results);
             if(!ret) {
                 __dropTable(query);
@@ -779,6 +783,8 @@ private:
     string __restPath;
     string __rootPath;
 
+    int __lruMaxDepth;
+
     inline void __odbcRoot(char *path) {
         strcpy(path, __rootPath.c_str());
         strcat(path, s_R1Catalog);
@@ -809,6 +815,46 @@ private:
     long long __offset;
     long long __length;
     long long __surrounding;
+
+    void __freeCacheEntry() 
+    {
+        char *sql;
+        int sqlret;
+        char *errp;
+        char **prows;
+        int nrows, ncols;
+        int lru_entry;
+
+        do {
+            sql = sqlite3_mprintf("SELECT * FROM \"__DIRECTORY__\"");
+            sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
+            sqlite3_free(sql);
+            if(errp)
+                sqlite3_free(errp);
+            if(sqlret != SQLITE_OK) 
+                return;
+            if(nrows < __lruMaxDepth) {
+                sqlite3_free_table(prows);
+                return;
+            }
+
+            lru_entry = 0;
+            long long lru_time = time(NULL); // in order to avoid deleting permament entries start with current time and work back
+            for(int idx = 1; idx <= nrows; idx++) {
+                if(atoll((const char *)prows[(idx*ncols) + 4]) < lru_time) {
+                    lru_entry = idx;
+                    lru_time = atoll((const char *)prows[(idx*ncols) + 4]);
+                }
+            }
+            // lru_entry is the oldest
+            if(lru_entry) {
+                string query = prows[(lru_entry*ncols) + 1]; 
+                __dropTable(query);
+            }
+            sqlite3_free_table(prows);
+        }
+        while (lru_entry);
+    }
 
     bool __initTable(string& query, string& tableName)
     {
@@ -884,7 +930,7 @@ private:
 
         string escapedQuery;
         CopyEscapedLiteral(escapedQuery, query);
-        sql = sqlite3_mprintf("INSERT INTO \"__DIRECTORY__\" VALUES ('%s','%s', NULL, NULL)", tableName.c_str(), escapedQuery.c_str());
+        sql = sqlite3_mprintf("INSERT INTO \"__DIRECTORY__\" VALUES ('%s','%s', NULL, NULL, 0)", tableName.c_str(), escapedQuery.c_str());
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -1056,7 +1102,7 @@ private:
         return false;
     }
 
-    bool __storeToSqlite(string& tableName, const char *count_file)
+    bool __storeToSqlite(string& tableName, const char *count_file, bool no_discard)
     {
         int fd;
         struct stat sb;
@@ -1070,7 +1116,8 @@ private:
         string idxPath = __path + s_R1Caches + "/" + tableName + ".txt";
 
         char * errp;
-        char * sql = sqlite3_mprintf("UPDATE \"__DIRECTORY__\" SET IDX_FILE = '%s', NUM_ROWS = %d WHERE ID = '%s'", idxPath.c_str(), matches, tableName.c_str());
+        char * sql = sqlite3_mprintf("UPDATE \"__DIRECTORY__\" SET IDX_FILE = '%s', NUM_ROWS = %d, LRU_TIME = %lld WHERE ID = '%s'", 
+            idxPath.c_str(), matches, no_discard ? LLONG_MAX : time(NULL), tableName.c_str());
         int sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(sqlret != SQLITE_OK) {
