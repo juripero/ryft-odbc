@@ -9,9 +9,12 @@ Steps to install libraries required for server build:
 6. unzip latest Simba SDK (currently build with SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz)
 
 Set environment variables for LANG, SIMBAENGINE_DIR and SIMBAENGINE_THIRDPARTY_DIR, e.g.:
+
+```
 export LANG=en_US.UTF-8
 export SIMBAENGINE_DIR=/usr/local/simba/SimbaEngineSDK/10.0/DataAccessComponents
 export SIMBAENGINE_THIRDPARTY_DIR=/usr/local/simba/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty
+```
 
 Run build_install.sh from the ryft-odbc root to build and package the installer.
 
