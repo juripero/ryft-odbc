@@ -1,24 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ryft1_odbcd", "ryft1_server\ryft1_server.vcxproj", "{9F6FBA14-42B8-419A-B596-81C4C8C1307F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmeta", "libmeta\libmeta.vcxproj", "{BD80B755-DE82-4B40-9A05-B177D77297DE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsqlite", "libsqlite\libsqlite.vcxproj", "{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "odbcd", "odbcd\odbcd.vcxproj", "{9F6FBA14-42B8-419A-B596-81C4C8C1307F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2} = {5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}
 		{BD80B755-DE82-4B40-9A05-B177D77297DE} = {BD80B755-DE82-4B40-9A05-B177D77297DE}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ryft1_miscellaneous", "ryft1_miscellaneous\ryft1_miscellaneous.vcxproj", "{F88AEF7C-BEF5-444F-8C13-6C880306FB7D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server_files", "server_files\server_files.vcxproj", "{F88AEF7C-BEF5-444F-8C13-6C880306FB7D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ryft1_odbcctl", "ryft1_odbcctl\ryft1_odbcctl.vcxproj", "{1421933C-8131-4EA6-8870-0F8F6685EE2B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "odbcctl", "odbcctl\odbcctl.vcxproj", "{1421933C-8131-4EA6-8870-0F8F6685EE2B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BD80B755-DE82-4B40-9A05-B177D77297DE} = {BD80B755-DE82-4B40-9A05-B177D77297DE}
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmeta", "libmeta\libmeta.vcxproj", "{BD80B755-DE82-4B40-9A05-B177D77297DE}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libsqlite", "libsqlite\libsqlite.vcxproj", "{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scripts", "scripts\scripts.vcxproj", "{6C0FD2B2-9D7A-4D56-96C8-BCF19A500BFA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +24,14 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Debug|Win32.Build.0 = Debug|Win32
+		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Release|Win32.ActiveCfg = Release|Win32
+		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Release|Win32.Build.0 = Release|Win32
+		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Debug|Win32.Build.0 = Debug|Win32
+		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Release|Win32.ActiveCfg = Release|Win32
+		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Release|Win32.Build.0 = Release|Win32
 		{9F6FBA14-42B8-419A-B596-81C4C8C1307F}.Debug|Win32.ActiveCfg = Debug|Win32
 		{9F6FBA14-42B8-419A-B596-81C4C8C1307F}.Debug|Win32.Build.0 = Debug|Win32
 		{9F6FBA14-42B8-419A-B596-81C4C8C1307F}.Release|Win32.ActiveCfg = Release|Win32
@@ -38,18 +44,6 @@ Global
 		{1421933C-8131-4EA6-8870-0F8F6685EE2B}.Debug|Win32.Build.0 = Debug|Win32
 		{1421933C-8131-4EA6-8870-0F8F6685EE2B}.Release|Win32.ActiveCfg = Release|Win32
 		{1421933C-8131-4EA6-8870-0F8F6685EE2B}.Release|Win32.Build.0 = Release|Win32
-		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Debug|Win32.ActiveCfg = Debug|Win32
-		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Debug|Win32.Build.0 = Debug|Win32
-		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Release|Win32.ActiveCfg = Release|Win32
-		{BD80B755-DE82-4B40-9A05-B177D77297DE}.Release|Win32.Build.0 = Release|Win32
-		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Debug|Win32.ActiveCfg = Debug|Win32
-		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Debug|Win32.Build.0 = Debug|Win32
-		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Release|Win32.ActiveCfg = Release|Win32
-		{5FB04D34-7B9F-4709-A54F-EC8616E0C3D2}.Release|Win32.Build.0 = Release|Win32
-		{6C0FD2B2-9D7A-4D56-96C8-BCF19A500BFA}.Debug|Win32.ActiveCfg = Debug|Win32
-		{6C0FD2B2-9D7A-4D56-96C8-BCF19A500BFA}.Debug|Win32.Build.0 = Debug|Win32
-		{6C0FD2B2-9D7A-4D56-96C8-BCF19A500BFA}.Release|Win32.ActiveCfg = Release|Win32
-		{6C0FD2B2-9D7A-4D56-96C8-BCF19A500BFA}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -19,7 +19,7 @@
         <UserName>ryftuser</UserName>
       </RemoteHost>
       <LocalDirectory>D:\Ryft\ryft-odbc\files\server</LocalDirectory>
-      <RemoteDirectory>/home/ryftuser/development/ryft1_files</RemoteDirectory>
+      <RemoteDirectory>/home/ryftuser/development/files/server</RemoteDirectory>
       <FileMasks>
         <string>*</string>
       </FileMasks>
@@ -32,10 +32,7 @@
     <IgnoreFileTransferErrors>false</IgnoreFileTransferErrors>
     <RemoveRemoteDirectoryOnClean>true</RemoveRemoteDirectoryOnClean>
   </Project>
-  <Build xsi:type="com.visualgdb.build.make">
-    <MakeFilePathRelativeToSourceDir>Makefile</MakeFilePathRelativeToSourceDir>
-    <MakeConfigurationName>Release</MakeConfigurationName>
-    <AdditionalMakeArguments />
+  <Build xsi:type="com.visualgdb.build.custom">
     <Toolchain>
       <Name>Default GCC toolchain on 192.168.56.101</Name>
       <UnixSystem>true</UnixSystem>
@@ -66,24 +63,8 @@
         </TestableLinuxPackage>
       </RequiredLinuxPackages>
     </Toolchain>
-    <MakeCommandTemplate>
-      <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
-      <RemoteHost>
-        <HostName>192.168.56.101</HostName>
-        <Transport>SSH</Transport>
-        <UserName>ryftuser</UserName>
-      </RemoteHost>
-      <Command>make</Command>
-      <WorkingDirectory>$(BuildDir)</WorkingDirectory>
-      <Environment>
-        <Records>
-          <Record>
-            <VariableName>LANG</VariableName>
-            <Value>en_US.UTF-8</Value>
-          </Record>
-        </Records>
-      </Environment>
-    </MakeCommandTemplate>
+    <MainBuildDirectory>$(SourceDir)</MainBuildDirectory>
+    <AutoUpdateMakefiles>true</AutoUpdateMakefiles>
   </Build>
   <Debug xsi:type="com.visualgdb.debug.remote">
     <AdditionalStartupCommands />

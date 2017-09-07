@@ -19,7 +19,7 @@
         <UserName>ryftuser</UserName>
       </RemoteHost>
       <LocalDirectory>D:\Ryft\ryft-odbc\src\server</LocalDirectory>
-      <RemoteDirectory>/home/ryftuser/development/ryft1_odbcd</RemoteDirectory>
+      <RemoteDirectory>/home/ryftuser/development/src/odbcd</RemoteDirectory>
       <FileMasks>
         <string>*</string>
         <string>-*.opensdf</string>
