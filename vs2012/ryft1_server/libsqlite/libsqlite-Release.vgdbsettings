@@ -19,7 +19,7 @@
         <UserName>ryftuser</UserName>
       </RemoteHost>
       <LocalDirectory>D:\Ryft\ryft-odbc\src\libsqlite</LocalDirectory>
-      <RemoteDirectory>/home/ryftuser/development/libsqlite</RemoteDirectory>
+      <RemoteDirectory>/home/ryftuser/development/src/libsqlite</RemoteDirectory>
       <FileMasks>
         <string>*.cpp</string>
         <string>*.h</string>

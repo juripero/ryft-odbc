@@ -19,7 +19,7 @@
         <UserName>ryftuser</UserName>
       </RemoteHost>
       <LocalDirectory>D:\Ryft\ryft-odbc\src\roosctl</LocalDirectory>
-      <RemoteDirectory>/home/ryftuser/development/ryft1_odbcctl</RemoteDirectory>
+      <RemoteDirectory>/home/ryftuser/development/src/odbcctl</RemoteDirectory>
       <FileMasks>
         <string>*.cpp</string>
         <string>*.h</string>

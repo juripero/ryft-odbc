@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <VisualGDBProjectSettings2 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <ConfigurationName>Release</ConfigurationName>
+  <ConfigurationName>Debug</ConfigurationName>
   <Project xsi:type="com.visualgdb.project.linux">
     <CustomSourceDirectories>
       <Directories />
@@ -18,12 +18,16 @@
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
-      <LocalDirectory>D:\Ryft\ryft-odbc\src\server</LocalDirectory>
-      <RemoteDirectory>/home/ryftuser/development/ryft1_odbcd</RemoteDirectory>
+      <LocalDirectory>D:\Ryft\ryft-odbc\files\server</LocalDirectory>
+      <RemoteDirectory>/home/ryftuser/development/files/server</RemoteDirectory>
       <FileMasks>
-        <string>*</string>
-        <string>-*.opensdf</string>
-        <string>-*.sdf</string>
+        <string>*.cpp</string>
+        <string>*.h</string>
+        <string>*.c</string>
+        <string>*.cc</string>
+        <string>*.cxx</string>
+        <string>*.mak</string>
+        <string>Makefile</string>
       </FileMasks>
       <TransferNewFilesOnly>true</TransferNewFilesOnly>
       <IncludeSubdirectories>true</IncludeSubdirectories>
@@ -32,63 +36,9 @@
     <AllowChangingHostForMainCommands>false</AllowChangingHostForMainCommands>
     <SkipBuildIfNoSourceFilesChanged>false</SkipBuildIfNoSourceFilesChanged>
     <IgnoreFileTransferErrors>false</IgnoreFileTransferErrors>
-    <RemoveRemoteDirectoryOnClean>true</RemoveRemoteDirectoryOnClean>
+    <RemoveRemoteDirectoryOnClean>false</RemoveRemoteDirectoryOnClean>
   </Project>
   <Build xsi:type="com.visualgdb.build.custom">
-    <BuildCommand>
-      <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
-      <RemoteHost>
-        <HostName>172.16.13.3</HostName>
-        <Transport>SSH</Transport>
-        <UserName>ryftuser</UserName>
-      </RemoteHost>
-      <Command>make</Command>
-      <Arguments>-f ryft1_odbcd.mak BUILDSERVER=exe ARCH=x8664 release</Arguments>
-      <WorkingDirectory>$(BuildDir)</WorkingDirectory>
-      <Environment>
-        <Records>
-          <Record>
-            <VariableName>LANG</VariableName>
-            <Value>en_US.UTF-8</Value>
-          </Record>
-          <Record>
-            <VariableName>SIMBAENGINE_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents</Value>
-          </Record>
-          <Record>
-            <VariableName>SIMBAENGINE_THIRDPARTY_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty</Value>
-          </Record>
-        </Records>
-      </Environment>
-    </BuildCommand>
-    <CleanCommand>
-      <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
-      <RemoteHost>
-        <HostName>172.16.13.3</HostName>
-        <Transport>SSH</Transport>
-        <UserName>ryftuser</UserName>
-      </RemoteHost>
-      <Command>make</Command>
-      <Arguments>-f ryft1_odbcd.mak BUILDSERVER=exe ARCH=x8664 clean</Arguments>
-      <WorkingDirectory>$(BuildDir)</WorkingDirectory>
-      <Environment>
-        <Records>
-          <Record>
-            <VariableName>LANG</VariableName>
-            <Value>en_US.UTF-8</Value>
-          </Record>
-          <Record>
-            <VariableName>SIMBAENGINE_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents</Value>
-          </Record>
-          <Record>
-            <VariableName>SIMBAENGINE_THIRDPARTY_DIR</VariableName>
-            <Value>$HOME/development/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty</Value>
-          </Record>
-        </Records>
-      </Environment>
-    </CleanCommand>
     <Toolchain>
       <Name>Default GCC toolchain on 192.168.56.101</Name>
       <UnixSystem>true</UnixSystem>
@@ -119,17 +69,11 @@
         </TestableLinuxPackage>
       </RequiredLinuxPackages>
     </Toolchain>
-    <MainBuildDirectory>$(RemoteSourceDir)/Makefiles</MainBuildDirectory>
-    <AbsoluteTargetPath>/home/ryftuser/development/ryft1_odbcd/Bin/Linux_x8664/ryft1_odbcd</AbsoluteTargetPath>
+    <MainBuildDirectory>$(SourceDir)</MainBuildDirectory>
     <AutoUpdateMakefiles>true</AutoUpdateMakefiles>
   </Build>
   <Debug xsi:type="com.visualgdb.debug.remote">
-    <AdditionalStartupCommands>
-      <GDBPreStartupCommands />
-      <GDBStartupCommands>
-        <string>set follow-fork-mode parent</string>
-      </GDBStartupCommands>
-    </AdditionalStartupCommands>
+    <AdditionalStartupCommands />
     <AdditionalGDBSettings>
       <FilterSpuriousStoppedNotifications>false</FilterSpuriousStoppedNotifications>
       <ForceSingleThreadedMode>false</ForceSingleThreadedMode>
@@ -161,17 +105,23 @@
       <EnableNonStopMode>false</EnableNonStopMode>
     </AdditionalGDBSettings>
     <LaunchGDBSettings xsi:type="GDBLaunchParametersNewInstance">
+      <GDBEnvironment>
+        <Records>
+          <Record>
+            <VariableName>LANG</VariableName>
+            <Value>en_US.UTF-8</Value>
+          </Record>
+        </Records>
+      </GDBEnvironment>
       <DebuggedProgram>$(TargetPath)</DebuggedProgram>
       <GDBServerPort>2000</GDBServerPort>
       <ProgramArguments />
     </LaunchGDBSettings>
     <GenerateCtrlBreakInsteadOfCtrlC>false</GenerateCtrlBreakInsteadOfCtrlC>
-    <DeploymentTargetPath />
     <X11WindowMode>Local</X11WindowMode>
     <KeepConsoleAfterExit>false</KeepConsoleAfterExit>
-    <RunGDBUnderSudo>true</RunGDBUnderSudo>
+    <RunGDBUnderSudo>false</RunGDBUnderSudo>
     <DeploymentMode>Auto</DeploymentMode>
-    <LdLibraryPath>/home/ryftuser/development/SimbaEngineSDK/9.5/DataAccessComponents/ThirdParty/icu/53.1/centos5/gcc4_4/release64/lib</LdLibraryPath>
     <DeployWhenLaunchedWithoutDebugging>true</DeployWhenLaunchedWithoutDebugging>
   </Debug>
   <CustomBuild>

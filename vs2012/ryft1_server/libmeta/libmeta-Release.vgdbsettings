@@ -19,7 +19,7 @@
         <UserName>ryftuser</UserName>
       </RemoteHost>
       <LocalDirectory>D:\Ryft\ryft-odbc\src\libmeta</LocalDirectory>
-      <RemoteDirectory>/home/ryftuser/development/libmeta</RemoteDirectory>
+      <RemoteDirectory>/home/ryftuser/development/src/libmeta</RemoteDirectory>
       <FileMasks>
         <string>*.cpp</string>
         <string>*.h</string>
