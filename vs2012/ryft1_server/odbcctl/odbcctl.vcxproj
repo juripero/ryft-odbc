@@ -36,7 +36,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <NMakeIncludeSearchPath>$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8\backward;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0001\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0003\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0002\include-fixed;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include;D:\Ryft\ryft-odbc\src\roosctl\..\libmeta;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8\backward;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0001\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0003\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0002\include-fixed;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include;D:\Ryft\ryft-odbc\src\odbcctl\..\libmeta;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <NMakeForcedIncludes>$(ProjectDir)\gcc_Debug.h;$(VISUALGDB_DIR)\gcc_compat.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeBuildCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /build "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /clean "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeCleanCommandLine>
@@ -48,7 +48,7 @@
     <NMakePreprocessorDefinitions>__VisualGDB_CFG_Debug;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <NMakeIncludeSearchPath>$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8\backward;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0001\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0003\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0002\include-fixed;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include;D:\Ryft\ryft-odbc\src\roosctl\..\libmeta;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
+    <NMakeIncludeSearchPath>$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu\c++\4.8;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\c++\4.8\backward;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0001\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0003\include;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0002\include-fixed;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include\x86_64-linux-gnu;$(LOCALAPPDATA)\VisualGDB\RemoteSourceCache\172.16.13.3\0000\include;D:\Ryft\ryft-odbc\src\odbcctl\..\libmeta;$(NMakeIncludeSearchPath)</NMakeIncludeSearchPath>
     <NMakeForcedIncludes>$(ProjectDir)\gcc_Release.h;$(VISUALGDB_DIR)\gcc_compat.h;$(NMakeForcedIncludes)</NMakeForcedIncludes>
     <NMakeBuildCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /build "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>"$(VISUALGDB_DIR)\VisualGDB.exe" /clean "$(ProjectPath)" "/solution:$(SolutionPath)" "/config:$(Configuration)" "/platform:$(Platform)"</NMakeCleanCommandLine>
@@ -62,12 +62,12 @@
   <ItemDefinitionGroup>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\..\..\src\roosctl\debug.mak" />
-    <None Include="..\..\..\src\roosctl\Makefile" />
-    <None Include="..\..\..\src\roosctl\release.mak" />
+    <None Include="..\..\..\src\odbcctl\debug.mak" />
+    <None Include="..\..\..\src\odbcctl\Makefile" />
+    <None Include="..\..\..\src\odbcctl\release.mak" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\roosctl\ryft1_odbcctl.cpp" />
+    <ClCompile Include="..\..\..\src\odbcctl\ryft1_odbcctl.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

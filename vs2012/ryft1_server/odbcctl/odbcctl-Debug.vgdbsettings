@@ -18,7 +18,7 @@
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
-      <LocalDirectory>D:\Ryft\ryft-odbc\src\roosctl</LocalDirectory>
+      <LocalDirectory>D:\Ryft\ryft-odbc\src\odbcctl</LocalDirectory>
       <RemoteDirectory>/home/ryftuser/development/src/odbcctl</RemoteDirectory>
       <FileMasks>
         <string>*.cpp</string>
