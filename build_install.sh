@@ -76,7 +76,7 @@ cp ${directory}/VERSION ${directory}/bin/x8664/.version
 
 mkdir ${directory}/lib
 mkdir ${directory}/lib/x8664
-cp -P SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty/icu/53.1/centos5/gcc4_4/release64/lib/{libicudata_sb64*,libicui18n_sb64*,libicuuc_sb64*} ${directory}/lib/x8664
+cp -P ${SIMBAENGINE_THIRDPARTY_DIR}/icu/53.1/centos5/gcc4_4/release64/lib/{libicudata_sb64*,libicui18n_sb64*,libicuuc_sb64*} ${directory}/lib/x8664
 
 cp -r files/server/errormessages ${directory}
  
