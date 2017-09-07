@@ -6,7 +6,8 @@ Steps to install libraries required for server build:
 3. sudo apt-get install libcurl4-gnutls-dev
 4. sudo apt-get install libglib2.0-dev
 5. sudo apt-get install libconfig-dev
-6. unzip latest Simba SDK (currently build with SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz)
+6. sudo apt-get install dos2unix
+7. unzip latest Simba SDK (currently build with SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz)
 
 Set environment variables for LANG, SIMBAENGINE_DIR and SIMBAENGINE_THIRDPARTY_DIR, e.g.:
 
