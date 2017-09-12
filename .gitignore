@@ -184,6 +184,4 @@ FakesAssemblies/
 # Ryft
 /src/server/Lib/*
 SourceCache.dat
-*.msm
-SimbaEngineSDK.lic
 vs2012/ryft1_linuxclient/example/*
