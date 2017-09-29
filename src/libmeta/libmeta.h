@@ -456,6 +456,7 @@ public:
         size_t stRemain;
         int readThisLoop;
         bool bLast;
+
         char *buffer = (char *)malloc(PARSER_WINDOW_SIZE);
         if(!buffer)
             return false;
@@ -479,6 +480,7 @@ public:
             while((jobj = json_tokener_parse_ex(jtok, buffer + stRead, readThisLoop - stRead)) && no_top) {
                 stRead += jtok->char_offset;
                 json_parse(jobj, NULL, 1);
+                json_object_put(jobj);
             }
         } 
         while(((jerr = json_tokener_get_error(jtok)) == json_tokener_continue) && (stCurr < stSize));
@@ -486,10 +488,12 @@ public:
         free(buffer);
 
         if(jobj && !no_top) {
+            json_object *jobj_array = jobj;
             if(!top_object.empty()) {
-                jobj = json_object_object_get(jobj, top_object.c_str());
+                json_object_object_get_ex(jobj, top_object.c_str(), &jobj_array);
             }
-            json_parse_array(jobj, NULL, 0);
+            json_parse_array(jobj_array, NULL, 0);
+            json_object_put(jobj);
         }
         json_tokener_free(jtok);
         return true;
