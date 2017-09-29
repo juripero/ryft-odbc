@@ -38,7 +38,7 @@
     <BuildCommand>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>172.16.13.3</HostName>
+        <HostName>172.16.10.23</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
@@ -65,7 +65,7 @@
     <CleanCommand>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>172.16.13.3</HostName>
+        <HostName>172.16.10.23</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>
@@ -120,7 +120,7 @@
       </RequiredLinuxPackages>
     </Toolchain>
     <MainBuildDirectory>$(RemoteSourceDir)/Makefiles</MainBuildDirectory>
-    <AbsoluteTargetPath>/home/ryftuser/development/ryft1_odbcd/Bin/Linux_x8664/ryft1_odbcd_debug</AbsoluteTargetPath>
+    <AbsoluteTargetPath>/home/ryftuser/development/src/odbcd/Bin/Linux_x8664/ryft1_odbcd_debug</AbsoluteTargetPath>
     <AutoUpdateMakefiles>true</AutoUpdateMakefiles>
   </Build>
   <Debug xsi:type="com.visualgdb.debug.remote">
@@ -171,7 +171,7 @@
     <KeepConsoleAfterExit>false</KeepConsoleAfterExit>
     <RunGDBUnderSudo>true</RunGDBUnderSudo>
     <DeploymentMode>Auto</DeploymentMode>
-    <LdLibraryPath>/home/ryftuser/development/SimbaEngineSDK/9.5/DataAccessComponents/ThirdParty/icu/53.1/centos5/gcc4_4/release64/lib</LdLibraryPath>
+    <LdLibraryPath>/home/ryftuser/development/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty/icu/53.1/centos5/gcc4_4/release64/lib</LdLibraryPath>
     <DeployWhenLaunchedWithoutDebugging>true</DeployWhenLaunchedWithoutDebugging>
   </Debug>
   <CustomBuild>
