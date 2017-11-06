@@ -1197,8 +1197,12 @@ private:
 
         free(buffer);
 
-        jobj = json_object_object_get(jobj, "matches");
-        matches = json_object_get_int(jobj);
+        json_object *jnext = NULL;
+        if(jobj && json_object_object_get_ex(jobj, "stats", &jnext)) {
+            if(json_object_object_get_ex(jnext, "matches", &jnext))
+                matches = json_object_get_int(jnext);
+        }
+        json_object_put(jobj);
         json_tokener_free(jtok);
         return matches;
     }
