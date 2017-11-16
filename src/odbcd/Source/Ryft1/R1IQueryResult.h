@@ -621,6 +621,12 @@ protected:
         return ProcessNode;
     }
 
+    NodeAction __addElement(int colIdx)
+    {
+        __cursor.__colIdx = colIdx;
+        return ProcessNode;
+    }
+
     void __addText(std::string sText, std::string sDelimiter) 
     {
         if(__cursor.__colIdx != -1) {

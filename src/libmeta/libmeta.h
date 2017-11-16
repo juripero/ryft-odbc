@@ -1,3 +1,10 @@
+// =================================================================================================
+///  @file libmeta.h
+///
+///  Handles meta functions for ODBC
+///
+///  Copyright (C) 2017 Ryft Systems, Inc.
+// =================================================================================================
 #pragma once
 #include <libconfig.h>
 #include <vector>
@@ -15,7 +22,8 @@ extern const char s_RyftUser[];
 enum DataType {
     dataType_None = 0,
     dataType_XML,
-    dataType_JSON
+    dataType_JSON,
+    dataType_CSV
 };
 
 class __meta_config__ {
@@ -55,8 +63,13 @@ public:
     // version 2
     DataType data_type; 
     string file_glob;
+    // XML
     string record_tag;
+    // JSON
     bool no_top;
+    // CSV
+    string record_delimiter;
+    string field_delimiter;
 
     void write_meta_config(string path);
 
@@ -79,11 +92,16 @@ public:
     DataType data_type; 
     string rdf_name;
     string file_glob;
+    int chunk_size;
+    // XML
     string record_start;
     string record_end;
-    bool no_top;
-    int chunk_size;
     vector<__rdf_tag__> tags;
+    // JSON
+    bool no_top;
+    // CSV
+    string record_delimiter;
+    string field_delimiter;
 
     void write_rdf_config(string path);
 };
@@ -108,6 +126,29 @@ enum NodeAction
     PushNode,
     SkipNode,
 };
+#define PARSER_WINDOW_SIZE      0x10000
+#define PARSER_SNIFF_SIZE       0x1000
+
+static size_t __stripControlChars(char *pbuf1, char *pbuf2, size_t siz)
+{
+    size_t out_siz = 0;
+    for(size_t i = 0; i < siz; i++) {
+        if(pbuf1[i] > 0 && pbuf1[i] <= 0x1F) {
+            switch(pbuf1[i]) {
+            case 0x09:
+            case 0x0A:
+            case 0x0D:
+                pbuf2[out_siz++] = pbuf1[i];
+                break;
+            default:
+                break;
+            }
+        }
+        else
+            pbuf2[out_siz++] = pbuf1[i];
+    }
+    return out_siz;
+}
 
 #define XML_STATIC
 #include "expat.h"
@@ -166,36 +207,12 @@ protected:
 // Element objects will be stored on a stack by parsers:
 typedef std::deque<XMLElement *> ElementStack;
 
-static size_t __stripControlChars(char *pbuf1, char *pbuf2, size_t siz)
-{
-    size_t out_siz = 0;
-    for(size_t i = 0; i < siz; i++) {
-        if(pbuf1[i] > 0 && pbuf1[i] <= 0x1F) {
-            switch(pbuf1[i]) {
-            case 0x09:
-            case 0x0A:
-            case 0x0D:
-                pbuf2[out_siz++] = pbuf1[i];
-                break;
-            default:
-                break;
-            }
-        }
-        else
-            pbuf2[out_siz++] = pbuf1[i];
-    }
-    return out_siz;
-}
-
 class XMLParser : public XMLElement
 {
 public:
     inline          XMLParser() : m_bParsed( false ), m_iLevel( 0 ) {}
     inline          XMLParser( const std::string &wsElName ) : XMLElement( wsElName ), m_bParsed( false ), m_iLevel( 0 ), m_inNode(false) {}
   
-#define PARSER_WINDOW_SIZE      0x10000
-#define PARSER_SNIFF_SIZE       0x1000
-
     // The auto-magic parse function.  This processes relationships and then
     // parses the main XML file associated with the object:
     bool XMLParse(int fd, size_t stSize, std::string delim, bool no_top)
@@ -398,8 +415,8 @@ class JSONElement {
     friend class JSONParser;
 
 public:
-    inline                      JSONElement() : m_bDeleteOnPop( false ) {}
-    inline                      JSONElement( const std::string &sElName ) : m_sElName( sElName ), m_bDeleteOnPop( false ) {}
+    inline                      JSONElement() {}
+    inline                      JSONElement( const std::string &sElName ) : m_sElName( sElName ) {}
 
     // This function is called automatically by the parser
     // for whichever element is on top of the parse stack
@@ -427,23 +444,12 @@ public:
     virtual void                JSONExitRow() {}
 
     inline const std::string   &ElementName() const { return m_sElName; }
-    inline int                  ElementLevel() const { return m_iLevel; }
 
 protected:
-
-    inline                      JSONElement( const std::string &sElName, int iLevel, bool bDeleteOnPop ) : m_sElName( sElName ), m_iLevel( iLevel ), m_bDeleteOnPop( bDeleteOnPop ) {}
-
-    inline void                 SetLevel( int iLevel ) { m_iLevel = iLevel; }
-    inline bool                 DeleteOnPop() const { return m_bDeleteOnPop; }
 
     std::string                 m_sElName;          // Inherited classes MUST initialize this
                                                     // as it is used to determine when to pop
                                                     // elements from the parser stack!!
-
-    int                         m_iLevel;           // Set by the XMLParser during XML Parsing
-
-    bool                        m_bDeleteOnPop;     // If true, XMLParser objects will delete this
-                                                    // object upon removing it from the parse stack
 };
 
 class JSONParser : public JSONElement {
@@ -612,6 +618,149 @@ private:
     }
 };
 
+#include "csv.h"
+class CSVElement
+{
+    friend class CSVParser;
+
+public:
+    inline                      CSVElement() {}
+    inline                      CSVElement( const std::string &sElName ) : m_sElName( sElName ) {}
+
+    // This function is called automatically by the parser
+    // for whichever element is on top of the parse stack
+    // when a new nested start tag is encountered.
+    // Return ProcessNode to continue parsing.
+    // Return PushNode and set ppElement if
+    // parsing should continue with a new XMLElement object on the
+    // top of the parse stack.
+    // Return SkipNode to ignore the node and its children.
+    virtual NodeAction          CSVStartRow( ) { return ProcessNode; }
+    virtual NodeAction          CSVAddElement(int valueIndex) { return ProcessNode; }
+    
+    // This function is called automatically by the parser
+    // for whichever element is on top of the parse stack
+    // when enclosed text inside a pair of tags is being processed:
+    virtual void                CSVAddText( std::string sText ) {}
+    
+    // This function is called when an element is about to be popped
+    // of the the parse stack
+    virtual void                CSVExitElement() {}
+    virtual void                CSVExitRow() {}
+
+    inline const std::string   &ElementName() const { return m_sElName; }
+
+protected:
+
+    std::string                 m_sElName;          // Inherited classes MUST initialize this
+                                                    // as it is used to determine when to pop
+                                                    // elements from the parser stack!!
+};
+
+class CSVParser : public CSVElement
+{
+public:
+    inline          CSVParser() : m_bParsed( false ) {}
+    inline          CSVParser( const std::string &wsElName ) : CSVElement( wsElName ), m_bParsed( false ), m_inNode(false) {}
+  
+    bool CSVParse(int fd, size_t stSize, std::string value_delim, std::string record_delim)
+    {
+        // Open parse path XML file:
+        m_sniffing = false;
+        
+        CSV_Parser parser = CSV_ParserCreate( );
+        if( parser )
+        {
+            CSV_SetDelimiter(parser, value_delim[0], record_delim[0]);
+
+            // Set handlers:
+            CSV_SetValueHandler( parser, CSVParser::StartHandler, CSVParser::EndHandler );
+            CSV_SetCharacterDataHandler( parser, CSVParser::TextHandler );
+            CSV_SetUserData( parser, (void *)this );
+            
+            // Parse:
+            try 
+            {
+                size_t stCurr, stRemain;
+                int readThisLoop;
+                bool bLast;
+
+                char * pbBuffer = (char *)malloc(PARSER_WINDOW_SIZE);
+                if(!pbBuffer) {
+                    CSV_ParserFree( parser );
+                    return false;
+                }
+                for( stCurr = 0; stCurr < stSize; stCurr += PARSER_WINDOW_SIZE )
+                {
+                    stRemain = stSize - stCurr;
+                    bLast = stRemain < PARSER_WINDOW_SIZE;
+                    readThisLoop = read(fd, pbBuffer, bLast ? stRemain : PARSER_WINDOW_SIZE);
+                    if(readThisLoop == -1) 
+                    {
+                        free(pbBuffer);
+                        CSV_ParserFree( parser );
+                        return false;
+                    }
+                    if( CSV_STATUS_OK != CSV_Parse( parser, (const char *)( pbBuffer ), readThisLoop, bLast ) ) 
+                    {
+                        break;
+                    }
+                    else
+                        m_bParsed = true;
+                }
+                free(pbBuffer);
+            }
+            catch(...)
+            {
+                m_bParsed = false;
+            }
+            CSV_ParserFree( parser );
+        }
+
+        // NOTE: No need to pop us, as the close tag handler will pop us automatically.
+        return m_bParsed;
+    }
+
+    bool CSVSniff(int fd, size_t stSize, string& record_tag) 
+    {
+        return true;
+    }
+
+    inline bool     IsParsed() const { return m_bParsed; }
+
+protected:
+    // Internal implementations:
+    static void CSVCALL StartHandler( void *pData, int valueIndex )
+    {
+        CSVParser *pThis = (CSVParser *)pData;
+        if(valueIndex == 1) {
+            pThis->CSVStartRow();
+        }
+        pThis->CSVAddElement(valueIndex);
+    }
+
+    static void CSVCALL TextHandler( void * pData, const char * sText, int len )
+    {
+        string text;
+        text.append(sText, len);
+        CSVParser *pThis = (CSVParser *)pData;
+        pThis->CSVAddText(text);
+    }
+
+    static void CSVCALL EndHandler( void * pData, int valueIndex, bool endLine )
+    {
+        CSVParser *pThis = (CSVParser *)pData;
+        pThis->CSVExitElement();
+        if(endLine)
+            pThis->CSVExitRow();
+    }
+
+    bool            m_bParsed;
+    bool            m_inNode;
+    int             m_iLevel;
+    bool            m_sniffing;
+};
+
 #include <stdio.h>
 #include <pwd.h>
 
@@ -639,6 +788,32 @@ protected:
     virtual bool copyFile( char *src_path ) { return false; }
 
     FILE *  __ffile;
+};
+
+class XMLFile : public IFile, public XMLParser {
+public:
+    XMLFile(string output, string delim) : IFile(output), __delim(delim), __in_row(false) { }
+
+protected:
+    // XML Parse
+    virtual NodeAction StartRow( );
+    virtual NodeAction AddElement( std::string sName, const char **psAttribs, XMLElement **ppElement );
+    virtual void AddText( std::string sText );
+    virtual void ExitRow();
+
+    // IFile
+    virtual bool prolog( );
+    virtual bool epilog( );
+    virtual bool startRecord( );
+    virtual bool endRecord( );
+    virtual bool outputField( string field, string value );
+    virtual bool copyFile( char *src_path );
+
+private:
+    string  __delim;
+    string  __field;
+    string  __value;
+    bool    __in_row;
 };
 
 class JSONFile : public IFile, public JSONParser {
@@ -675,16 +850,18 @@ private:
 
 };
 
-class XMLFile : public IFile, public XMLParser {
+class CSVFile : public IFile, public CSVParser {
 public:
-    XMLFile(string output, string delim) : IFile(output), __delim(delim), __in_row(false) { }
+    CSVFile(string output, string field_delimiter, string record_delimiter) : IFile(output), 
+        __field_delimiter(field_delimiter), __record_delimiter(record_delimiter)  { }
 
 protected:
-    // XML Parse
-    virtual NodeAction StartRow( );
-    virtual NodeAction AddElement( std::string sName, const char **psAttribs, XMLElement **ppElement );
-    virtual void AddText( std::string sText );
-    virtual void ExitRow();
+    // CSV Parse
+    virtual NodeAction CSVStartRow();
+    virtual NodeAction CSVAddElement(int valueIndex);
+    virtual void CSVAddText( std::string sText );
+    virtual void CSVExitElement();
+    virtual void CSVExitRow();
 
     // IFile
     virtual bool prolog( );
@@ -695,8 +872,8 @@ protected:
     virtual bool copyFile( char *src_path );
 
 private:
-    string  __delim;
-    string  __field;
+    string  __field_delimiter;
+    string  __record_delimiter;
     string  __value;
-    bool    __in_row;
+    bool    __output;
 };

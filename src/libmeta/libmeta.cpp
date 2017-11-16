@@ -1,3 +1,10 @@
+// =================================================================================================
+///  @file libmeta.cpp
+///
+///  Handles meta functions for ODBC
+///
+///  Copyright (C) 2017 Ryft Systems, Inc.
+// =================================================================================================
 #include <string.h>
 #include <stdio.h>
 #include <dirent.h>
@@ -105,6 +112,9 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                 else if(!strcasecmp(result, "XML")) {
                     data_type = dataType_XML;
                 }
+                else if(!strcasecmp(result, "CSV")) {
+                    data_type = dataType_CSV;
+                }
             }
             if(CONFIG_TRUE == config_lookup_string(&tableMeta, "file_glob", &result)) 
                 file_glob = result;
@@ -120,6 +130,12 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                     if(!strcmp(result, "."))
                         no_top = true;
                 }
+                break;
+            case dataType_CSV:
+                if(CONFIG_TRUE == config_lookup_string(&tableMeta, "record_delimiter", &result))
+                    record_delimiter = result;
+                if(CONFIG_TRUE == config_lookup_string(&tableMeta, "field_delimiter", &result))
+                    field_delimiter = result;
                 break;
             }
             break;
@@ -248,6 +264,9 @@ __rdf_config__::__rdf_config__(string& in_path) : data_type(dataType_None)
             else if(!strcasecmp(result, "XML")) {
                 data_type = dataType_XML;
             }
+            else if(!strcasecmp(result, "CSV")) {
+                data_type = dataType_CSV;
+            }
         }
         if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "file_glob", &result)) 
             file_glob = result;
@@ -273,6 +292,12 @@ __rdf_config__::__rdf_config__(string& in_path) : data_type(dataType_None)
                     no_top = true;
             }
             break;
+        case dataType_CSV:
+            if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "record_delimiter", &result))
+                record_delimiter = result;
+            if(CONFIG_TRUE == config_lookup_string(&rdfConfig, "field_delimiter", &result))
+                field_delimiter = result;
+ 
         }
     }
     config_destroy(&rdfConfig);
@@ -309,7 +334,7 @@ void __rdf_config__::write_rdf_config(string path)
             config_setting_set_string(tagElem, itr->end_tag.c_str());
         }
     }
-    else {
+    else if (data_type == dataType_JSON) {
         config_setting_set_string(data_type_cs, "JSON");
         config_setting_t *record_path_cs = config_setting_add(root, "record_path", CONFIG_TYPE_STRING);
         if(no_top) {
@@ -317,6 +342,13 @@ void __rdf_config__::write_rdf_config(string path)
         }
         else
             config_setting_set_string(record_path_cs, "[]");
+    }
+    else if (data_type == dataType_CSV) {
+        config_setting_set_string(data_type_cs, "CSV");
+        config_setting_t *record_delimiter_cs = config_setting_add(root, "record_delimiter", CONFIG_TYPE_STRING);
+        config_setting_set_string(record_delimiter_cs, record_delimiter.c_str());
+        config_setting_t *field_delimiter_cs = config_setting_add(root, "field_delimiter", CONFIG_TYPE_STRING);
+        config_setting_set_string(field_delimiter_cs, field_delimiter.c_str());
     }
 
     config_write_file(&tableRdf, path.c_str());
@@ -612,6 +644,98 @@ bool JSONFile::copyFile( char *src_path )
     if((ffile = open(src_path, O_RDONLY)) != -1) {
         fstat(ffile, &sb);
         JSONParse(ffile, sb.st_size, __no_top, "");
+        close(ffile);
+        return true;
+    }
+    return false;    
+}
+
+// CSVFile
+
+NodeAction CSVFile::CSVStartRow()
+{
+    startRecord();
+    return ProcessNode;
+}
+
+NodeAction CSVFile::CSVAddElement(int valueIndex)
+{
+    __value.clear();
+    return ProcessNode;
+}
+
+void CSVFile::CSVAddText( std::string sText )
+{
+    __value += sText;
+}
+
+void CSVFile::CSVExitElement()
+{
+    outputField("", __value);
+}
+
+void CSVFile::CSVExitRow()
+{
+    endRecord();
+}
+
+bool CSVFile::prolog( ) 
+{ 
+    // CSV Header?
+    return true;
+}
+
+bool CSVFile::epilog( ) 
+{
+    return true;
+}
+
+bool CSVFile::startRecord( ) 
+{ 
+    __output = false;
+    return true; 
+}
+
+bool CSVFile::endRecord( ) 
+{ 
+    if(__ffile) {
+        fputs(__record_delimiter.c_str(), __ffile);
+        return true; 
+    }
+    return false;
+}
+
+bool CSVFile::outputField( string field, string value ) 
+{ 
+    if(__ffile) {
+        if(__output)
+            fputs(__field_delimiter.c_str(), __ffile);
+        if(value.find_first_of("\"\n,") != string::npos) {
+            // output must be escaped
+            size_t pos = value.find_first_of("\"");
+            while(pos != string::npos) {
+                // escape double quotes
+                value.insert(pos++, "\"");
+                pos = value.find_first_of("\"", ++pos);
+            }
+            // escape whole value
+            value.insert(0, "\"");
+            value.append("\"");
+        }
+        fputs(value.c_str(), __ffile);
+        __output = true;
+        return true; 
+    }
+    return false;
+}
+
+bool CSVFile::copyFile( char *src_path ) 
+{ 
+    int ffile;
+    struct stat sb;
+    if((ffile = open(src_path, O_RDONLY)) != -1) {
+        fstat(ffile, &sb);
+        CSVParse(ffile, sb.st_size, __field_delimiter, __record_delimiter);
         close(ffile);
         return true;
     }
