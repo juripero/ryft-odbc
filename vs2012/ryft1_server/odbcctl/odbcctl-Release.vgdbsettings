@@ -75,7 +75,7 @@
     <MakeCommandTemplate>
       <SkipWhenRunningCommandList>false</SkipWhenRunningCommandList>
       <RemoteHost>
-        <HostName>172.16.13.3</HostName>
+        <HostName>172.16.10.23</HostName>
         <Transport>SSH</Transport>
         <UserName>ryftuser</UserName>
       </RemoteHost>

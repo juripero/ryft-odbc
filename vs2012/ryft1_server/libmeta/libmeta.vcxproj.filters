@@ -31,12 +31,18 @@
     <ClCompile Include="..\..\..\src\libmeta\libmeta.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\libmeta\crypt.cpp">
+      <Filter>Source files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\libmeta\libmeta.h">
       <Filter>Header files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\libmeta\csv.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\libmeta\crypt.h">
       <Filter>Header files</Filter>
     </ClInclude>
   </ItemGroup>

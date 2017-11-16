@@ -16,7 +16,7 @@ PREPROCESSOR_MACROS := DEBUG
 INCLUDE_DIRS := ../libmeta
 LIBRARY_DIRS := 
 LIBRARY_NAMES := 
-ADDITIONAL_LINKER_INPUTS := -lconfig -lexpat -ljson
+ADDITIONAL_LINKER_INPUTS := -lconfig -lexpat -ljson -lcrypto
 MACOS_FRAMEWORKS := 
 LINUX_PACKAGES := 
 
