@@ -25,6 +25,7 @@ namespace Support
 using namespace std;
 
 #include "libmeta.h"
+#include "crypt.h"
 #include "R1Util.h"
 #include "R1IQueryResult.h"
 #include "R1JSONResult.h"

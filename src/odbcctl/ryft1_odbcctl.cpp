@@ -19,6 +19,7 @@
 using namespace std;
 
 #include "libmeta.h"
+#include "crypt.h"
 
 const char _exenam[]="ryft1_odbcd";
 const char _pidfile[]=".r1odbcd.pid";
@@ -585,6 +586,7 @@ void usage(string name)
     cout << "usage: " << name << " [opts] [args]\n";
     cout << "  opts:\n";
     cout << "  -a, --add\tAdd file as a new database (Syntax: -a source_file)\n";
+    cout << "  -c, --crypt\tEncrypt configuration password\n";
     cout << "  -d, --del\tDelete installed database (Syntax: -d id)\n";
     cout << "  -e, --edit\tEdit database metadata (Syntax: -e id)\n";
     cout << "  -h, --help\tDisplay help\n";
@@ -616,6 +618,16 @@ int main(int argc, char *argv[])
             }
             else usage(argv[0]);
             add(filespec);
+        }
+        else if((arg == "-c") || (arg == "--crypt")) {
+            cout << "password: ";
+            string in;
+            getline(std::cin, in);
+            char *out = __encrypt(in.c_str());
+            cout << "ENCRYPTED_CONTENT(";
+            cout << (char *)out;
+            cout << ")\n";
+            free(out);
         }
         else if((arg == "-d") || (arg == "--del")) {
             string id;

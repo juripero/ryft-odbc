@@ -21,6 +21,7 @@ using namespace RyftOne;
 
 RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __log(log)
 {
+    static char encrypted_content[] = "ENCRYPTED_CONTENT";
     GKeyFile *keyfile = g_key_file_new( );
     GKeyFileFlags flags;
     GError *error = NULL;
@@ -50,7 +51,16 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
 
             ldapString = g_key_file_get_string(keyfile, "Auth", "LDAPPassword", &error);
             if(ldapString) {
-                __ldapPassword = ldapString;
+                char *pstr = strstr(ldapString, encrypted_content);
+                if(pstr) {
+                    pstr += strlen(encrypted_content) + 1;
+                    pstr[strlen(pstr)-1] = '\0';
+                    char *decrypted = __decrypt(pstr);
+                    __ldapPassword = decrypted;
+                    free(decrypted);
+                }
+                else
+                    __ldapPassword = ldapString;
                 free(ldapString);
             }
             if(error != NULL)
@@ -91,7 +101,16 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
 
         restString = g_key_file_get_string(keyfile, "REST", "RESTPass", &error);
         if(restString) {
-            __restPass = restString;
+            char *pstr = strstr(restString, encrypted_content);
+            if(pstr) {
+                pstr += strlen(encrypted_content) + 1;
+                pstr[strlen(pstr)-1] = '\0';
+                char *decrypted = __decrypt(pstr);
+                __restPass = decrypted;
+                free(decrypted);
+            }
+            else
+                __restPass = restString;
             free(restString);
         }
         if(error != NULL)

@@ -16,9 +16,11 @@
     <None Include="..\..\..\src\libmeta\release.mak" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\libmeta\crypt.cpp" />
     <ClCompile Include="..\..\..\src\libmeta\libmeta.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\libmeta\crypt.h" />
     <ClInclude Include="..\..\..\src\libmeta\csv.h" />
     <ClInclude Include="..\..\..\src\libmeta\libmeta.h" />
   </ItemGroup>
