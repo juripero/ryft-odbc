@@ -29,6 +29,7 @@ using namespace std;
 #include "R1IQueryResult.h"
 #include "R1JSONResult.h"
 #include "R1XMLResult.h"
+#include "R1CSVResult.h"
 #include "R1RAWResult.h"
 #include "R1Catalog.h"
 

@@ -19,6 +19,7 @@
     <ClCompile Include="..\..\..\src\libmeta\libmeta.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\libmeta\csv.h" />
     <ClInclude Include="..\..\..\src\libmeta\libmeta.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

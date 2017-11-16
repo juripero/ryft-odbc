@@ -31,6 +31,7 @@ Ryft1/R1Catalog.cpp \
 Ryft1/R1JSONResult.cpp \
 Ryft1/R1XMLResult.cpp \
 Ryft1/R1RAWResult.cpp \
+Ryft1/R1CSVResult.cpp \
 Ryft1/R1Util.cpp \
 
 ##--------------------------------------------------------------------------------------------------

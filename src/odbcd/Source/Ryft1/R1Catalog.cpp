@@ -278,6 +278,9 @@ IQueryResult *RyftOne_Database::OpenTable(string& in_table)
         case dataType_XML:
             result = new RyftOne_XMLResult(__log);
             break;
+        case dataType_CSV:
+            result = new RyftOne_CSVResult(__log);
+            break;
         default:
             result = new RyftOne_RAWResult(__log);
             break;

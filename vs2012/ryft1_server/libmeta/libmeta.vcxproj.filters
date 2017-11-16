@@ -36,5 +36,8 @@
     <ClInclude Include="..\..\..\src\libmeta\libmeta.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\libmeta\csv.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

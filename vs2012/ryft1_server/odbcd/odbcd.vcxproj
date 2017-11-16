@@ -88,6 +88,7 @@
     <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\R1Table.h" />
     <ClInclude Include="..\..\..\src\odbcd\Source\Resources\resource.h" />
     <ClInclude Include="..\..\..\src\odbcd\Source\Resources\VersionResource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.h" />
     <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1IQueryResult.h" />
     <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1JSONResult.h" />
     <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1Catalog.h" />
@@ -136,6 +137,7 @@
     <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\R1QueryExecutor.cpp" />
     <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\R1Table.cpp" />
     <ClCompile Include="..\..\..\src\odbcd\Source\Main_Unix.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.cpp" />
     <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1JSONResult.cpp" />
     <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1Catalog.cpp" />
     <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1RAWResult.cpp" />

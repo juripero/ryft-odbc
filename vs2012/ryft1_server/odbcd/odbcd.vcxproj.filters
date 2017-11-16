@@ -197,6 +197,9 @@
     <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1UnloadProcedure.h">
       <Filter>Source files\DataEngine\Procedures\Include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\src\odbcd\Source\Makefile">
@@ -324,6 +327,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1UnloadProcedure.cpp">
       <Filter>Source files\DataEngine\Procedures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
