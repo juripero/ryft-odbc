@@ -1094,7 +1094,6 @@ private:
             close(fd);
 
             for(idx = 1; idx <= nrows; idx++) {
-
                 if( (atoll((const char *)prows[(idx*ncols) + 0]) == (long long)sb.st_dev) && 
                     (atoll((const char *)prows[(idx*ncols) + 1]) == (long long)sb.st_ino) &&
                     (atoll((const char *)prows[(idx*ncols) + 2]) == (long long)sb.st_mtime))
@@ -1102,6 +1101,15 @@ private:
             }
             if(idx == nrows + 1) {
                 INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss on file GLOB update");
+                char debug_buf[1024];
+                snprintf(debug_buf, sizeof(debug_buf), "file %s (dev %lld, ino %lld, mtime %lld) does not match one of:", 
+                    (*globItr).c_str(), (long long)sb.st_dev, (long long)sb.st_ino, (long long)sb.st_mtime);
+                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", debug_buf);
+                for(idx = 1; idx <= nrows; idx++) {
+                    snprintf(debug_buf, sizeof(debug_buf), "--> dev %s, ino %s, mtime %s", (const char *)prows[(idx*ncols) + 0],
+                        (const char *)prows[(idx*ncols) + 1], (const char *)prows[(idx*ncols) + 2]);
+                    INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", debug_buf);
+                }
                 sqlite3_free_table(prows);
                 __dropTable(query);
                 return false;
