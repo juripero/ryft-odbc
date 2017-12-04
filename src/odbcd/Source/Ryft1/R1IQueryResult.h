@@ -955,6 +955,8 @@ private:
         char **prows;
         int nrows, ncols;
 
+        INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__dropTable", "QUERY: \"%s\"", query.c_str());
+
         string escapedQuery;
         CopyEscapedLiteral(escapedQuery, query);
         sql = sqlite3_mprintf("SELECT * FROM \"__DIRECTORY__\" WHERE QUERY = '%s'", escapedQuery.c_str());
@@ -1004,6 +1006,8 @@ private:
         struct stat sb;
         vector<string>::iterator globItr;
 
+        INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "QUERY: \"%s\"", query.c_str());
+
         string escapedQuery;
         CopyEscapedLiteral(escapedQuery, query);
         sql = sqlite3_mprintf("SELECT * FROM \"__DIRECTORY__\" WHERE QUERY = '%s'", escapedQuery.c_str());
@@ -1011,11 +1015,14 @@ private:
         sqlite3_free(sql);
         if(errp)
             sqlite3_free(errp);
-        if(sqlret != SQLITE_OK) 
+        if(sqlret != SQLITE_OK) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "SELECT on __DIRECTORY__ failed");
             return false;
-        if(nrows == 0) 
+        }
+        if(nrows == 0) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "No matching cache entry");
             return false;
-
+        }
         string tableName;
         if(prows[ncols+0])
             tableName = prows[ncols+0];
@@ -1038,11 +1045,13 @@ private:
         if(errp)
             sqlite3_free(errp);
         if(sqlret != SQLITE_OK) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "Error loading file __METAFILE_STAT");
             __dropTable(query);
             return false;
         }
         if((nrows) != 1) {
             sqlite3_free_table(prows);
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "nrows(%d) != 1 on __METAFILE_STAT", nrows);
             __dropTable(query);
             return false;
         }
@@ -1050,6 +1059,7 @@ private:
             (atoll((const char *)prows[(ncols) + 1]) != (long long)__metafile_stat.st_ino) ||
             (atoll((const char *)prows[(ncols) + 2]) != (long long)__metafile_stat.st_mtime)) {
 
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss due to __METAFILE_STAT update");
             sqlite3_free_table(prows);
             __dropTable(query);
             return false;
@@ -1062,10 +1072,12 @@ private:
         if(errp)
             sqlite3_free(errp);
         if(sqlret != SQLITE_OK) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "could not load file GLOB");
             __dropTable(query);
             return false;
         }
         if((nrows) != __glob.size()) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss on file GLOB addition/deletion");
             sqlite3_free_table(prows);
             __dropTable(query);
             return false;
@@ -1089,6 +1101,7 @@ private:
                         break;
             }
             if(idx == nrows + 1) {
+                INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss on file GLOB update");
                 sqlite3_free_table(prows);
                 __dropTable(query);
                 return false;
