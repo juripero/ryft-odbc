@@ -23,7 +23,8 @@ enum DataType {
     dataType_None = 0,
     dataType_XML,
     dataType_JSON,
-    dataType_CSV
+    dataType_CSV,
+    dataType_PCAP
 };
 
 class __meta_config__ {

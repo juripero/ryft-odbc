@@ -130,6 +130,11 @@ bool R1Table::RetrieveData(
 
     simba_int16 sqlType = in_data->GetMetadata()->GetTDWType();
 
+    if (m_result->IsNull(in_column)) {
+        in_data->SetNull(true);
+        return false;
+    }
+
     try {
         switch (sqlType) {
         case TDW_SQL_VARCHAR: {
@@ -276,6 +281,12 @@ void R1Table::GetTypeFormatSpecifier(
 bool R1Table::IsStructuredType()
 {
     return m_result->IsStructuredType();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+bool R1Table::IsPCAPDatabase()
+{
+    return m_result->IsPCAPDatabase();
 }
 
 // Protected =======================================================================================

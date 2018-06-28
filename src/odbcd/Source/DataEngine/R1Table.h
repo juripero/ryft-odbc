@@ -181,6 +181,8 @@ namespace RyftOne
 
         bool IsStructuredType();
 
+        bool IsPCAPDatabase();
+
     // Protected ===================================================================================
     public:
         /// @brief Destructor.

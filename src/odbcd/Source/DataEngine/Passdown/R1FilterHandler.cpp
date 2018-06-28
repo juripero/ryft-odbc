@@ -169,7 +169,11 @@ bool R1FilterHandler::PassdownAnd(AEAnd *in_node)
     m_filter.Clear();
     m_filter += "( ";
     if(DSIExtAbstractBooleanExprHandler::Passdown(lExpr)) {
-        m_filter += " AND ";
+        if(m_table->IsPCAPDatabase()) {
+            m_filter += " && ";
+        }
+        else
+            m_filter += " AND ";
         if(DSIExtAbstractBooleanExprHandler::Passdown(rExpr)) {
             m_filter += " )";
             m_filter = pushFilter + m_filter;
@@ -204,7 +208,11 @@ bool R1FilterHandler::PassdownOr(AEOr* in_node)
     m_filter.Clear();
     m_filter += "( ";
     if(DSIExtAbstractBooleanExprHandler::Passdown(lExpr)) {
-        m_filter += " OR ";
+        if(m_table->IsPCAPDatabase()) {
+            m_filter += " || ";
+        }
+        else
+            m_filter += " OR ";
         if(DSIExtAbstractBooleanExprHandler::Passdown(rExpr)) {
             m_filter += " )";
             m_filter = pushFilter + m_filter;
@@ -278,7 +286,11 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
     string formatSpecial;
     m_table->GetTypeFormatSpecifier(colRef.m_colIndex, &typeSpecial, formatSpecial);
 
-    if((exprLiteralType == PS_LITERAL_DATE) && 
+    if (m_table->IsPCAPDatabase() && columnName != L"payload") {
+        // If this is a PCAP database and we are not doing a Ryft search on the payload, fail the passdown request
+        return false;
+    }
+    else if((exprLiteralType == PS_LITERAL_DATE) && 
         ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
             (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP))) 
     {
@@ -299,14 +311,14 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         m_isPassedDown = true;
         return true;
     }
-    else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
+    else if ((exprLiteralType == PS_LITERAL_TIMESTAMP) &&
         ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
     {
         // Construct the filter string for input to Ryft.
         m_filter += "( ";
         ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
         m_filter += " AND ";
-        literalVal.Remove(0,11);
+        literalVal.Remove(0, 11);
         ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
         m_filter += " )";
 
@@ -314,10 +326,10 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         m_isPassedDown = true;
         return true;
     }
-    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+    else if (((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
         (typeSpecial == TYPE_NUMBER))
     {
-        if(negate)
+        if (negate)
             literalVal = "-" + rExpr->GetAsLiteral()->GetLiteralValue();
 
         // Construct the filter string for input to Ryft.
@@ -327,10 +339,10 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         m_isPassedDown = true;
         return true;
     }
-    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+    else if (((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
         (typeSpecial == TYPE_CURRENCY))
     {
-        if(negate)
+        if (negate)
             literalVal = "-" + rExpr->GetAsLiteral()->GetLiteralValue();
 
         // Construct the filter string for input to Ryft.
@@ -340,10 +352,10 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         m_isPassedDown = true;
         return true;
     }
-    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+    else if (((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) ||
         (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)))
     {
-        if(negate)
+        if (negate)
             literalVal = "--" + rExpr->GetAsLiteral()->GetLiteralValue();
 
         // Construct the filter string for input to Ryft.
@@ -382,7 +394,7 @@ bool R1FilterHandler::PassdownSimpleComparison(
     // ryftprim doesn't like the trailing .[] which can happen in a JSON array that contains unnamed elements
     simba_wstring trailingArray = L".[]";
     simba_int32 loc = columnName.Find(L".[]", columnName.GetLength() - trailingArray.GetLength());
-    if(loc != SIMBA_NPOS)
+    if (loc != SIMBA_NPOS)
         columnName.Remove(loc, trailingArray.GetLength());
 
     // Get the literal type of RHS of comparison expression.
@@ -395,7 +407,21 @@ bool R1FilterHandler::PassdownSimpleComparison(
     string formatSpecial;
     m_table->GetTypeFormatSpecifier(in_leftExpr.m_colIndex, &typeSpecial, formatSpecial);
 
-    if((exprLiteralType == PS_LITERAL_DATE) && 
+    if (m_table->IsPCAPDatabase() && columnName != L"payload") {
+
+        if ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) ||
+            (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+            (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
+
+            // Construct the filter string for input to Ryft.
+            ConstructPCAPComparisonFilter(columnName, literalVal, in_compOp);
+
+            // Setting passdown flag so the filter result set is returned.
+            m_isPassedDown = true;
+            return true;
+        }
+    }
+    else if((exprLiteralType == PS_LITERAL_DATE) && 
         ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
             (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
@@ -1227,4 +1253,39 @@ void R1FilterHandler::ConstructCurrencyComparisonFilter(
     m_filter += "\"" + in_formatCustom.substr(1,1) + "\", ";
     m_filter += "\"" + in_formatCustom.substr(2,1) + "\"";
     m_filter += ") )";
+}
+
+void R1FilterHandler::ConstructPCAPComparisonFilter(
+    simba_wstring in_columnName,
+    const simba_wstring& in_exprValue,
+    Simba::SQLEngine::SEComparisonType in_compOp) 
+{
+    string searchLiteral = in_exprValue.GetAsPlatformString();
+
+    m_filter += "( " + in_columnName;
+
+    // Determine the math symbol for comparison type.
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        m_filter += " == ";
+        break;
+    case SE_COMP_NE:
+        m_filter += " != ";
+        break;
+    case SE_COMP_GT:
+        m_filter += " > ";
+        break;
+    case SE_COMP_GE:
+        m_filter += " >= ";
+        break;
+    case SE_COMP_LT:
+        m_filter += " < ";
+        break;
+    case SE_COMP_LE:
+        m_filter += " <= ";
+        break;
+    }
+
+    m_filter += searchLiteral;
+    m_filter += " )";
 }

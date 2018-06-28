@@ -32,6 +32,7 @@ using namespace std;
 #include "R1XMLResult.h"
 #include "R1CSVResult.h"
 #include "R1RAWResult.h"
+#include "R1PCAPResult.h"
 #include "R1Catalog.h"
 
 #define AUTH_NONE   0

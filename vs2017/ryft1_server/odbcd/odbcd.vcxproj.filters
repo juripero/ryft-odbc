@@ -83,6 +83,9 @@
       <Filter>Source files\DataEngine\Include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\odbcd\Source\RyftOne.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1PCAPResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source files">
@@ -211,6 +214,9 @@
       <Filter>Source files\Ryft1</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\odbcd\Source\Main_Unix.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1PCAPResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\src\odbcd\Makefiles\Makedepend\ryft1_odbcd.depend">

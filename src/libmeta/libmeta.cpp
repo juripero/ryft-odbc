@@ -46,6 +46,7 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
     const char *result;
     int value;
     int idx;
+    vector<__meta_config__::__meta_col__>::iterator colItr;
 
     strcpy(path, in_dir.c_str());
     strcat(path, "/");
@@ -115,6 +116,9 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                 else if(!strcasecmp(result, "CSV")) {
                     data_type = dataType_CSV;
                 }
+                else if (!strcasecmp(result, "PCAP")) {
+                    data_type = dataType_PCAP;
+                }
             }
             if(CONFIG_TRUE == config_lookup_string(&tableMeta, "file_glob", &result)) 
                 file_glob = result;
@@ -136,6 +140,12 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                     record_delimiter = result;
                 if(CONFIG_TRUE == config_lookup_string(&tableMeta, "field_delimiter", &result))
                     field_delimiter = result;
+                break;
+            case dataType_PCAP:
+                // map pcap values to column names
+                for (colItr = columns.begin(); colItr != columns.end(); colItr++) {
+                    colItr->json_or_xml_tag = colItr->description;
+                }
                 break;
             }
             break;
