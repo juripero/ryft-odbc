@@ -688,10 +688,10 @@ protected:
 
         if (query.empty()) {
             if (isPCAP) {
-                query = "ip.src != 255.255.255.255";
+                query = "(ip.src != 255.255.255.255)";
             }
             else
-                query = "( RECORD CONTAINS ? )";
+                query = "(RECORD CONTAINS ?)";
         }
 
         INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Executing query = %s", query.c_str());
