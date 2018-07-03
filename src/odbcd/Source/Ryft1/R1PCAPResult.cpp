@@ -55,6 +55,9 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colitr->m_colAlias.compare("payload")) {
             colQuantity = PAYLOAD;
         }
+        else if (!colitr->m_colAlias.compare("payload_as_ascii")) {
+            colQuantity = PAYLOAD_AS_ASCII;
+        }
         else if (!colitr->m_colAlias.compare("tcp.srcport")) {
             colQuantity = TCP_SRCPORT;
         }
@@ -78,6 +81,18 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         }
         else if (!colitr->m_colAlias.compare("udp.length")) {
             colQuantity = UDP_LENGTH;
+        }
+        else if (!colitr->m_colAlias.compare("http.request.method")) {
+            colQuantity = HTTP_REQ_METHOD;
+        }
+        else if (!colitr->m_colAlias.compare("http.request.uri")) {
+            colQuantity = HTTP_REQ_URI;
+        }
+        else if (!colitr->m_colAlias.compare("http.request.headers")) {
+            colQuantity = HTTP_REQ_HEADERS;
+        }
+        else if (!colitr->m_colAlias.compare("http.request.connection")) {
+            colQuantity = HTTP_REQ_CONNECTION;
         }
         __colQuantity.push_back(colQuantity);
     }
@@ -126,6 +141,14 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             udpHeader = (udphdr *)(pkt + sizeof(struct ether_header) + sizeof(struct ip));
             payloadLen = udpHeader->len;
             payloadData = (u_char *)(pkt + (sizeof(struct ether_header) + sizeof(struct ip) + sizeof(struct udphdr)));
+        }
+        bool isHTTPReq = isTCP && (ntohs(tcpHeader->dest) == 80 || ntohs(tcpHeader->dest) == 8008 || 
+                ntohs(tcpHeader->dest) == 8080);
+        string httpMethod;
+        string httpURI;
+        map<string, string> httpHeaders;
+        if (isHTTPReq) {
+            __loadHttpRequest((char *)payloadData, payloadLen, httpMethod, httpURI, httpHeaders);
         }
         int idx;
         RyftOne_Columns::iterator itr;
@@ -217,6 +240,18 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 }
                 break;
             }
+            case PAYLOAD_AS_ASCII: {
+                if (payloadLen) {
+                    string payload(payloadLen, '.');
+                    size_t p = 0;
+                    for (int i = 0; i < payloadLen; i++) {
+                        if ((payloadData[i] >= 0x20) && payloadData[i] != 0x7F)
+                            payload[i] = payloadData[i];
+                    }
+                    snprintf(ptr, len, "%s", payload.c_str());
+                }
+                break;
+            }
             case TCP_SRCPORT:
                 if (isTCP)
                     snprintf(ptr, len, "%d", ntohs(tcpHeader->source));
@@ -248,6 +283,28 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             case UDP_LENGTH:
                 if (isUDP)
                     snprintf(ptr, len, "%d", ntohs(udpHeader->len));
+                break;
+            case HTTP_REQ_METHOD:
+                snprintf(ptr, len, "%s", httpMethod.c_str());
+                break;
+            case HTTP_REQ_URI:
+                snprintf(ptr, len, "%s", httpURI.c_str());
+                break;
+            case HTTP_REQ_HEADERS: {
+                string headers;
+                map<string, string>::iterator itr;
+                for (itr = httpHeaders.begin(); itr != httpHeaders.end(); itr++) {
+                    headers += itr->first;
+                    headers += ":";
+                    headers += itr->second;
+                    headers += "\n";
+                }
+                snprintf(ptr, len, "%s", headers.c_str());
+                break;
+            }
+            case HTTP_REQ_CONNECTION:
+                if (httpHeaders.find("Connection") != httpHeaders.end())
+                    snprintf(ptr, len, "%s", httpHeaders["Connection"].c_str());
                 break;
             }
         }
@@ -321,4 +378,40 @@ void RyftOne_PCAPResult::__loadTable(string& in_name, vector<__catalog_entry__>:
 		__metaTags.push_back(colItr->json_or_xml_tag);
 
 	__delimiter = in_itr->meta_config.delimiter;
+}
+
+void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method, string& uri, map<string, string>& headers)
+{
+    membuf httpBuf(ptr, len);
+    istream in(&httpBuf);
+    string reqLine;
+    char *dup;
+    char *token;
+    getline(in, reqLine);
+    if (!reqLine.empty()) {
+        dup = strdup(reqLine.c_str());
+        token = strtok(dup, " ");
+        method = token;
+        token = strtok(NULL, " ");
+        if(token)
+            uri = token;
+        free(dup);
+    }
+    if (method.empty() || (__httpVerbs.find(method) == string::npos))
+        return;
+    if (uri.empty())
+        return;
+    string header;
+    while (getline(in, header)) {
+        size_t idx;
+        if ((idx = header.rfind('\r')) != string::npos)
+            header = header.substr(0, idx);
+        if (header.empty())
+            break;
+        dup = strdup(header.c_str());
+        token = strtok(dup, ":");
+        token = strtok(NULL, " ");
+        headers[dup] = token;
+        free(dup);
+    }
 }
