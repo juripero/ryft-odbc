@@ -75,6 +75,11 @@ const char __hexmap[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 
 const string __httpVerbs = "OPTIONS,GET,HEAD,POST,PUT,DELETE,TRACE,CONNECT";
 
+const char whitespace[] = " \f\n\r\t\v";
+
+#define is_whitespace(c) \
+    ((!c) || strchr(whitespace, (c)))
+
 struct membuf : std::streambuf
 {
     membuf(char * begin, size_t len) {

@@ -295,7 +295,7 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 map<string, string>::iterator itr;
                 for (itr = httpHeaders.begin(); itr != httpHeaders.end(); itr++) {
                     headers += itr->first;
-                    headers += ":";
+                    headers += ": ";
                     headers += itr->second;
                     headers += "\n";
                 }
@@ -410,8 +410,11 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
             break;
         dup = strdup(header.c_str());
         token = strtok(dup, ":");
-        token = strtok(NULL, " ");
-        headers[dup] = token;
+        token = strtok(NULL, "");
+        while (is_whitespace(*token))
+            token++;
+        if(token)
+            headers[dup] = token;
         free(dup);
     }
 }
