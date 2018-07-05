@@ -95,6 +95,8 @@ private:
     string __restPath;
     string __rootPath;
 
+    string __geoipPath;
+
     int __lruMaxDepth;
 
     // Reference to the ILogger. (NOT OWN)

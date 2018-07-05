@@ -18,6 +18,8 @@
 #include <netinet/udp.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <GeoIP.h>
+#include <GeoIPCity.h>
 #include <string>
 #include <vector>
 #include <deque>
@@ -49,11 +51,12 @@ using namespace std;
 
 #define IP_DST              DOMAIN_IP | 1
 #define IP_SRC              DOMAIN_IP | 2
-#define IP_GEOIP_DST_LAT    DOMAIN_IP | 3
-#define IP_GEOIP_DST_LON    DOMAIN_IP | 4
+#define IP_GEOIP_SRC_LAT    DOMAIN_IP | 3
+#define IP_GEOIP_SRC_LON    DOMAIN_IP | 4
+#define IP_GEOIP_DST_LAT    DOMAIN_IP | 5
+#define IP_GEOIP_DST_LON    DOMAIN_IP | 6
 
 #define PAYLOAD             DOMAIN_LAYER4 | 1
-#define PAYLOAD_AS_ASCII    DOMAIN_LAYER4 | 2
 
 #define TCP_SRCPORT         DOMAIN_TCP | 1
 #define TCP_DSTPORT         DOMAIN_TCP | 2
@@ -89,8 +92,15 @@ struct membuf : std::streambuf
 
 class RyftOne_PCAPResult : public IQueryResult {
 public:
-    RyftOne_PCAPResult(ILogger *log) : IQueryResult(log) { ; }
-   ~RyftOne_PCAPResult() { ; }
+    RyftOne_PCAPResult(ILogger *log, string geoipPath) : IQueryResult(log) 
+    { 
+        __gi = GeoIP_open(geoipPath.c_str(), GEOIP_INDEX_CACHE); 
+    }
+   ~RyftOne_PCAPResult() 
+    { 
+        if(__gi)
+            GeoIP_delete(__gi); 
+    }
 
     virtual bool OpenIndexedResult();
     virtual bool CloseIndexedResult();
@@ -111,6 +121,8 @@ private:
 
     pcap_t *__pcap;
     char __errbuf[PCAP_ERRBUF_SIZE];
+
+    GeoIP *__gi;
 };
 #endif
 

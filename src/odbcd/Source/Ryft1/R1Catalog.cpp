@@ -141,6 +141,16 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
             free(cacheString);
         if(error != NULL)
             g_clear_error(&error);
+
+        // GeoIP database path
+        gchar *geoipString;
+        geoipString = g_key_file_get_string(keyfile, "PCAP", "GeoIP", &error);
+        if (geoipString) {
+            __geoipPath = geoipString;
+            free(geoipString);
+        }
+        if (error != NULL)
+            g_clear_error(&error);
     }
     if(error != NULL)
         g_clear_error(&error);
@@ -301,7 +311,7 @@ IQueryResult *RyftOne_Database::OpenTable(string& in_table)
             result = new RyftOne_CSVResult(__log);
             break;
         case dataType_PCAP:
-            result = new RyftOne_PCAPResult(__log);
+            result = new RyftOne_PCAPResult(__log, __geoipPath);
             break;
         default:
             result = new RyftOne_RAWResult(__log);

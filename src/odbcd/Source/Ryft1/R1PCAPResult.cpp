@@ -52,11 +52,20 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colitr->m_colAlias.compare("ip.dst")) {
             colQuantity = IP_DST;
         }
+        else if (!colitr->m_colAlias.compare("ip.geoip.src_lat")) {
+            colQuantity = IP_GEOIP_SRC_LAT;
+        }
+        else if (!colitr->m_colAlias.compare("ip.geoip.src_lon")) {
+            colQuantity = IP_GEOIP_SRC_LON;
+        }
+        else if (!colitr->m_colAlias.compare("ip.geoip.dst_lat")) {
+            colQuantity = IP_GEOIP_DST_LAT;
+        }
+        else if (!colitr->m_colAlias.compare("ip.geoip.dst_lon")) {
+            colQuantity = IP_GEOIP_DST_LON;
+        }
         else if (!colitr->m_colAlias.compare("payload")) {
             colQuantity = PAYLOAD;
-        }
-        else if (!colitr->m_colAlias.compare("payload_as_ascii")) {
-            colQuantity = PAYLOAD_AS_ASCII;
         }
         else if (!colitr->m_colAlias.compare("tcp.srcport")) {
             colQuantity = TCP_SRCPORT;
@@ -127,6 +136,8 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
         const struct udphdr* udpHeader;
         int payloadLen = 0;
         u_char *payloadData = NULL;
+        char addr[INET_ADDRSTRLEN];
+        GeoIPRecord *gir;
         etherHeader = (struct ether_header *)pkt;
         bool isIP = (ntohs(etherHeader->ether_type) == ETHERTYPE_IP);
         ipHeader = (struct ip *)(pkt + sizeof(struct ether_header));
@@ -226,24 +237,49 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 if (isIP)
                     inet_ntop(AF_INET, &(ipHeader->ip_dst), ptr, min(INET_ADDRSTRLEN, len));
                 break;
-            case PAYLOAD: {
-                if (payloadLen) {
-                    string payload(((payloadLen - 1) * 3) + 2, ' ');
-                    size_t p = 0;
-                    for (int i = 0; i < payloadLen; i++) {
-                        if (i != 0)
-                            payload[p++] = ':';
-                        payload[p++] = __hexmap[(payloadData[i] & 0xF0) >> 4];
-                        payload[p++] = __hexmap[(payloadData[i] & 0x0F)];
+            case IP_GEOIP_SRC_LAT:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_src), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%f", gir->latitude);
+                        GeoIPRecord_delete(gir);
                     }
-                    snprintf(ptr, len, "%s", payload.c_str());
                 }
                 break;
-            }
-            case PAYLOAD_AS_ASCII: {
+            case IP_GEOIP_SRC_LON:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_src), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%f", gir->longitude);
+                        GeoIPRecord_delete(gir);
+                    }
+                }
+                break;
+            case IP_GEOIP_DST_LAT:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_dst), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%f", gir->latitude);
+                        GeoIPRecord_delete(gir);
+                    }
+                }
+                break;
+            case IP_GEOIP_DST_LON:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_dst), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%f", gir->longitude);
+                        GeoIPRecord_delete(gir);
+                    }
+                }
+                break;
+            case PAYLOAD: {
                 if (payloadLen) {
                     string payload(payloadLen, '.');
-                    size_t p = 0;
                     for (int i = 0; i < payloadLen; i++) {
                         if ((payloadData[i] >= 0x20) && payloadData[i] != 0x7F)
                             payload[i] = payloadData[i];
