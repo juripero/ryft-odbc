@@ -31,47 +31,51 @@ using namespace std;
 
 #include "R1IQueryResult.h"
 
-#define DOMAIN_FRAME        0x0000
-#define DOMAIN_ETHER        0x0100
-#define DOMAIN_IP           0x0200
-#define DOMAIN_LAYER4       0x0400
-#define DOMAIN_TCP          0x0800
-#define DOMAIN_UDP          0x1000
-#define DOMAIN_HTTP         0x2000
+#define DOMAIN_FRAME            0x0000
+#define DOMAIN_ETHER            0x0100
+#define DOMAIN_IP               0x0200
+#define DOMAIN_LAYER4           0x0400
+#define DOMAIN_TCP              0x0800
+#define DOMAIN_UDP              0x1000
+#define DOMAIN_HTTP             0x2000
 
-#define FRAME_TIME          DOMAIN_FRAME | 1
-#define FRAME_NUMBER        DOMAIN_FRAME | 2
-#define FRAME_LEN           DOMAIN_FRAME | 3
-#define FRAME_PROTOCOLS     DOMAIN_FRAME | 4
+#define FRAME_TIME              DOMAIN_FRAME | 1
+#define FRAME_NUMBER            DOMAIN_FRAME | 2
+#define FRAME_LEN               DOMAIN_FRAME | 3
+#define FRAME_PROTOCOLS         DOMAIN_FRAME | 4
 
-#define ETH_DST             DOMAIN_ETHER | 1
-#define ETH_DST_RESOLVED    DOMAIN_ETHER | 2
-#define ETH_SRC             DOMAIN_ETHER | 3
-#define ETH_SRC_RESOLVED    DOMAIN_ETHER | 4
+#define ETH_DST                 DOMAIN_ETHER | 1
+#define ETH_DST_RESOLVED        DOMAIN_ETHER | 2
+#define ETH_SRC                 DOMAIN_ETHER | 3
+#define ETH_SRC_RESOLVED        DOMAIN_ETHER | 4
 
-#define IP_DST              DOMAIN_IP | 1
-#define IP_SRC              DOMAIN_IP | 2
-#define IP_GEOIP_SRC_LAT    DOMAIN_IP | 3
-#define IP_GEOIP_SRC_LON    DOMAIN_IP | 4
-#define IP_GEOIP_DST_LAT    DOMAIN_IP | 5
-#define IP_GEOIP_DST_LON    DOMAIN_IP | 6
+#define IP_DST                  DOMAIN_IP | 1
+#define IP_SRC                  DOMAIN_IP | 2
+#define IP_GEOIP_SRC_LAT        DOMAIN_IP | 3
+#define IP_GEOIP_SRC_LON        DOMAIN_IP | 4
+#define IP_GEOIP_SRC_CITY       DOMAIN_IP | 5
+#define IP_GEOIP_SRC_COUNTRY    DOMAIN_IP | 6
+#define IP_GEOIP_DST_LAT        DOMAIN_IP | 7
+#define IP_GEOIP_DST_LON        DOMAIN_IP | 8
+#define IP_GEOIP_DST_CITY       DOMAIN_IP | 9
+#define IP_GEOIP_DST_COUNTRY    DOMAIN_IP | 10
 
-#define PAYLOAD             DOMAIN_LAYER4 | 1
+#define PAYLOAD                 DOMAIN_LAYER4 | 1
 
-#define TCP_SRCPORT         DOMAIN_TCP | 1
-#define TCP_DSTPORT         DOMAIN_TCP | 2
-#define TCP_LEN             DOMAIN_TCP | 3
-#define TCP_SEQ             DOMAIN_TCP | 4
-#define TCP_ACK             DOMAIN_TCP | 5
+#define TCP_SRCPORT             DOMAIN_TCP | 1
+#define TCP_DSTPORT             DOMAIN_TCP | 2
+#define TCP_LEN                 DOMAIN_TCP | 3
+#define TCP_SEQ                 DOMAIN_TCP | 4
+#define TCP_ACK                 DOMAIN_TCP | 5
 
-#define UDP_SRCPORT         DOMAIN_UDP | 1
-#define UDP_DSTPORT         DOMAIN_UDP | 2
-#define UDP_LENGTH          DOMAIN_UDP | 3
+#define UDP_SRCPORT             DOMAIN_UDP | 1
+#define UDP_DSTPORT             DOMAIN_UDP | 2
+#define UDP_LENGTH              DOMAIN_UDP | 3
 
-#define HTTP_REQ_METHOD     DOMAIN_HTTP | 1
-#define HTTP_REQ_URI        DOMAIN_HTTP | 2
-#define HTTP_REQ_HEADERS    DOMAIN_HTTP | 3
-#define HTTP_REQ_CONNECTION DOMAIN_HTTP | 4
+#define HTTP_REQ_METHOD         DOMAIN_HTTP | 1
+#define HTTP_REQ_URI            DOMAIN_HTTP | 2
+#define HTTP_REQ_HEADERS        DOMAIN_HTTP | 3
+#define HTTP_REQ_CONNECTION     DOMAIN_HTTP | 4
 
 const char __hexmap[] = { '0', '1', '2', '3', '4', '5', '6', '7',
                           '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };

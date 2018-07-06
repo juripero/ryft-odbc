@@ -58,11 +58,23 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colitr->m_colAlias.compare("ip.geoip.src_lon")) {
             colQuantity = IP_GEOIP_SRC_LON;
         }
+        else if (!colitr->m_colAlias.compare("ip.geoip.src_city")) {
+            colQuantity = IP_GEOIP_SRC_CITY;
+        }
+        else if (!colitr->m_colAlias.compare("ip.geoip.src_country")) {
+            colQuantity = IP_GEOIP_SRC_COUNTRY;
+        }
         else if (!colitr->m_colAlias.compare("ip.geoip.dst_lat")) {
             colQuantity = IP_GEOIP_DST_LAT;
         }
         else if (!colitr->m_colAlias.compare("ip.geoip.dst_lon")) {
             colQuantity = IP_GEOIP_DST_LON;
+        }
+        else if (!colitr->m_colAlias.compare("ip.geoip.dst_city")) {
+            colQuantity = IP_GEOIP_DST_CITY;
+        }
+        else if (!colitr->m_colAlias.compare("ip.geoip.dst_country")) {
+            colQuantity = IP_GEOIP_DST_COUNTRY;
         }
         else if (!colitr->m_colAlias.compare("payload")) {
             colQuantity = PAYLOAD;
@@ -257,6 +269,26 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                     }
                 }
                 break;
+            case IP_GEOIP_SRC_CITY:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_src), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%s, %s", gir->city, gir->region);
+                        GeoIPRecord_delete(gir);
+                    }
+                }
+                break;
+            case IP_GEOIP_SRC_COUNTRY:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_src), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%s", gir->country_name);
+                        GeoIPRecord_delete(gir);
+                    }
+                }
+                break;
             case IP_GEOIP_DST_LAT:
                 if (isIP && __gi) {
                     inet_ntop(AF_INET, &(ipHeader->ip_dst), addr, INET_ADDRSTRLEN);
@@ -273,6 +305,26 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                     gir = GeoIP_record_by_name(__gi, (const char *)addr);
                     if (gir != NULL) {
                         snprintf(ptr, len, "%f", gir->longitude);
+                        GeoIPRecord_delete(gir);
+                    }
+                }
+                break;
+            case IP_GEOIP_DST_CITY:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_dst), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%s, %s", gir->city, gir->region);
+                        GeoIPRecord_delete(gir);
+                    }
+                }
+                break;
+            case IP_GEOIP_DST_COUNTRY:
+                if (isIP && __gi) {
+                    inet_ntop(AF_INET, &(ipHeader->ip_dst), addr, INET_ADDRSTRLEN);
+                    gir = GeoIP_record_by_name(__gi, (const char *)addr);
+                    if (gir != NULL) {
+                        snprintf(ptr, len, "%s", gir->country_name);
                         GeoIPRecord_delete(gir);
                     }
                 }
