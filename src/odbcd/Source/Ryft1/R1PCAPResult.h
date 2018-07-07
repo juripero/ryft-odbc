@@ -85,7 +85,7 @@ const string __httpVerbs = "OPTIONS,GET,HEAD,POST,PUT,DELETE,TRACE,CONNECT";
 const char whitespace[] = " \f\n\r\t\v";
 
 #define is_whitespace(c) \
-    ((!c) || strchr(whitespace, (c)))
+    ((c) && strchr(whitespace, (c)))
 
 struct membuf : std::streambuf
 {
@@ -94,11 +94,22 @@ struct membuf : std::streambuf
     }
 };
 
+typedef bool (*comparitor)(const struct ether_addr *a1, const struct ether_addr *a2);
+
+typedef struct {
+    struct ether_addr _addr;
+    unsigned char _sig;
+    comparitor _comparitor;
+    string _manuf;
+} MANUF;
+typedef vector<MANUF> MANUFS;
+
 class RyftOne_PCAPResult : public IQueryResult {
 public:
-    RyftOne_PCAPResult(ILogger *log, string geoipPath) : IQueryResult(log) 
+    RyftOne_PCAPResult(ILogger *log, string geoipPath, string manufPath) : IQueryResult(log) 
     { 
-        __gi = GeoIP_open(geoipPath.c_str(), GEOIP_INDEX_CACHE); 
+        __gi = GeoIP_open(geoipPath.c_str(), GEOIP_INDEX_CACHE);
+        __loadManufs(manufPath);
     }
    ~RyftOne_PCAPResult() 
     { 
@@ -121,12 +132,17 @@ private:
 
     void __loadHttpRequest(char *ptr, size_t len, string& method, string& uri, map<string, string>& headers);
 
+    void __loadManufs(string& manufPath);
+    bool __getManufAddr(char *ptr, size_t len, const struct ether_addr *);
+
     vector<int> __colQuantity;
 
     pcap_t *__pcap;
     char __errbuf[PCAP_ERRBUF_SIZE];
 
     GeoIP *__gi;
+
+    MANUFS __manufs[256];
 };
 #endif
 

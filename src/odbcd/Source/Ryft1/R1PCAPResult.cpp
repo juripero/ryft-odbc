@@ -226,6 +226,8 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             case ETH_SRC_RESOLVED:
                 if(0 == ether_ntohost(ptr, (const struct ether_addr *)&etherHeader->ether_shost))
                     break;
+                if (__getManufAddr(ptr, len, (const struct ether_addr *)&etherHeader->ether_shost))
+                    break;
                 // fallthrough
             case ETH_SRC:
                 snprintf(ptr, len, "%02x:%02x:%02x:%02x:%02x:%02x",
@@ -234,6 +236,8 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 break;
             case ETH_DST_RESOLVED:
                 if (0 == ether_ntohost(ptr, (const struct ether_addr *)&etherHeader->ether_dhost))
+                    break;
+                if (__getManufAddr(ptr, len, (const struct ether_addr *)&etherHeader->ether_dhost))
                     break;
                 // fallthrough
             case ETH_DST:
@@ -505,4 +509,298 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
             headers[dup] = token;
         free(dup);
     }
+}
+
+void insert_in_list(MANUF& manuf, MANUFS& list)
+{
+    // insert from most significant to least significant
+    MANUFS::iterator itr;
+    for (itr = list.begin(); itr != list.end(); itr++) {
+        if (manuf._sig > itr->_sig) {
+            list.insert(itr, manuf);
+            return;
+        }
+    }
+    list.push_back(manuf);
+}
+
+bool comparitor16(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]))
+        return true;
+
+    return false;
+}
+
+bool comparitor24(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]))
+        return true;
+
+    return false;
+}
+
+bool comparitor25(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        ((a1->ether_addr_octet[3] & 0x80) == (a2->ether_addr_octet[3] & 0x80)))
+        return true;
+
+    return false;
+}
+
+bool comparitor28(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        ((a1->ether_addr_octet[3] & 0xF0) == (a2->ether_addr_octet[3] & 0xF0)))
+        return true;
+
+    return false;
+}
+
+bool comparitor32(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        (a1->ether_addr_octet[3] == a2->ether_addr_octet[3]))
+        return true;
+
+    return false;
+}
+
+bool comparitor36(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        (a1->ether_addr_octet[3] == a2->ether_addr_octet[3]) &&
+        ((a1->ether_addr_octet[4] & 0xF0) == (a2->ether_addr_octet[4] & 0xF0)))
+        return true;
+
+    return false;
+}
+
+bool comparitor40(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        (a1->ether_addr_octet[3] == a2->ether_addr_octet[3]) &&
+        (a1->ether_addr_octet[4] == a2->ether_addr_octet[4]))
+        return true;
+
+    return false;
+}
+
+bool comparitor44(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        (a1->ether_addr_octet[3] == a2->ether_addr_octet[3]) &&
+        (a1->ether_addr_octet[4] == a2->ether_addr_octet[4]) &&
+        ((a1->ether_addr_octet[5] & 0xF0) == (a2->ether_addr_octet[5] & 0xF0)))
+        return true;
+
+    return false;
+}
+
+bool comparitor45(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        (a1->ether_addr_octet[3] == a2->ether_addr_octet[3]) &&
+        (a1->ether_addr_octet[4] == a2->ether_addr_octet[4]) &&
+        ((a1->ether_addr_octet[5] & 0xF8) == (a2->ether_addr_octet[5] & 0xF8)))
+        return true;
+
+    return false;
+}
+
+bool comparitor48(const struct ether_addr *a1, const struct ether_addr *a2)
+{
+    if ((a1->ether_addr_octet[0] == a2->ether_addr_octet[0]) &&
+        (a1->ether_addr_octet[1] == a2->ether_addr_octet[1]) &&
+        (a1->ether_addr_octet[2] == a2->ether_addr_octet[2]) &&
+        (a1->ether_addr_octet[3] == a2->ether_addr_octet[3]) &&
+        (a1->ether_addr_octet[4] == a2->ether_addr_octet[4]) &&
+        (a1->ether_addr_octet[5] == a2->ether_addr_octet[5]))
+        return true;
+
+    return false;
+}
+
+void RyftOne_PCAPResult::__loadManufs(string& manufPath)
+{
+    char readfile[256];
+    char eth[128];
+    char manufacturer[128];
+    char *pstr;
+    MANUF manuf;
+
+    FILE *manufFile = fopen(manufPath.c_str(), "r");
+    if (manufFile == NULL)
+        return;
+
+    while (fgets(readfile, sizeof(readfile), manufFile) != NULL) {
+
+        pstr = readfile;
+        while (is_whitespace(*pstr))
+            pstr++;
+        if (!*pstr)
+            continue;
+        if (*pstr == '#')
+            continue;
+        sscanf(pstr, "%s\t%s", eth, manufacturer);
+
+        int sig = 24;
+        memset(&manuf._addr, 0, sizeof(struct ether_addr));
+        int elements = sscanf(eth, "%x:%x:%x:%x:%x:%x/%d",
+            &manuf._addr.ether_addr_octet[0], &manuf._addr.ether_addr_octet[1], &manuf._addr.ether_addr_octet[2],
+            &manuf._addr.ether_addr_octet[3], &manuf._addr.ether_addr_octet[4], &manuf._addr.ether_addr_octet[5],
+            &sig);
+        if (elements == 3 || elements == 7) {
+            // matched pattern xx:xx:xx OR xx:xx:xx:xx:xx:xx/sig 
+            manuf._sig = sig;
+        }
+        else {
+            elements = sscanf(eth, "%x-%x-%x-%x-%x-%x/%d",
+                &manuf._addr.ether_addr_octet[0], &manuf._addr.ether_addr_octet[1], &manuf._addr.ether_addr_octet[2],
+                &manuf._addr.ether_addr_octet[3], &manuf._addr.ether_addr_octet[4], &manuf._addr.ether_addr_octet[5],
+                &sig);
+            if (elements == 3) {
+                // matched pattern xx-xx-xx
+                manuf._sig = 24;
+            }
+            else if (elements == 6) {
+                // matched pattern xx-xx-xx-xx-xx-xx
+                manuf._sig = 48;
+            }
+            else if (elements == 7) {
+                // matched pattern xx-xx-xx-xx-xx-xx/sig
+                manuf._sig = sig;
+            }
+            else {
+                elements = sscanf(eth, "%x-%x-%x-%x-%x/%d",
+                    &manuf._addr.ether_addr_octet[0], &manuf._addr.ether_addr_octet[1], &manuf._addr.ether_addr_octet[2],
+                    &manuf._addr.ether_addr_octet[3], &manuf._addr.ether_addr_octet[4], &sig);
+
+                if (elements == 6) {
+                    // matched pattern xx-xx-xx-xx-xx/sig
+                    manuf._sig = sig;
+                }
+                else {
+                    elements = sscanf(eth, "%x-%x-%x/%d",
+                        &manuf._addr.ether_addr_octet[0], &manuf._addr.ether_addr_octet[1], &manuf._addr.ether_addr_octet[2],
+                        &sig);
+
+                    if (elements == 4) {
+                        // matched pattern xx-xx-xx/sig
+                        manuf._sig = sig;
+                    }
+                    else
+                        continue;
+                }
+            }
+        }
+        manuf._manuf = manufacturer;
+        switch (manuf._sig) {
+        case 16:
+            manuf._comparitor = comparitor16;
+            break;
+        case 24:
+            manuf._comparitor = comparitor24;
+            break;
+        case 25:
+            manuf._comparitor = comparitor25;
+            break;
+        case 28:
+            manuf._comparitor = comparitor28;
+            break;
+        case 32:
+            manuf._comparitor = comparitor32;
+            break;
+        case 36:
+            manuf._comparitor = comparitor36;
+            break;
+        case 40:
+            manuf._comparitor = comparitor40;
+            break;
+        case 44:
+            manuf._comparitor = comparitor44;
+            break;
+        case 45:
+            manuf._comparitor = comparitor45;
+            break;
+        case 48:
+            manuf._comparitor = comparitor48;
+            break;
+        default:
+            DEBUG_LOG(__log, "RyftOne", "RyftOne_PCAPResult", "__loadManufs", "Count not find a comparitor for %d bits", manuf._sig);
+            break;
+        }
+
+        int idx = (manuf._addr.ether_addr_octet[0] + manuf._addr.ether_addr_octet[1]) % 0xFF;
+        insert_in_list(manuf, __manufs[idx]);
+    }
+
+    fclose(manufFile);
+}
+
+bool RyftOne_PCAPResult::__getManufAddr(char *ptr, size_t len, const struct ether_addr *a1)
+{
+    int idx = (a1->ether_addr_octet[0] + a1->ether_addr_octet[1]) % 0xFF;
+    MANUFS::iterator itr;
+    for (itr = __manufs[idx].begin(); itr != __manufs[idx].end(); itr++) {
+        if (itr->_comparitor(a1, &itr->_addr)) {
+            switch (itr->_sig) {
+            case 16:
+                snprintf(ptr, len, "%s_%02x:%02x:%02x:%02x",
+                    itr->_manuf.c_str(), a1->ether_addr_octet[2], a1->ether_addr_octet[3], a1->ether_addr_octet[4],
+                    a1->ether_addr_octet[5]);
+                break;
+            case 24:
+                snprintf(ptr, len, "%s_%02x:%02x:%02x",
+                    itr->_manuf.c_str(), a1->ether_addr_octet[3], a1->ether_addr_octet[4], a1->ether_addr_octet[5]);
+                break;
+            case 25:
+                snprintf(ptr, len, "%s_%02x:%02x:%02x",
+                    itr->_manuf.c_str(), a1->ether_addr_octet[3] & 0x7F, a1->ether_addr_octet[4], a1->ether_addr_octet[5]);
+                break;
+            case 28:
+                snprintf(ptr, len, "%s_%01x:%02x:%02x",
+                    itr->_manuf.c_str(), a1->ether_addr_octet[3] & 0x0F, a1->ether_addr_octet[4], a1->ether_addr_octet[5]);
+                break;
+            case 32:
+                snprintf(ptr, len, "%s_%02x:%02x", itr->_manuf.c_str(), a1->ether_addr_octet[4], a1->ether_addr_octet[5]);
+                break;
+            case 36:
+                snprintf(ptr, len, "%s_%01x:%02x", itr->_manuf.c_str(), a1->ether_addr_octet[4] & 0x0F, a1->ether_addr_octet[5]);
+                break;
+            case 40:
+                snprintf(ptr, len, "%s_%02x", itr->_manuf.c_str(), a1->ether_addr_octet[5]);
+                break;
+            case 44:
+                snprintf(ptr, len, "%s_%01x", itr->_manuf.c_str(), a1->ether_addr_octet[5] & 0x0F);
+                break;
+            case 45:
+                snprintf(ptr, len, "%s_%01x", itr->_manuf.c_str(), a1->ether_addr_octet[5] & 0x07);
+                break;
+            case 48:
+                snprintf(ptr, len, "%s", itr->_manuf.c_str());
+                break;
+            }
+            return true;
+        }
+    }
+    return false;
 }

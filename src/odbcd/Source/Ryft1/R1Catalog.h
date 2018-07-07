@@ -96,6 +96,7 @@ private:
     string __rootPath;
 
     string __geoipPath;
+    string __manufPath;
 
     int __lruMaxDepth;
 

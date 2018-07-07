@@ -151,6 +151,16 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
         }
         if (error != NULL)
             g_clear_error(&error);
+
+        // manuf file path
+        gchar *manufString;
+        manufString = g_key_file_get_string(keyfile, "PCAP", "manuf", &error);
+        if (manufString) {
+            __manufPath = manufString;
+            free(manufString);
+        }
+        if (error != NULL)
+            g_clear_error(&error);
     }
     if(error != NULL)
         g_clear_error(&error);
@@ -311,7 +321,7 @@ IQueryResult *RyftOne_Database::OpenTable(string& in_table)
             result = new RyftOne_CSVResult(__log);
             break;
         case dataType_PCAP:
-            result = new RyftOne_PCAPResult(__log, __geoipPath);
+            result = new RyftOne_PCAPResult(__log, __geoipPath, __manufPath);
             break;
         default:
             result = new RyftOne_RAWResult(__log);

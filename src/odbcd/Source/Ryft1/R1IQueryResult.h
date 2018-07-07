@@ -817,9 +817,9 @@ protected:
 
     RyftOne_Columns __cols;
 
-private:
     ILogger* __log;
 
+private:
     string __restServer;
     string __restToken;
     string __restPath;
