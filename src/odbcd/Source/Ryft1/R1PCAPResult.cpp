@@ -483,10 +483,12 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
     if (!reqLine.empty()) {
         dup = strdup(reqLine.c_str());
         token = strtok(dup, " ");
-        method = token;
-        token = strtok(NULL, " ");
-        if(token)
-            uri = token;
+        if (token) {
+            method = token;
+            token = strtok(NULL, " ");
+            if (token)
+                uri = token;
+        }
         free(dup);
     }
     if (method.empty() || (__httpVerbs.find(method) == string::npos))

@@ -81,6 +81,8 @@ private:
 
     vector<__catalog_entry__> __catalog;
 
+    struct stat __settings_fstat;
+
     int __authType;
     string __ldapServer;
     string __ldapUser;
@@ -99,6 +101,7 @@ private:
     string __manufPath;
 
     int __lruMaxDepth;
+    long __maxMatchCount;
 
     // Reference to the ILogger. (NOT OWN)
     ILogger* __log;

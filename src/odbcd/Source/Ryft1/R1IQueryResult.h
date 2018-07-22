@@ -87,6 +87,11 @@ __inline void CopyEscapedLiteral(string& dest, string& src)
         ;
     }
 }
+
+#define GLOB_DATA       0
+#define GLOB_METAFILE   1
+#define GLOB_SETTINGS   2
+
 #define SC_NUMERIC  0
 #define SC_TEXT     1
 #define SC_REAL     2
@@ -159,7 +164,8 @@ public:
    }
 
     void OpenQuery(string& in_name, vector<__catalog_entry__>::iterator in_catentry, 
-        string in_server, string in_token, string in_restPath, string in_rootPath, int in_lruMaxDepth)
+        string in_server, string in_token, string in_restPath, string in_rootPath, int in_lruMaxDepth, 
+        long in_maxMatchCount, struct stat *in_settings_fstat)
     {
         __query.clear();
 
@@ -168,6 +174,8 @@ public:
         __restPath = in_restPath;
         __rootPath = in_rootPath;
         __lruMaxDepth = in_lruMaxDepth;
+        __maxMatchCount = in_maxMatchCount;
+        __settings_fstat = *in_settings_fstat;
 
         // JSON, XML, Unstructured
         __dataType = in_catentry->meta_config.data_type;
@@ -685,6 +693,7 @@ protected:
         bool ret = false;
         string tableName;
         bool isPCAP = IsPCAPDatabase();
+        bool useLimit = false;
 
         if (query.empty()) {
             if (isPCAP) {
@@ -692,6 +701,9 @@ protected:
             }
             else
                 query = "(RECORD CONTAINS ?)";
+
+            // max count limit applies for unrestricted selects
+            useLimit = (__maxMatchCount != 0);
         }
 
         INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Executing query = %s", query.c_str());
@@ -743,7 +755,12 @@ protected:
                 url += "&index=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
                 url += "&local=true";
             }
-
+            if (useLimit) {
+                char max_count[128];
+                snprintf(max_count, sizeof(max_count),
+                    "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d", __maxMatchCount);
+                url += max_count;
+            }
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
             char resultsPath[PATH_MAX];
@@ -820,12 +837,15 @@ protected:
     ILogger* __log;
 
 private:
+    struct stat __settings_fstat;
+
     string __restServer;
     string __restToken;
     string __restPath;
     string __rootPath;
 
     int __lruMaxDepth;
+    long __maxMatchCount;
 
     inline void __odbcRoot(char *path) {
         strcpy(path, __rootPath.c_str());
@@ -936,12 +956,21 @@ private:
             return false;
 
         // store fstat for .meta.table
-        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,1)", tableName.c_str(), __metafile_stat.st_dev, __metafile_stat.st_ino, __metafile_stat.st_mtime);
+        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,%d)", tableName.c_str(), __metafile_stat.st_dev, __metafile_stat.st_ino, __metafile_stat.st_mtime, GLOB_METAFILE);
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
             sqlite3_free(errp);
         if(sqlret != SQLITE_OK) 
+            return false;
+
+        // store fstat for settings file
+        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,%d)", tableName.c_str(), __settings_fstat.st_dev, __settings_fstat.st_ino, __settings_fstat.st_mtime, GLOB_SETTINGS);
+        sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
+        sqlite3_free(sql);
+        if (errp)
+            sqlite3_free(errp);
+        if (sqlret != SQLITE_OK)
             return false;
 
         int fd;
@@ -953,7 +982,7 @@ private:
                 return false;
             fstat(fd, &sb);
             close(fd);
-            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,0)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
+            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,%d)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime, GLOB_DATA);
             sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
             sqlite3_free(sql);
             if(errp)
@@ -1067,7 +1096,7 @@ private:
         sqlite3_free_table(prows);
 
         // check stat against .meta.table
-        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = 1", tableName.c_str());
+        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = %d", tableName.c_str(), GLOB_METAFILE);
         sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -1088,6 +1117,34 @@ private:
             (atoll((const char *)prows[(ncols) + 2]) != (long long)__metafile_stat.st_mtime)) {
 
             INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss due to __METAFILE_STAT update");
+            sqlite3_free_table(prows);
+            __dropTable(query);
+            return false;
+        }
+        sqlite3_free_table(prows);
+
+        // check stat against settings file
+        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = %d", tableName.c_str(), GLOB_SETTINGS);
+        sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
+        sqlite3_free(sql);
+        if (errp)
+            sqlite3_free(errp);
+        if (sqlret != SQLITE_OK) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "Error loading file __SETTINGS_STAT");
+            __dropTable(query);
+            return false;
+        }
+        if ((nrows) != 1) {
+            sqlite3_free_table(prows);
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "nrows(%d) != 1 on __SETTINGS_STAT", nrows);
+            __dropTable(query);
+            return false;
+        }
+        if ((atoll((const char *)prows[(ncols)+0]) != (long long)__settings_fstat.st_dev) ||
+            (atoll((const char *)prows[(ncols)+1]) != (long long)__settings_fstat.st_ino) ||
+            (atoll((const char *)prows[(ncols)+2]) != (long long)__settings_fstat.st_mtime)) {
+
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss due to __SETTINGS_STAT update");
             sqlite3_free_table(prows);
             __dropTable(query);
             return false;
