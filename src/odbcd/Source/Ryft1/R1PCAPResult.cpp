@@ -46,6 +46,27 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colitr->m_colAlias.compare("eth.dst_resolved")) {
             colQuantity = ETH_DST_RESOLVED;
         }
+        else if (!colitr->m_colAlias.compare("vlan.priority")) {
+            colQuantity = VLAN_PRIORITY;
+        }
+        else if (!colitr->m_colAlias.compare("vlan.cfi")) {
+            colQuantity = VLAN_CFI;
+        }
+        else if (!colitr->m_colAlias.compare("vlan.id")) {
+            colQuantity = VLAN_ID;
+        }
+        else if (!colitr->m_colAlias.compare("vlan.len")) {
+            colQuantity = VLAN_LEN;
+        }
+        else if (!colitr->m_colAlias.compare("vlan.etype")) {
+            colQuantity = VLAN_ETYPE;
+        }
+        else if (!colitr->m_colAlias.compare("vlan.padding")) {
+            colQuantity = VLAN_PADDING;
+        }
+        else if (!colitr->m_colAlias.compare("vlan.trailer")) {
+            colQuantity = VLAN_TRAILER;
+        }
         else if (!colitr->m_colAlias.compare("ip.src")) {
             colQuantity = IP_SRC;
         }
@@ -143,27 +164,45 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
     __idxCurRow++;
     if (pkt = pcap_next(__pcap, &hdr)) {
         const struct ether_header* etherHeader;
+        const struct vlan_hdr* vlanHeader;
         const struct ip* ipHeader;
         const struct tcphdr* tcpHeader;
         const struct udphdr* udpHeader;
+        unsigned short ethType;
+        unsigned short traverse = 0;
         int payloadLen = 0;
         u_char *payloadData = NULL;
         char addr[INET_ADDRSTRLEN];
         GeoIPRecord *gir;
-        etherHeader = (struct ether_header *)pkt;
-        bool isIP = (ntohs(etherHeader->ether_type) == ETHERTYPE_IP);
-        ipHeader = (struct ip *)(pkt + sizeof(struct ether_header));
+
+        etherHeader = (struct ether_header *)(pkt + traverse);
+        traverse += sizeof(struct ether_header);
+        ethType = ntohs(etherHeader->ether_type);
+        bool isVLAN = (ethType == ETHERTYPE_VLAN);
+        if (isVLAN) {
+            vlanHeader = (struct vlan_hdr *)(pkt + traverse);
+            traverse += sizeof(struct vlan_hdr);
+            ethType = ntohs(vlanHeader->h_vlan_encapsulated_proto);
+        }
+        bool isIP = (ethType == ETHERTYPE_IP);
+        if (isIP) {
+            ipHeader = (struct ip *)(pkt + traverse);
+            traverse += sizeof(struct ip);
+        }
+
         bool isTCP = isIP && (ipHeader->ip_p == IPPROTO_TCP);
         bool isUDP = isIP && (ipHeader->ip_p == IPPROTO_UDP);
         if (isTCP) {
-            tcpHeader = (tcphdr *)(pkt + sizeof(struct ether_header) + sizeof(struct ip));
-            payloadLen = hdr.len - (sizeof(struct ether_header) + sizeof(struct ip) + sizeof(struct tcphdr));
-            payloadData = (u_char *)(pkt + (sizeof(struct ether_header) + sizeof(struct ip) + sizeof(struct tcphdr)));
+            tcpHeader = (tcphdr *)(pkt + traverse);
+            traverse += sizeof(struct tcphdr);
+            payloadLen = hdr.len - traverse;
+            payloadData = (u_char *)(pkt + traverse);
         }
         else if (isUDP) {
-            udpHeader = (udphdr *)(pkt + sizeof(struct ether_header) + sizeof(struct ip));
+            udpHeader = (udphdr *)(pkt + traverse);
+            traverse += sizeof(struct udphdr);
             payloadLen = udpHeader->len;
-            payloadData = (u_char *)(pkt + (sizeof(struct ether_header) + sizeof(struct ip) + sizeof(struct udphdr)));
+            payloadData = (u_char *)(pkt + traverse);
         }
         bool isHTTPReq = isTCP && (ntohs(tcpHeader->dest) == 80 || ntohs(tcpHeader->dest) == 8008 || 
                 ntohs(tcpHeader->dest) == 8080);
@@ -198,6 +237,8 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 int d_port = 0;
                 struct servent *_servent;
                 string proto = "eth:ethertype";
+                if (isVLAN)
+                    proto += ":vlan:ethertype";
                 if (isIP)
                     proto += ":ip";
                 if (isTCP) {
@@ -244,6 +285,40 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 snprintf(ptr, len, "%02x:%02x:%02x:%02x:%02x:%02x",
                     etherHeader->ether_dhost[0], etherHeader->ether_dhost[1], etherHeader->ether_dhost[2],
                     etherHeader->ether_dhost[3], etherHeader->ether_dhost[4], etherHeader->ether_dhost[5]);
+                break;
+            case VLAN_PRIORITY:
+                if (isVLAN) {
+                    unsigned short us;
+                    us = ntohs(vlanHeader->h_vlan_TCI);
+                    us >>= 13;
+                    // First 3 bits of the TCI are the priority
+                    snprintf(ptr, len, "%d", us);
+                }
+                break;
+            case VLAN_CFI:
+                if (isVLAN) {
+                    unsigned short us;
+                    us = ntohs(vlanHeader->h_vlan_TCI);
+                    // 4th bit of the TCI is the CFI flag
+                    snprintf(ptr, len, "%d", (us & 0x1000) ? 1 : 0);
+                }
+                break;
+            case VLAN_ID:
+                if (isVLAN) {
+                    unsigned short us;
+                    us = ntohs(vlanHeader->h_vlan_TCI);
+                    // ID is last 12 bits of the TCI
+                    snprintf(ptr, len, "%d", (us & 0xFFF));
+                }
+                break;
+            case VLAN_LEN:
+                break;
+            case VLAN_ETYPE:
+                if (isVLAN)
+                    snprintf(ptr, len, "%d", ethType);
+                break;
+            case VLAN_PADDING:
+            case VLAN_TRAILER:
                 break;
             case IP_SRC:
                 if (isIP)

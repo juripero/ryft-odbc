@@ -11,6 +11,7 @@
 #include <string.h>
 #include <pcap.h>
 #include <net/ethernet.h>
+#include <linux/if_vlan.h>
 #include <netinet/ether.h>
 #include <netinet/ip.h>
 #include <netinet/in.h>
@@ -29,20 +30,41 @@
 #include <map>
 using namespace std;
 
+
+/*
+* 	struct vlan_hdr - vlan header
+* 	@h_vlan_TCI: priority and VLAN ID
+*	@h_vlan_encapsulated_proto: packet type ID or len
+*/
+struct vlan_hdr {
+    __be16	h_vlan_TCI;
+    __be16	h_vlan_encapsulated_proto;
+};
+
+
 #include "R1IQueryResult.h"
 
 #define DOMAIN_FRAME            0x0000
 #define DOMAIN_ETHER            0x0100
-#define DOMAIN_IP               0x0200
-#define DOMAIN_LAYER4           0x0400
-#define DOMAIN_TCP              0x0800
-#define DOMAIN_UDP              0x1000
-#define DOMAIN_HTTP             0x2000
+#define DOMAIN_VLAN             0x0200
+#define DOMAIN_IP               0x0400
+#define DOMAIN_LAYER4           0x0800
+#define DOMAIN_TCP              0x1000
+#define DOMAIN_UDP              0x2000
+#define DOMAIN_HTTP             0x4000
 
 #define FRAME_TIME              DOMAIN_FRAME | 1
 #define FRAME_NUMBER            DOMAIN_FRAME | 2
 #define FRAME_LEN               DOMAIN_FRAME | 3
 #define FRAME_PROTOCOLS         DOMAIN_FRAME | 4
+
+#define VLAN_PRIORITY           DOMAIN_VLAN | 1
+#define VLAN_CFI                DOMAIN_VLAN | 2
+#define VLAN_ID                 DOMAIN_VLAN | 3
+#define VLAN_LEN                DOMAIN_VLAN | 4
+#define VLAN_ETYPE              DOMAIN_VLAN | 5
+#define VLAN_PADDING            DOMAIN_VLAN | 6
+#define VLAN_TRAILER            DOMAIN_VLAN | 7
 
 #define ETH_DST                 DOMAIN_ETHER | 1
 #define ETH_DST_RESOLVED        DOMAIN_ETHER | 2
