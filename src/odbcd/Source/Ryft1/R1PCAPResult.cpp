@@ -67,6 +67,18 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colitr->m_colAlias.compare("vlan.trailer")) {
             colQuantity = VLAN_TRAILER;
         }
+        else if (!colitr->m_colAlias.compare("mpls.label")) {
+            colQuantity = MPLS_LABEL;
+        }
+        else if (!colitr->m_colAlias.compare("mpls.exp")) {
+            colQuantity = MPLS_EXP;
+        }
+        else if (!colitr->m_colAlias.compare("mpls.bottom")) {
+            colQuantity = MPLS_BOTTOM;
+        }
+        else if (!colitr->m_colAlias.compare("mpls.ttl")) {
+            colQuantity = MPLS_TTL;
+        }
         else if (!colitr->m_colAlias.compare("ip.src")) {
             colQuantity = IP_SRC;
         }
@@ -97,6 +109,27 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colitr->m_colAlias.compare("ip.geoip.dst_country")) {
             colQuantity = IP_GEOIP_DST_COUNTRY;
         }
+        else if (!colitr->m_colAlias.compare("ip.ttl")) {
+            colQuantity = IP_TTL;
+        }
+        else if (!colitr->m_colAlias.compare("icmp.type")) {
+            colQuantity = ICMP_TYPE;
+        }
+        else if (!colitr->m_colAlias.compare("icmp.code")) {
+            colQuantity = ICMP_CODE;
+        }
+        else if (!colitr->m_colAlias.compare("icmp.checksum")) {
+            colQuantity = ICMP_CHECKSUM;
+        }
+        else if (!colitr->m_colAlias.compare("icmp.ident")) {
+            colQuantity = ICMP_IDENT;
+        }
+        else if (!colitr->m_colAlias.compare("icmp.seq_le")) {
+            colQuantity = ICMP_SEQ_LE;
+        }
+        else if (!colitr->m_colAlias.compare("icmp.data.data")) {
+            colQuantity = ICMP_DATA;
+        }
         else if (!colitr->m_colAlias.compare("payload")) {
             colQuantity = PAYLOAD;
         }
@@ -114,6 +147,12 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         }
         else if (!colitr->m_colAlias.compare("tcp.seq")) {
             colQuantity = TCP_SEQ;
+        }
+        else if (!colitr->m_colAlias.compare("tcp.flags.res")) {
+            colQuantity = TCP_FLAGS_RES;
+        }
+        else if (!colitr->m_colAlias.compare("tcp.flags.syn")) {
+            colQuantity = TCP_FLAGS_SYN;
         }
         else if (!colitr->m_colAlias.compare("udp.srcport")) {
             colQuantity = UDP_SRCPORT;
@@ -165,6 +204,7 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
     if (pkt = pcap_next(__pcap, &hdr)) {
         const struct ether_header* etherHeader;
         const struct vlan_hdr* vlanHeader;
+        struct mpls_label mplsHeader;
         const struct ip* ipHeader;
         const struct tcphdr* tcpHeader;
         const struct udphdr* udpHeader;
@@ -184,17 +224,23 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             traverse += sizeof(struct vlan_hdr);
             ethType = ntohs(vlanHeader->h_vlan_encapsulated_proto);
         }
+        bool isMPLS = (ethType == ETHERTYPE_MPLS);
+        if (isMPLS) {
+            mplsHeader.entry = ntohl(*(__be32 *)(pkt + traverse));
+            traverse += sizeof(mpls_label);
+            ethType = ETHERTYPE_IP;
+        }
         bool isIP = (ethType == ETHERTYPE_IP);
         if (isIP) {
             ipHeader = (struct ip *)(pkt + traverse);
-            traverse += sizeof(struct ip);
+            traverse += ipHeader->ip_hl * 4;
         }
 
         bool isTCP = isIP && (ipHeader->ip_p == IPPROTO_TCP);
         bool isUDP = isIP && (ipHeader->ip_p == IPPROTO_UDP);
         if (isTCP) {
             tcpHeader = (tcphdr *)(pkt + traverse);
-            traverse += sizeof(struct tcphdr);
+            traverse += tcpHeader->th_off * 4; // number of 32bit words in the TCP header
             payloadLen = hdr.len - traverse;
             payloadData = (u_char *)(pkt + traverse);
         }
@@ -320,6 +366,22 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             case VLAN_PADDING:
             case VLAN_TRAILER:
                 break;
+            case MPLS_LABEL:
+                if (isMPLS)
+                    snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_LABEL_MASK) >> MPLS_LS_LABEL_SHIFT);
+                break;
+            case MPLS_EXP:
+                if (isMPLS)
+                    snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_TC_MASK) >> MPLS_LS_TC_SHIFT);
+                break;
+            case MPLS_BOTTOM:
+                if (isMPLS)
+                    snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_S_MASK) >> MPLS_LS_S_SHIFT);
+                break;
+            case MPLS_TTL:
+                if (isMPLS)
+                    snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_TTL_MASK) >> MPLS_LS_TTL_SHIFT);
+                break;
             case IP_SRC:
                 if (isIP)
                     inet_ntop(AF_INET, &(ipHeader->ip_src), ptr, min(INET_ADDRSTRLEN, len));
@@ -408,6 +470,18 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                     }
                 }
                 break;
+            case IP_TTL:
+                if (isIP) {
+                    snprintf(ptr, len, "%d", ipHeader->ip_ttl);
+                }
+                break;
+            case ICMP_TYPE:
+            case ICMP_CODE:
+            case ICMP_CHECKSUM:
+            case ICMP_IDENT:
+            case ICMP_SEQ_LE:
+            case ICMP_DATA:
+                break;
             case PAYLOAD: {
                 if (payloadLen) {
                     string payload(payloadLen, '.');
@@ -438,6 +512,14 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             case TCP_SEQ:
                 if (isTCP)
                     snprintf(ptr, len, "%ud", ntohl(tcpHeader->seq));
+                break;
+            case TCP_FLAGS_RES:
+                if (isTCP)
+                    snprintf(ptr, len, "%d", tcpHeader->res1);
+                break;
+            case TCP_FLAGS_SYN:
+                if (isTCP)
+                    snprintf(ptr, len, "%d", tcpHeader->syn);
                 break;
             case UDP_SRCPORT:
                 if (isUDP)
@@ -554,7 +636,7 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
     string reqLine;
     char *dup;
     char *token;
-    getline(in, reqLine);
+    my_getline(in, reqLine);
     if (!reqLine.empty()) {
         dup = strdup(reqLine.c_str());
         token = strtok(dup, " ");
@@ -571,19 +653,20 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
     if (uri.empty())
         return;
     string header;
-    while (getline(in, header)) {
+    while (true) {
+        my_getline(in, header);
         size_t idx;
-        if ((idx = header.rfind('\r')) != string::npos)
-            header = header.substr(0, idx);
-        if (header.empty())
+        if (header == "\r\n")
             break;
         dup = strdup(header.c_str());
         token = strtok(dup, ":");
-        token = strtok(NULL, "");
-        while (is_whitespace(*token))
-            token++;
-        if(token)
-            headers[dup] = token;
+        if (token) {
+            token = strtok(NULL, "");
+            while (is_whitespace(*token))
+                token++;
+            if (token)
+                headers[dup] = token;
+        }
         free(dup);
     }
 }
