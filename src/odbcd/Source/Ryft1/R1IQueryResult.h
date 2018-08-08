@@ -769,7 +769,7 @@ protected:
             if (useLimit) {
                 char max_count[128];
                 snprintf(max_count, sizeof(max_count),
-                    "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d", __maxMatchCount);
+                    "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d&backend-option=-vv", __maxMatchCount);
                 url += max_count;
             }
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());

@@ -409,7 +409,7 @@ bool R1FilterHandler::PassdownSimpleComparison(
 
     if (m_table->IsPCAPDatabase() && columnName != L"payload") {
 
-        if ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) && m_table->HasResultThinner(columnName)) {
+        if (((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE)) && m_table->HasResultThinner(columnName)) {
 
             // Contruct the filter string based upon built in filters
             ConstructPCAPThinner(columnName, literalVal, in_compOp);
