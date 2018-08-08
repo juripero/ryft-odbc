@@ -295,6 +295,17 @@ namespace RyftOne
             const simba_wstring& in_exprValue,
             Simba::SQLEngine::SEComparisonType in_compOp);
 
+        /// @brief Construct the PCAP filter string. 
+        ///
+        /// @param in_columnName        Name of the column. Cannot be NULL.
+        /// @param in_exprValue         Right side expression value as a simba_wstring.
+        /// @param in_compOp            Comparison operation.  Cannot be NULL.
+        void ConstructPCAPThinner(
+            simba_wstring in_columnName,
+            const simba_wstring& in_exprValue,
+            Simba::SQLEngine::SEComparisonType in_compOp);
+
+
         // The table on which to apply filters. (NOT OWN)
         Simba::Support::SharedPtr<R1Table> m_table;
 

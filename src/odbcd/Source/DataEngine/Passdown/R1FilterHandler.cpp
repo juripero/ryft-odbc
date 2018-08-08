@@ -409,9 +409,17 @@ bool R1FilterHandler::PassdownSimpleComparison(
 
     if (m_table->IsPCAPDatabase() && columnName != L"payload") {
 
-        if ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) ||
-            (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
-            (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
+        if ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) && m_table->HasResultThinner(columnName)) {
+
+            // Contruct the filter string based upon built in filters
+            ConstructPCAPThinner(columnName, literalVal, in_compOp);
+
+            m_isPassedDown = true;
+            return true;
+        }
+        else if ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) ||
+                 (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
+                 (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
 
             // Construct the filter string for input to Ryft.
             ConstructPCAPComparisonFilter(columnName, literalVal, in_compOp);
@@ -1288,4 +1296,26 @@ void R1FilterHandler::ConstructPCAPComparisonFilter(
 
     m_filter += searchLiteral;
     m_filter += ")";
+}
+
+void R1FilterHandler::ConstructPCAPThinner(
+    simba_wstring in_columnName,
+    const simba_wstring& in_exprValue,
+    Simba::SQLEngine::SEComparisonType in_compOp)
+{
+    string searchLiteral = in_exprValue.GetAsPlatformString();
+    string constraint;
+    char query[1024];
+
+    switch (in_compOp) {
+    case SE_COMP_EQ:
+        constraint = m_table->GetResultThinnerQuery(in_columnName, FILTER_EQ);
+        break;
+    case SE_COMP_NE:
+        constraint = m_table->GetResultThinnerQuery(in_columnName, FILTER_NE);
+        break;
+    }
+
+    snprintf(query, sizeof(query), constraint.c_str(), searchLiteral.c_str());
+    m_filter += query;
 }

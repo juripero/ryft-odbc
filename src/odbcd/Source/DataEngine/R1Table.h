@@ -181,7 +181,13 @@ namespace RyftOne
 
         bool IsStructuredType();
 
+
+        // PCAP
+
         bool IsPCAPDatabase();
+
+        bool HasResultThinner(simba_wstring& columnName);
+        string GetResultThinnerQuery(simba_wstring& columnName, simba_int16 type);
 
     // Protected ===================================================================================
     public:

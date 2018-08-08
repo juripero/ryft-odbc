@@ -289,6 +289,18 @@ bool R1Table::IsPCAPDatabase()
     return m_result->IsPCAPDatabase();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+bool R1Table::HasResultThinner(simba_wstring& columnName)
+{
+    return m_result->HasResultThinner(columnName.GetAsPlatformString());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+string R1Table::GetResultThinnerQuery(simba_wstring& columnName, simba_int16 type)
+{
+    return m_result->GetResultThinnerQuery(columnName.GetAsPlatformString(), type);
+}
+
 // Protected =======================================================================================
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 R1Table::~R1Table()

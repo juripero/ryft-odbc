@@ -21,164 +21,212 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
 
     RyftOne_Columns::iterator colitr;
     for (colitr = __cols.begin(); colitr != __cols.end(); colitr++) {
-        int colQuantity = 0;
-        if (!colitr->m_colAlias.compare("frame.time")) {
-            colQuantity = FRAME_TIME;
+        long colQuantity = 0;
+        string colAlias = colitr->m_colAlias;
+        size_t idx = colAlias.find_first_of('.');
+        if (idx != string::npos) {
+            string colFiltered = colAlias.substr(0, idx);
+            if (!colFiltered.compare("filtered")) {
+                colQuantity = FLAG_FILTER;
+                colAlias = colAlias.substr(idx + 1);
+            }
         }
-        else if (!colitr->m_colAlias.compare("frame.len")) {
-            colQuantity = FRAME_LEN;
+        if (!colAlias.compare("frame.time")) {
+            colQuantity |= FRAME_TIME;
         }
-        else if (!colitr->m_colAlias.compare("frame.number")) {
-            colQuantity = FRAME_NUMBER;
+        else if (!colAlias.compare("frame.len")) {
+            colQuantity |= FRAME_LEN;
         }
-        else if (!colitr->m_colAlias.compare("frame.protocols")) {
-            colQuantity = FRAME_PROTOCOLS;
+        else if (!colAlias.compare("frame.number")) {
+            colQuantity |= FRAME_NUMBER;
         }
-        else if (!colitr->m_colAlias.compare("eth.src")) {
-            colQuantity = ETH_SRC;
+        else if (!colAlias.compare("frame.protocols")) {
+            colQuantity |= FRAME_PROTOCOLS;
         }
-        else if (!colitr->m_colAlias.compare("eth.src_resolved")) {
-            colQuantity = ETH_SRC_RESOLVED;
+        else if (!colAlias.compare("eth.src")) {
+            colQuantity |= ETH_SRC;
         }
-        else if (!colitr->m_colAlias.compare("eth.dst")) {
-            colQuantity = ETH_DST;
+        else if (!colAlias.compare("eth.src_resolved")) {
+            colQuantity |= ETH_SRC_RESOLVED;
         }
-        else if (!colitr->m_colAlias.compare("eth.dst_resolved")) {
-            colQuantity = ETH_DST_RESOLVED;
+        else if (!colAlias.compare("eth.dst")) {
+            colQuantity |= ETH_DST;
         }
-        else if (!colitr->m_colAlias.compare("vlan.priority")) {
-            colQuantity = VLAN_PRIORITY;
+        else if (!colAlias.compare("eth.dst_resolved")) {
+            colQuantity |= ETH_DST_RESOLVED;
         }
-        else if (!colitr->m_colAlias.compare("vlan.cfi")) {
-            colQuantity = VLAN_CFI;
+        else if (!colAlias.compare("vlan.priority")) {
+            colQuantity |= VLAN_PRIORITY;
         }
-        else if (!colitr->m_colAlias.compare("vlan.id")) {
-            colQuantity = VLAN_ID;
+        else if (!colAlias.compare("vlan.cfi")) {
+            colQuantity |= VLAN_CFI;
         }
-        else if (!colitr->m_colAlias.compare("vlan.len")) {
-            colQuantity = VLAN_LEN;
+        else if (!colAlias.compare("vlan.id")) {
+            colQuantity |= VLAN_ID;
         }
-        else if (!colitr->m_colAlias.compare("vlan.etype")) {
-            colQuantity = VLAN_ETYPE;
+        else if (!colAlias.compare("vlan.len")) {
+            colQuantity |= VLAN_LEN;
         }
-        else if (!colitr->m_colAlias.compare("vlan.padding")) {
-            colQuantity = VLAN_PADDING;
+        else if (!colAlias.compare("vlan.etype")) {
+            colQuantity |= VLAN_ETYPE;
         }
-        else if (!colitr->m_colAlias.compare("vlan.trailer")) {
-            colQuantity = VLAN_TRAILER;
+        else if (!colAlias.compare("vlan.padding")) {
+            colQuantity |= VLAN_PADDING;
         }
-        else if (!colitr->m_colAlias.compare("mpls.label")) {
-            colQuantity = MPLS_LABEL;
+        else if (!colAlias.compare("vlan.trailer")) {
+            colQuantity |= VLAN_TRAILER;
         }
-        else if (!colitr->m_colAlias.compare("mpls.exp")) {
-            colQuantity = MPLS_EXP;
+        else if (!colAlias.compare("mpls.label")) {
+            colQuantity |= MPLS_LABEL;
         }
-        else if (!colitr->m_colAlias.compare("mpls.bottom")) {
-            colQuantity = MPLS_BOTTOM;
+        else if (!colAlias.compare("mpls.exp")) {
+            colQuantity |= MPLS_EXP;
         }
-        else if (!colitr->m_colAlias.compare("mpls.ttl")) {
-            colQuantity = MPLS_TTL;
+        else if (!colAlias.compare("mpls.bottom")) {
+            colQuantity |= MPLS_BOTTOM;
         }
-        else if (!colitr->m_colAlias.compare("ip.src")) {
-            colQuantity = IP_SRC;
+        else if (!colAlias.compare("mpls.ttl")) {
+            colQuantity |= MPLS_TTL;
         }
-        else if (!colitr->m_colAlias.compare("ip.dst")) {
-            colQuantity = IP_DST;
+        else if (!colAlias.compare("ip.src")) {
+            colQuantity |= IP_SRC;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.src_lat")) {
-            colQuantity = IP_GEOIP_SRC_LAT;
+        else if (!colAlias.compare("ip.dst")) {
+            colQuantity |= IP_DST;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.src_lon")) {
-            colQuantity = IP_GEOIP_SRC_LON;
+        else if (!colAlias.compare("ip.geoip.src_lat")) {
+            colQuantity |= IP_GEOIP_SRC_LAT;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.src_city")) {
-            colQuantity = IP_GEOIP_SRC_CITY;
+        else if (!colAlias.compare("ip.geoip.src_lon")) {
+            colQuantity |= IP_GEOIP_SRC_LON;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.src_country")) {
-            colQuantity = IP_GEOIP_SRC_COUNTRY;
+        else if (!colAlias.compare("ip.geoip.src_city")) {
+            colQuantity |= IP_GEOIP_SRC_CITY;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.dst_lat")) {
-            colQuantity = IP_GEOIP_DST_LAT;
+        else if (!colAlias.compare("ip.geoip.src_country")) {
+            colQuantity |= IP_GEOIP_SRC_COUNTRY;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.dst_lon")) {
-            colQuantity = IP_GEOIP_DST_LON;
+        else if (!colAlias.compare("ip.geoip.dst_lat")) {
+            colQuantity |= IP_GEOIP_DST_LAT;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.dst_city")) {
-            colQuantity = IP_GEOIP_DST_CITY;
+        else if (!colAlias.compare("ip.geoip.dst_lon")) {
+            colQuantity |= IP_GEOIP_DST_LON;
         }
-        else if (!colitr->m_colAlias.compare("ip.geoip.dst_country")) {
-            colQuantity = IP_GEOIP_DST_COUNTRY;
+        else if (!colAlias.compare("ip.geoip.dst_city")) {
+            colQuantity |= IP_GEOIP_DST_CITY;
         }
-        else if (!colitr->m_colAlias.compare("ip.ttl")) {
-            colQuantity = IP_TTL;
+        else if (!colAlias.compare("ip.geoip.dst_country")) {
+            colQuantity |= IP_GEOIP_DST_COUNTRY;
         }
-        else if (!colitr->m_colAlias.compare("icmp.type")) {
-            colQuantity = ICMP_TYPE;
+        else if (!colAlias.compare("ip.ttl")) {
+            colQuantity |= IP_TTL;
         }
-        else if (!colitr->m_colAlias.compare("icmp.code")) {
-            colQuantity = ICMP_CODE;
+        else if (!colAlias.compare("icmp.type")) {
+            colQuantity |= ICMP_TYPE;
         }
-        else if (!colitr->m_colAlias.compare("icmp.checksum")) {
-            colQuantity = ICMP_CHECKSUM;
+        else if (!colAlias.compare("icmp.code")) {
+            colQuantity |= ICMP_CODE;
         }
-        else if (!colitr->m_colAlias.compare("icmp.ident")) {
-            colQuantity = ICMP_IDENT;
+        else if (!colAlias.compare("icmp.checksum")) {
+            colQuantity |= ICMP_CHECKSUM;
         }
-        else if (!colitr->m_colAlias.compare("icmp.seq_le")) {
-            colQuantity = ICMP_SEQ_LE;
+        else if (!colAlias.compare("icmp.ident")) {
+            colQuantity |= ICMP_IDENT;
         }
-        else if (!colitr->m_colAlias.compare("icmp.data.data")) {
-            colQuantity = ICMP_DATA;
+        else if (!colAlias.compare("icmp.seq_le")) {
+            colQuantity |= ICMP_SEQ_LE;
         }
-        else if (!colitr->m_colAlias.compare("payload")) {
-            colQuantity = PAYLOAD;
+        else if (!colAlias.compare("icmp.data.data")) {
+            colQuantity |= ICMP_DATA;
         }
-        else if (!colitr->m_colAlias.compare("tcp.srcport")) {
-            colQuantity = TCP_SRCPORT;
+        else if (!colAlias.compare("payload")) {
+            colQuantity |= PAYLOAD;
         }
-        else if (!colitr->m_colAlias.compare("tcp.dstport")) {
-            colQuantity = TCP_DSTPORT;
+        else if (!colAlias.compare("tcp.srcport")) {
+            colQuantity |= TCP_SRCPORT;
         }
-        else if (!colitr->m_colAlias.compare("tcp.len")) {
-            colQuantity = TCP_LEN;
+        else if (!colAlias.compare("tcp.dstport")) {
+            colQuantity |= TCP_DSTPORT;
         }
-        else if (!colitr->m_colAlias.compare("tcp.ack")) {
-            colQuantity = TCP_ACK;
+        else if (!colAlias.compare("tcp.len")) {
+            colQuantity |= TCP_LEN;
         }
-        else if (!colitr->m_colAlias.compare("tcp.seq")) {
-            colQuantity = TCP_SEQ;
+        else if (!colAlias.compare("tcp.ack")) {
+            colQuantity |= TCP_ACK;
         }
-        else if (!colitr->m_colAlias.compare("tcp.flags.res")) {
-            colQuantity = TCP_FLAGS_RES;
+        else if (!colAlias.compare("tcp.seq")) {
+            colQuantity |= TCP_SEQ;
         }
-        else if (!colitr->m_colAlias.compare("tcp.flags.syn")) {
-            colQuantity = TCP_FLAGS_SYN;
+        else if (!colAlias.compare("tcp.flags.res")) {
+            colQuantity |= TCP_FLAGS_RES;
         }
-        else if (!colitr->m_colAlias.compare("udp.srcport")) {
-            colQuantity = UDP_SRCPORT;
+        else if (!colAlias.compare("tcp.flags.syn")) {
+            colQuantity |= TCP_FLAGS_SYN;
         }
-        else if (!colitr->m_colAlias.compare("udp.dstport")) {
-            colQuantity = UDP_DSTPORT;
+        else if (!colAlias.compare("udp.srcport")) {
+            colQuantity |= UDP_SRCPORT;
         }
-        else if (!colitr->m_colAlias.compare("udp.length")) {
-            colQuantity = UDP_LENGTH;
+        else if (!colAlias.compare("udp.dstport")) {
+            colQuantity |= UDP_DSTPORT;
         }
-        else if (!colitr->m_colAlias.compare("http.request.method")) {
-            colQuantity = HTTP_REQ_METHOD;
+        else if (!colAlias.compare("udp.length")) {
+            colQuantity |= UDP_LENGTH;
         }
-        else if (!colitr->m_colAlias.compare("http.request.uri")) {
-            colQuantity = HTTP_REQ_URI;
+        else if (!colAlias.compare("http.content_encoding")) {
+            colQuantity |= HTTP_CONTENT_ENCODING;
         }
-        else if (!colitr->m_colAlias.compare("http.request.headers")) {
-            colQuantity = HTTP_REQ_HEADERS;
+        else if (!colAlias.compare("http.content_length")) {
+            colQuantity |= HTTP_CONTENT_LENGTH;
         }
-        else if (!colitr->m_colAlias.compare("http.request.connection")) {
-            colQuantity = HTTP_REQ_CONNECTION;
+        else if (!colAlias.compare("http.content_type")) {
+            colQuantity |= HTTP_CONTENT_TYPE;
+        }
+        else if (!colAlias.compare("http.request.headers")) {
+            colQuantity |= HTTP_REQ_HEADERS;
+        }
+        else if (!colAlias.compare("http.request.method")) {
+            colQuantity |= HTTP_REQ_METHOD;
+        }
+        else if (!colAlias.compare("http.request.uri")) {
+            colQuantity |= HTTP_REQ_URI;
+        }
+        else if (!colAlias.compare("http.request.host")) {
+            colQuantity |= HTTP_REQ_HOST;
+        }
+        else if (!colAlias.compare("http.request.referer")) {
+            colQuantity |= HTTP_REQ_REFERER;
+        }
+        else if (!colAlias.compare("http.request.authorization")) {
+            colQuantity |= HTTP_REQ_AUTHORIZATION;
+        }
+        else if (!colAlias.compare("http.request.user_agent")) {
+            colQuantity |= HTTP_REQ_USER_AGENT;
+        }
+        else if (!colAlias.compare("http.request.connection")) {
+            colQuantity |= HTTP_REQ_CONNECTION;
+        }
+        else if (!colAlias.compare("http.request.version")) {
+            colQuantity |= HTTP_REQ_VERSION;
+        }
+        else if (!colAlias.compare("http.response.headers")) {
+            colQuantity |= HTTP_RES_HEADERS;
+        }
+        else if (!colAlias.compare("http.response.code")) {
+            colQuantity |= HTTP_RES_CODE;
+        }
+        else if (!colAlias.compare("http.response.phrase")) {
+            colQuantity |= HTTP_RES_PHRASE;
+        }
+        else if (!colAlias.compare("http.response.www_authenticate")) {
+            colQuantity |= HTTP_RES_WWW_AUTH;
+        }
+        else if (!colAlias.compare("http.response_number")) {
+            colQuantity |= HTTP_RES_NUMBER;
         }
         __colQuantity.push_back(colQuantity);
     }
     __idxCurRow = 0;
-
+    __httpResponseNum = 0;
     return FetchNextIndexedResult();
 }
 
@@ -191,7 +239,6 @@ bool RyftOne_PCAPResult::CloseIndexedResult()
     for (itr = __cursor.__row.begin(); itr != __cursor.__row.end(); itr++) {
         sqlite3_free((*itr).colResult.text);
     }
-
     return true;
 }
 
@@ -201,6 +248,7 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
     const u_char *pkt;
 
     __idxCurRow++;
+
     if (pkt = pcap_next(__pcap, &hdr)) {
         const struct ether_header* etherHeader;
         const struct vlan_hdr* vlanHeader;
@@ -254,9 +302,18 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 ntohs(tcpHeader->dest) == 8080);
         string httpMethod;
         string httpURI;
+        string httpVersion;
+        string httpStatus;
         map<string, string> httpHeaders;
         if (isHTTPReq) {
-            __loadHttpRequest((char *)payloadData, payloadLen, httpMethod, httpURI, httpHeaders);
+            __loadHttpRequest((char *)payloadData, payloadLen, httpMethod, httpURI, httpVersion, httpHeaders);
+        }
+        bool isHTTPRes = isTCP && (ntohs(tcpHeader->source) == 80 || ntohs(tcpHeader->source) == 8008 ||
+            ntohs(tcpHeader->source) == 8080);
+        int httpCode;
+        if (isHTTPRes) {
+            httpCode = __loadHttpResponse((char *)payloadData, payloadLen, httpVersion, httpStatus, httpHeaders);
+            __httpResponseNum++;
         }
         int idx;
         RyftOne_Columns::iterator itr;
@@ -264,7 +321,7 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             char *ptr = __cursor.__row[idx].colResult.text;
             int len = __cursor.__row[idx].charCols;
             *ptr = '\0';
-            switch(__colQuantity[idx]) {
+            switch (__colQuantity[idx] & ~COLRESULT_FLAGS) {
             case FRAME_TIME: {
                 char tmbuf[64];
                 struct tm *ptm = gmtime(&hdr.ts.tv_sec);
@@ -311,7 +368,7 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 break;
             }
             case ETH_SRC_RESOLVED:
-                if(0 == ether_ntohost(ptr, (const struct ether_addr *)&etherHeader->ether_shost))
+                if (0 == ether_ntohost(ptr, (const struct ether_addr *)&etherHeader->ether_shost))
                     break;
                 if (__getManufAddr(ptr, len, (const struct ether_addr *)&etherHeader->ether_shost))
                     break;
@@ -360,35 +417,42 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             case VLAN_LEN:
                 break;
             case VLAN_ETYPE:
-                if (isVLAN)
+                if (isVLAN) {
                     snprintf(ptr, len, "%d", ethType);
+                }
                 break;
             case VLAN_PADDING:
             case VLAN_TRAILER:
                 break;
             case MPLS_LABEL:
-                if (isMPLS)
+                if (isMPLS) {
                     snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_LABEL_MASK) >> MPLS_LS_LABEL_SHIFT);
+                }
                 break;
             case MPLS_EXP:
-                if (isMPLS)
+                if (isMPLS) {
                     snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_TC_MASK) >> MPLS_LS_TC_SHIFT);
+                }
                 break;
             case MPLS_BOTTOM:
-                if (isMPLS)
+                if (isMPLS) {
                     snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_S_MASK) >> MPLS_LS_S_SHIFT);
+                }
                 break;
             case MPLS_TTL:
-                if (isMPLS)
+                if (isMPLS) {
                     snprintf(ptr, len, "%d", (mplsHeader.entry & MPLS_LS_TTL_MASK) >> MPLS_LS_TTL_SHIFT);
+                }
                 break;
             case IP_SRC:
-                if (isIP)
+                if (isIP) {
                     inet_ntop(AF_INET, &(ipHeader->ip_src), ptr, min(INET_ADDRSTRLEN, len));
+                }
                 break;
             case IP_DST:
-                if (isIP)
+                if (isIP) {
                     inet_ntop(AF_INET, &(ipHeader->ip_dst), ptr, min(INET_ADDRSTRLEN, len));
+                }
                 break;
             case IP_GEOIP_SRC_LAT:
                 if (isIP && __gi) {
@@ -494,71 +558,191 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
                 break;
             }
             case TCP_SRCPORT:
-                if (isTCP)
+                if (isTCP) {
                     snprintf(ptr, len, "%d", ntohs(tcpHeader->source));
+                }
                 break;
             case TCP_DSTPORT:
-                if (isTCP)
+                if (isTCP) {
                     snprintf(ptr, len, "%d", ntohs(tcpHeader->dest));
+                }
                 break;
             case TCP_LEN:
-                if (isTCP)
+                if (isTCP) {
                     snprintf(ptr, len, "%d", payloadLen);
+                }
                 break;
             case TCP_ACK:
-                if (isTCP)
+                if (isTCP) {
                     snprintf(ptr, len, "%ud", ntohl(tcpHeader->ack_seq));
+                }
                 break;
             case TCP_SEQ:
-                if (isTCP)
+                if (isTCP) {
                     snprintf(ptr, len, "%ud", ntohl(tcpHeader->seq));
+                }
                 break;
             case TCP_FLAGS_RES:
-                if (isTCP)
+                if (isTCP) {
                     snprintf(ptr, len, "%d", tcpHeader->res1);
+                }
                 break;
             case TCP_FLAGS_SYN:
-                if (isTCP)
+                if (isTCP) {
                     snprintf(ptr, len, "%d", tcpHeader->syn);
+                }
                 break;
             case UDP_SRCPORT:
-                if (isUDP)
+                if (isUDP) {
                     snprintf(ptr, len, "%d", ntohs(udpHeader->source));
+                }
                 break;
             case UDP_DSTPORT:
-                if (isUDP)
+                if (isUDP) {
                     snprintf(ptr, len, "%d", ntohs(udpHeader->dest));
+                }
                 break;
             case UDP_LENGTH:
-                if (isUDP)
+                if (isUDP) {
                     snprintf(ptr, len, "%d", ntohs(udpHeader->len));
+                }
+                break;
+            case HTTP_CONTENT_ENCODING:
+                if ((isHTTPReq || isHTTPRes) && httpHeaders.find("Content-Encoding") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["Content-Encoding"].c_str());
+                }
+                break;
+            case HTTP_CONTENT_LENGTH:
+                if ((isHTTPReq || isHTTPRes) && httpHeaders.find("Content-Length") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["Content-Length"].c_str());
+                }
+                break;
+            case HTTP_CONTENT_TYPE:
+                if ((isHTTPReq || isHTTPRes) && httpHeaders.find("Content-Type") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["Content-Type"].c_str());
+                }
+                break;
+            case HTTP_REQ_HEADERS: 
+                if (isHTTPReq) {
+                    string headers;
+                    map<string, string>::iterator itr;
+                    for (itr = httpHeaders.begin(); itr != httpHeaders.end(); itr++) {
+                        headers += itr->first;
+                        headers += ": ";
+                        headers += itr->second;
+                        headers += "\n";
+                    }
+                    snprintf(ptr, len, "%s", headers.c_str());
+                }
                 break;
             case HTTP_REQ_METHOD:
-                snprintf(ptr, len, "%s", httpMethod.c_str());
+                if (isHTTPReq) {
+                    snprintf(ptr, len, "%s", httpMethod.c_str());
+                }
                 break;
             case HTTP_REQ_URI:
-                snprintf(ptr, len, "%s", httpURI.c_str());
-                break;
-            case HTTP_REQ_HEADERS: {
-                string headers;
-                map<string, string>::iterator itr;
-                for (itr = httpHeaders.begin(); itr != httpHeaders.end(); itr++) {
-                    headers += itr->first;
-                    headers += ": ";
-                    headers += itr->second;
-                    headers += "\n";
+                if (isHTTPReq) {
+                    snprintf(ptr, len, "%s", httpURI.c_str());
                 }
-                snprintf(ptr, len, "%s", headers.c_str());
                 break;
-            }
+            case HTTP_REQ_VERSION:
+                if (isHTTPReq) {
+                    snprintf(ptr, len, "%s", httpVersion.c_str());
+                }
+                break;
+            case HTTP_REQ_HOST:
+                if (isHTTPReq && httpHeaders.find("Host") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["Host"].c_str());
+                }
+                break;
+            case HTTP_REQ_REFERER:
+                if (isHTTPReq && httpHeaders.find("Referer") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["Referer"].c_str());
+                }
+                break;
+            case HTTP_REQ_AUTHORIZATION:
+                if (isHTTPReq && httpHeaders.find("Authorization") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["Authorization"].c_str());
+                }
+                break;
+            case HTTP_REQ_USER_AGENT:
+                if (isHTTPReq && httpHeaders.find("User-Agent") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["User-Agent"].c_str());
+                }
+                break;
             case HTTP_REQ_CONNECTION:
-                if (httpHeaders.find("Connection") != httpHeaders.end())
+                if (isHTTPReq && httpHeaders.find("Connection") != httpHeaders.end()) {
                     snprintf(ptr, len, "%s", httpHeaders["Connection"].c_str());
+                }
+                break;
+            case HTTP_RES_HEADERS:
+                if (isHTTPRes) {
+                    string headers;
+                    map<string, string>::iterator itr;
+                    for (itr = httpHeaders.begin(); itr != httpHeaders.end(); itr++) {
+                        headers += itr->first;
+                        headers += ": ";
+                        headers += itr->second;
+                        headers += "\n";
+                    }
+                    snprintf(ptr, len, "%s", headers.c_str());
+                }
+                break;
+            case HTTP_RES_CODE:
+                if (isHTTPRes) {
+                    snprintf(ptr, len, "%d", httpCode);
+                }
+                break;
+            case HTTP_RES_PHRASE:
+                if (isHTTPRes) {
+                    snprintf(ptr, len, "%s", httpStatus.c_str());
+                }
+                break;
+            case HTTP_RES_WWW_AUTH:
+                if (isHTTPRes && httpHeaders.find("WWW-Authenticate") != httpHeaders.end()) {
+                    snprintf(ptr, len, "%s", httpHeaders["WWW-Authenticate"].c_str());
+                }
+                break;
+            case HTTP_RES_NUMBER:
+                if (isHTTPRes) {
+                    snprintf(ptr, len, "%ld", __httpResponseNum);
+                }
                 break;
             }
         }
     }
     return true;
+}
+
+bool RyftOne_PCAPResult::HasResultThinner(string columnName) 
+{
+    vector<__meta_config__::__meta_filter__>::iterator itr;
+    for (itr = __colFilters.begin(); itr != __colFilters.end(); itr++) {
+        if (!columnName.compare(itr->filter_name))
+            return true;
+    }
+    return false;
+}
+
+string RyftOne_PCAPResult::GetResultThinnerQuery(string columnName, int type)
+{
+
+    vector<__meta_config__::__meta_filter__>::iterator itr;
+    for (itr = __colFilters.begin(); itr != __colFilters.end(); itr++) {
+        if (!columnName.compare(itr->filter_name))
+            break;
+    }
+
+    if (itr != __colFilters.end()) {
+        switch (type) {
+        case FILTER_EQ:
+            return itr->eq;
+        case FILTER_NE:
+            return itr->ne;
+        default:
+            return "";
+        }
+    }
 }
 
 RyftOne_Columns RyftOne_PCAPResult::__getColumns(__meta_config__ meta_config)
@@ -629,7 +813,7 @@ void RyftOne_PCAPResult::__loadTable(string& in_name, vector<__catalog_entry__>:
 	__delimiter = in_itr->meta_config.delimiter;
 }
 
-void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method, string& uri, map<string, string>& headers)
+void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method, string& uri, string& version, map<string, string>& headers)
 {
     membuf httpBuf(ptr, len);
     istream in(&httpBuf);
@@ -643,8 +827,12 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
         if (token) {
             method = token;
             token = strtok(NULL, " ");
-            if (token)
+            if (token) {
                 uri = token;
+                token = strtok(NULL, " ");
+                if (token)
+                    version = token;
+            }
         }
         free(dup);
     }
@@ -652,8 +840,47 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
         return;
     if (uri.empty())
         return;
+    __readHeaders(in, headers);
+}
+
+int RyftOne_PCAPResult::__loadHttpResponse(char *ptr, size_t len, string& version, string& status, map<string, string>& headers)
+{
+    membuf httpBuf(ptr, len);
+    istream in(&httpBuf);
+    string resLine;
+    int code = 0;
+    char *dup;
+    char *token;
+    my_getline(in, resLine);
+    if (!resLine.empty()) {
+        dup = strdup(resLine.c_str());
+        token = strtok(dup, " ");
+        if (token) {
+            version = token;
+            token = strtok(NULL, " ");
+            if (token) {
+                code = atoi(token);
+                token = strtok(NULL, " ");
+                if (token)
+                    status = token;
+            }
+        }
+        free(dup);
+    }
+    if (version.empty())
+        return code;
+    if (code == 0 || status.empty())
+        return code;
+    __readHeaders(in, headers);
+    return code;
+}
+
+void RyftOne_PCAPResult::__readHeaders(istream& in, map<string, string>& headers) 
+{
+    char *dup;
+    char *token;
     string header;
-    while (true) {
+    while (!in.eof()) {
         my_getline(in, header);
         size_t idx;
         if (header == "\r\n")
@@ -662,7 +889,7 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
         token = strtok(dup, ":");
         if (token) {
             token = strtok(NULL, "");
-            while (is_whitespace(*token))
+            while (token && is_whitespace(*token))
                 token++;
             if (token)
                 headers[dup] = token;

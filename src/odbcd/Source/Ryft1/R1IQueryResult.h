@@ -191,6 +191,7 @@ public:
         }
         
         __cols = __getColumns(in_catentry->meta_config);
+        __colFilters = in_catentry->meta_config.filters;
 
         resultCol rcol;
         for(int idx = 0; idx < __metaTags.size(); idx++) {
@@ -527,6 +528,16 @@ public:
         return __dataType == dataType_PCAP;
     }
 
+    virtual bool HasResultThinner(string columnName) 
+    {
+        return false;
+    }
+
+    virtual string GetResultThinnerQuery(string columnName, int type) 
+    {
+        return "";
+    }
+
     virtual bool OpenIndexedResult()
     {
         __idxFD = fopen(__idxFile.c_str(), "r");
@@ -820,6 +831,7 @@ protected:
     string __name;
     string __extension;
     vector<string> __metaTags;
+    vector<__meta_config__::__meta_filter__> __colFilters;
 
     bool __no_top;
     string __delimiter;

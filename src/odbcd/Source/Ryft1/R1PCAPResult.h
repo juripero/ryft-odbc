@@ -84,16 +84,20 @@ struct mpls_label {
 
 #include "R1IQueryResult.h"
 
-#define DOMAIN_FRAME            0x0000
-#define DOMAIN_ETHER            0x0010
-#define DOMAIN_VLAN             0x0020
-#define DOMAIN_MPLS             0x0040
-#define DOMAIN_IP               0x0080
-#define DOMAIN_ICMP             0x0100
-#define DOMAIN_LAYER4           0x0200
-#define DOMAIN_TCP              0x0400
-#define DOMAIN_UDP              0x0800
-#define DOMAIN_HTTP             0x1000
+#define COLRESULT_FLAGS         0xFF000000
+#define FLAG_FILTER             0x10000000
+
+#define DOMAIN_FRAME            0x00000000
+#define DOMAIN_ETHER            0x00000100
+#define DOMAIN_VLAN             0x00000200
+#define DOMAIN_MPLS             0x00000400
+#define DOMAIN_IP               0x00000800
+#define DOMAIN_IPV6             0x00001000
+#define DOMAIN_ICMP             0x00002000
+#define DOMAIN_LAYER4           0x00004000
+#define DOMAIN_TCP              0x00008000
+#define DOMAIN_UDP              0x00010000
+#define DOMAIN_HTTP             0x00020000
 
 #define FRAME_TIME              DOMAIN_FRAME | 1
 #define FRAME_NUMBER            DOMAIN_FRAME | 2
@@ -151,10 +155,23 @@ struct mpls_label {
 #define UDP_DSTPORT             DOMAIN_UDP | 2
 #define UDP_LENGTH              DOMAIN_UDP | 3
 
-#define HTTP_REQ_METHOD         DOMAIN_HTTP | 1
-#define HTTP_REQ_URI            DOMAIN_HTTP | 2
-#define HTTP_REQ_HEADERS        DOMAIN_HTTP | 3
-#define HTTP_REQ_CONNECTION     DOMAIN_HTTP | 4
+#define HTTP_CONTENT_ENCODING   DOMAIN_HTTP | 1
+#define HTTP_CONTENT_LENGTH     DOMAIN_HTTP | 2
+#define HTTP_CONTENT_TYPE       DOMAIN_HTTP | 3
+#define HTTP_REQ_HEADERS        DOMAIN_HTTP | 4
+#define HTTP_REQ_METHOD         DOMAIN_HTTP | 5
+#define HTTP_REQ_URI            DOMAIN_HTTP | 6
+#define HTTP_REQ_HOST           DOMAIN_HTTP | 7
+#define HTTP_REQ_REFERER        DOMAIN_HTTP | 8
+#define HTTP_REQ_AUTHORIZATION  DOMAIN_HTTP | 9
+#define HTTP_REQ_USER_AGENT     DOMAIN_HTTP | 10
+#define HTTP_REQ_CONNECTION     DOMAIN_HTTP | 11
+#define HTTP_REQ_VERSION        DOMAIN_HTTP | 12
+#define HTTP_RES_HEADERS        DOMAIN_HTTP | 13
+#define HTTP_RES_CODE           DOMAIN_HTTP | 14
+#define HTTP_RES_PHRASE         DOMAIN_HTTP | 15
+#define HTTP_RES_WWW_AUTH       DOMAIN_HTTP | 16
+#define HTTP_RES_NUMBER         DOMAIN_HTTP | 17 
 
 const char __hexmap[] = { '0', '1', '2', '3', '4', '5', '6', '7',
                           '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
@@ -168,7 +185,7 @@ const char whitespace[] = " \f\n\r\t\v";
 
 inline void my_getline(istream& in, string&out) {
     out.clear();
-    for (char cstr1 = in.get(); cstr1; cstr1 = in.get()) {
+    for (char cstr1 = in.get(); cstr1 != std::char_traits<char>::eof(); cstr1 = in.get()) {
         if (cstr1 == '\r' || cstr1 == '\n') {
             char cstr2 = in.get();
             if (cstr1 == '\r' && cstr2 == '\n' ||
@@ -218,6 +235,9 @@ public:
     virtual bool CloseIndexedResult();
     virtual bool FetchNextIndexedResult();
 
+    virtual bool HasResultThinner(string columnName);
+    virtual string GetResultThinnerQuery(string columnName, int type);
+
 protected:
     virtual RyftOne_Columns __getColumns(__meta_config__ meta_config);
     virtual IFile * __createFormattedFile(const char *filename);
@@ -227,19 +247,22 @@ protected:
 
 private:
 
-    void __loadHttpRequest(char *ptr, size_t len, string& method, string& uri, map<string, string>& headers);
+    void __loadHttpRequest(char *ptr, size_t len, string& method, string& uri, string& version, map<string, string>& headers);
+    int __loadHttpResponse(char *ptr, size_t len, string& version, string& status, map<string, string>& headers);
+    void __readHeaders(istream& in, map<string, string>& headers);
 
     void __loadManufs(string& manufPath);
     bool __getManufAddr(char *ptr, size_t len, const struct ether_addr *);
 
-    vector<int> __colQuantity;
+    vector<long> __colQuantity;
 
     pcap_t *__pcap;
     char __errbuf[PCAP_ERRBUF_SIZE];
 
     GeoIP *__gi;
-
     MANUFS __manufs[256];
+
+    long __httpResponseNum;
 };
 #endif
 
