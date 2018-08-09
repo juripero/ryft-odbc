@@ -158,11 +158,14 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colAlias.compare("tcp.seq")) {
             colQuantity |= TCP_SEQ;
         }
-        else if (!colAlias.compare("tcp.flags.res")) {
-            colQuantity |= TCP_FLAGS_RES;
+        else if (!colAlias.compare("tcp.flags.reset")) {
+            colQuantity |= TCP_FLAGS_RESET;
         }
         else if (!colAlias.compare("tcp.flags.syn")) {
             colQuantity |= TCP_FLAGS_SYN;
+        }
+        else if (!colAlias.compare("tcp.flags.fin")) {
+            colQuantity |= TCP_FLAGS_FIN;
         }
         else if (!colAlias.compare("udp.srcport")) {
             colQuantity |= UDP_SRCPORT;
@@ -607,14 +610,19 @@ bool RyftOne_PCAPResult::__internalFetch()
                     snprintf(ptr, len, "%ud", ntohl(tcpHeader->seq));
                 }
                 break;
-            case TCP_FLAGS_RES:
+            case TCP_FLAGS_RESET:
                 if (isTCP) {
-                    snprintf(ptr, len, "%d", tcpHeader->res1);
+                    snprintf(ptr, len, "%d", tcpHeader->rst);
                 }
                 break;
             case TCP_FLAGS_SYN:
                 if (isTCP) {
                     snprintf(ptr, len, "%d", tcpHeader->syn);
+                }
+                break;
+            case TCP_FLAGS_FIN:
+                if (isTCP) {
+                    snprintf(ptr, len, "%d", tcpHeader->fin);
                 }
                 break;
             case UDP_SRCPORT:
@@ -754,7 +762,7 @@ bool RyftOne_PCAPResult::__applyColFilter()
             ColFilters::iterator itrFilter;
             bool criteriaMet = false;
             char *ptr = __cursor.__row[colidx].colResult.text;
-            for (itrFilter = __appliedFilters[colidx].begin(); !criteriaMet && itrFilter != __colFilters.end(); itrFilter++) {
+            for (itrFilter = __appliedFilters[colidx].begin(); !criteriaMet && itrFilter != __appliedFilters[colidx].end(); itrFilter++) {
                 switch (itrFilter->compOp) {
                 case FILTER_EQ:
                     if (!itrFilter->searchLiteral.compare(ptr))

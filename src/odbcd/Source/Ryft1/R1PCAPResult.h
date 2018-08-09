@@ -148,8 +148,9 @@ struct mpls_label {
 #define TCP_LEN                 DOMAIN_TCP | 3
 #define TCP_SEQ                 DOMAIN_TCP | 4
 #define TCP_ACK                 DOMAIN_TCP | 5
-#define TCP_FLAGS_RES           DOMAIN_TCP | 6
+#define TCP_FLAGS_RESET         DOMAIN_TCP | 6
 #define TCP_FLAGS_SYN           DOMAIN_TCP | 7
+#define TCP_FLAGS_FIN           DOMAIN_TCP | 8
 
 #define UDP_SRCPORT             DOMAIN_UDP | 1
 #define UDP_DSTPORT             DOMAIN_UDP | 2
