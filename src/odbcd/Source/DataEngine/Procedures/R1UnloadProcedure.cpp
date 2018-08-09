@@ -47,7 +47,7 @@ void R1UnloadProcedure::Execute(ParameterValues* in_parameters)
     if(!table)
         return;
 
-    table->AppendFilter(__search_term);
+    table->AppendQuery(__search_term);
     int numrows = table->UnloadResults();
 
     DSISimpleRowCountResult* result = (DSISimpleRowCountResult*)m_results->GetCurrentResult();

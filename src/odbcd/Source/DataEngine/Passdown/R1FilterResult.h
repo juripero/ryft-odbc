@@ -28,7 +28,7 @@ namespace RyftOne
         /// @param in_table         The table on which to apply filters. Cannot be NULL.
         /// @param in_filter        The string representing the dbase expression for the filter.
         R1FilterResult(
-            Simba::Support::SharedPtr<R1Table> in_table, const simba_wstring& in_filter);
+            Simba::Support::SharedPtr<R1Table> in_table, const simba_wstring& in_query, ColFilters& in_colFilters);
 
         /// @brief Destructor.
         virtual ~R1FilterResult();
@@ -186,7 +186,7 @@ namespace RyftOne
         Simba::Support::SharedPtr<R1Table> m_table;
 
         /// The dbase expression filter string
-        simba_wstring m_filter;
+        simba_wstring m_query;
 
         /// Flag indicating if Move() has been called yet.
         bool m_hasStartedFetch;

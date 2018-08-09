@@ -19,8 +19,9 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         (*itr).colResult.text = (char *)sqlite3_malloc((*itr).charCols + 1);
     }
 
+    int colidx;
     RyftOne_Columns::iterator colitr;
-    for (colitr = __cols.begin(); colitr != __cols.end(); colitr++) {
+    for (colidx = 0, colitr = __cols.begin(); colitr != __cols.end(); colitr++, colidx++) {
         long colQuantity = 0;
         string colAlias = colitr->m_colAlias;
         size_t idx = colAlias.find_first_of('.');
@@ -224,7 +225,16 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
             colQuantity |= HTTP_RES_NUMBER;
         }
         __colQuantity.push_back(colQuantity);
+        ColFilters appliedFilters;
+        ColFilters::iterator itrFilter;
+        for (itrFilter = __colFilters.begin(); itrFilter != __colFilters.end(); itrFilter++) {
+            if (!colAlias.compare(itrFilter->colName)) {
+                appliedFilters.push_back(*itrFilter);
+            }
+        }
+        __appliedFilters.push_back(appliedFilters);
     }
+
     __idxCurRow = 0;
     __httpResponseNum = 0;
     return FetchNextIndexedResult();
@@ -243,6 +253,21 @@ bool RyftOne_PCAPResult::CloseIndexedResult()
 }
 
 bool RyftOne_PCAPResult::FetchNextIndexedResult()
+{
+    // This is a NOOP at this point. All the work has already been done by __internalFetch
+    return true;
+}
+
+bool RyftOne_PCAPResult::IndexedResultEof()
+{
+    while (__idxCurRow <= __idxNumRows) {
+        if (__internalFetch() && __applyColFilter())
+            return false;
+    }
+    return true;
+}
+
+bool RyftOne_PCAPResult::__internalFetch()
 {
     struct pcap_pkthdr hdr;
     const u_char *pkt;
@@ -711,13 +736,47 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
             }
         }
     }
+    else
+        return false;
+
+    return true;
+}
+
+bool RyftOne_PCAPResult::__applyColFilter()
+{
+    if (__colFilters.empty())
+        return true;
+
+    int colidx;
+    RyftOne_Columns::iterator colitr;
+    for (colidx = 0, colitr = __cols.begin(); colitr != __cols.end(); colitr++, colidx++) {
+        if (!__appliedFilters[colidx].empty()) {
+            ColFilters::iterator itrFilter;
+            bool criteriaMet = false;
+            char *ptr = __cursor.__row[colidx].colResult.text;
+            for (itrFilter = __appliedFilters[colidx].begin(); !criteriaMet && itrFilter != __colFilters.end(); itrFilter++) {
+                switch (itrFilter->compOp) {
+                case FILTER_EQ:
+                    if (!itrFilter->searchLiteral.compare(ptr))
+                        criteriaMet = true;
+                    break;
+                case FILTER_NE:
+                    if (itrFilter->searchLiteral.compare(ptr))
+                        criteriaMet = true;
+                    break;
+                }
+            }
+            if (!criteriaMet)
+                return false;
+        }
+    }
     return true;
 }
 
 bool RyftOne_PCAPResult::HasResultThinner(string columnName) 
 {
     vector<__meta_config__::__meta_filter__>::iterator itr;
-    for (itr = __colFilters.begin(); itr != __colFilters.end(); itr++) {
+    for (itr = __metaFilters.begin(); itr != __metaFilters.end(); itr++) {
         if (!columnName.compare(itr->filter_name))
             return true;
     }
@@ -726,14 +785,13 @@ bool RyftOne_PCAPResult::HasResultThinner(string columnName)
 
 string RyftOne_PCAPResult::GetResultThinnerQuery(string columnName, int type)
 {
-
     vector<__meta_config__::__meta_filter__>::iterator itr;
-    for (itr = __colFilters.begin(); itr != __colFilters.end(); itr++) {
+    for (itr = __metaFilters.begin(); itr != __metaFilters.end(); itr++) {
         if (!columnName.compare(itr->filter_name))
             break;
     }
 
-    if (itr != __colFilters.end()) {
+    if (itr != __metaFilters.end()) {
         switch (type) {
         case FILTER_EQ:
             return itr->eq;

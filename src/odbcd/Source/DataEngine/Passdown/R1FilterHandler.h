@@ -310,7 +310,8 @@ namespace RyftOne
         Simba::Support::SharedPtr<R1Table> m_table;
 
         bool m_negate;
-        simba_wstring m_filter;
+        simba_wstring m_query;
+        ColFilters m_colFilters;
 
         /// Flag for successful pass down.
         bool m_isPassedDown;

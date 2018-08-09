@@ -234,6 +234,7 @@ public:
     virtual bool OpenIndexedResult();
     virtual bool CloseIndexedResult();
     virtual bool FetchNextIndexedResult();
+    virtual bool IndexedResultEof();
 
     virtual bool HasResultThinner(string columnName);
     virtual string GetResultThinnerQuery(string columnName, int type);
@@ -247,6 +248,9 @@ protected:
 
 private:
 
+    bool __internalFetch();
+    bool __applyColFilter();
+
     void __loadHttpRequest(char *ptr, size_t len, string& method, string& uri, string& version, map<string, string>& headers);
     int __loadHttpResponse(char *ptr, size_t len, string& version, string& status, map<string, string>& headers);
     void __readHeaders(istream& in, map<string, string>& headers);
@@ -255,6 +259,7 @@ private:
     bool __getManufAddr(char *ptr, size_t len, const struct ether_addr *);
 
     vector<long> __colQuantity;
+    vector<ColFilters> __appliedFilters;
 
     pcap_t *__pcap;
     char __errbuf[PCAP_ERRBUF_SIZE];

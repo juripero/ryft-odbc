@@ -156,7 +156,7 @@ SharedPtr<DSIExtResultSet> R1FilterHandler::TakeResult()
     }
 
     // Return filter result.
-    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_filter));
+    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_query, m_colFilters));
 }
 
 // Protected =======================================================================================
@@ -165,23 +165,23 @@ bool R1FilterHandler::PassdownAnd(AEAnd *in_node)
 {
     AEBooleanExpr *lExpr = (AEBooleanExpr *)in_node->GetChild(0);
     AEBooleanExpr *rExpr = (AEBooleanExpr *)in_node->GetChild(1);
-    simba_wstring pushFilter = m_filter;
-    m_filter.Clear();
-    m_filter += "(";
+    simba_wstring pushFilter = m_query;
+    m_query.Clear();
+    m_query += "(";
     if(DSIExtAbstractBooleanExprHandler::Passdown(lExpr)) {
         if(m_table->IsPCAPDatabase()) {
-            m_filter += " && ";
+            m_query += " && ";
         }
         else
-            m_filter += " AND ";
+            m_query += " AND ";
         if(DSIExtAbstractBooleanExprHandler::Passdown(rExpr)) {
-            m_filter += ")";
-            m_filter = pushFilter + m_filter;
+            m_query += ")";
+            m_query = pushFilter + m_query;
             m_isPassedDown = true;
             return true;
         }
     }
-    m_filter = pushFilter;
+    m_query = pushFilter;
     return false;
 }
 
@@ -204,23 +204,23 @@ bool R1FilterHandler::PassdownOr(AEOr* in_node)
 {
     AEBooleanExpr *lExpr = (AEBooleanExpr *)in_node->GetChild(0);
     AEBooleanExpr *rExpr = (AEBooleanExpr *)in_node->GetChild(1);
-    simba_wstring pushFilter = m_filter;
-    m_filter.Clear();
-    m_filter += "(";
+    simba_wstring pushFilter = m_query;
+    m_query.Clear();
+    m_query += "(";
     if(DSIExtAbstractBooleanExprHandler::Passdown(lExpr)) {
         if(m_table->IsPCAPDatabase()) {
-            m_filter += " || ";
+            m_query += " || ";
         }
         else
-            m_filter += " OR ";
+            m_query += " OR ";
         if(DSIExtAbstractBooleanExprHandler::Passdown(rExpr)) {
-            m_filter += ")";
-            m_filter = pushFilter + m_filter;
+            m_query += ")";
+            m_query = pushFilter + m_query;
             m_isPassedDown = true;
             return true;
         }
     }
-    m_filter = pushFilter;
+    m_query = pushFilter;
     return false;
 }
 
@@ -315,12 +315,12 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
     {
         // Construct the filter string for input to Ryft.
-        m_filter += "(";
+        m_query += "(";
         ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
-        m_filter += " AND ";
+        m_query += " AND ";
         literalVal.Remove(0, 11);
         ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
-        m_filter += ")";
+        m_query += ")";
 
         // Setting passdown flag so the filter result set is returned.
         m_isPassedDown = true;
@@ -468,17 +468,17 @@ bool R1FilterHandler::PassdownSimpleComparison(
         // Construct the filter string for input to Ryft.
         if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
            (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
-             m_filter += "(";
+             m_query += "(";
         }
-        m_filter += "(";
+        m_query += "(";
         ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
-        m_filter += " AND ";
+        m_query += " AND ";
         literalVal.Remove(0,11);
         ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
-        m_filter += " )";
+        m_query += " )";
         if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
            (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
-            m_filter += " OR ";
+            m_query += " OR ";
             TDWTimestamp tdwTS(dateLiteral);
             if((in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE)) {
                 tdwTS = tdwTS + 1;
@@ -491,7 +491,7 @@ bool R1FilterHandler::PassdownSimpleComparison(
             }
             else
                 ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, dateLiteral, SE_COMP_LE, "CONTAINS");
-            m_filter += ")";
+            m_query += ")";
         }
 
         // Setting passdown flag so the filter result set is returned.
@@ -593,7 +593,7 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
         columnName.Remove(loc, trailingArray.GetLength());
 
     int literalIdx = 0;
-    m_filter += "(";
+    m_query += "(";
 
     LiteralVector::iterator literalItr;
     for(literalItr = in_literals.begin(); literalItr != in_literals.end(); literalItr++) {
@@ -642,7 +642,7 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
             bool bFetch = result->FetchFirst();
             for (; bFetch; bFetch = result->FetchNext()) {
                 if(literalIdx++) 
-                    m_filter += " OR ";
+                    m_query += " OR ";
 
                 char dateLiteral[11];
                 char timeLiteral[11];
@@ -665,20 +665,20 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
                 else if(((colItr->m_dataType == SQL_TYPE_TIMESTAMP) || (colItr->m_dataType == SQL_TIMESTAMP)) &&
                     ((columnSqlType == SQL_TYPE_TIMESTAMP) || (columnSqlType == SQL_TIMESTAMP))) 
                 {
-                    m_filter += "(";
+                    m_query += "(";
                     struct tm tmDatetime = result->GetDateTimeValue(colIdx);
 
                     snprintf(dateLiteral, sizeof(dateLiteral), "%04d-%02d-%02d", tmDatetime.tm_year, tmDatetime.tm_mon, tmDatetime.tm_mday);
                     literalVal.SetFromUTF8(dateLiteral);
                     ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
 
-                    m_filter += " AND ";
+                    m_query += " AND ";
 
                     snprintf(dateLiteral, sizeof(timeLiteral), "%04d:%02d:%02d", tmDatetime.tm_hour, tmDatetime.tm_min, tmDatetime.tm_sec);
                     literalVal.SetFromUTF8(dateLiteral);
                     ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
 
-                    m_filter += ")";
+                    m_query += ")";
                 }
                 else if((ltypeSpecial == TYPE_NUMBER) && (rtypeSpecial == TYPE_NUMBER)) 
                 {
@@ -706,7 +706,7 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
         }
         else {
             if(literalIdx++)
-                m_filter += " OR ";
+                m_query += " OR ";
 
             // Get the literal type of RHS of comparison expression.
             PSLiteralType exprLiteralType = literalItr->first->GetLiteralType();
@@ -726,12 +726,12 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
             else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
                 ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
             {
-                m_filter += "( ";
+                m_query += "( ";
                 ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
-                m_filter += " AND ";
+                m_query += " AND ";
                 literalVal.Remove(0,11);
                 ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
-                m_filter += " )";
+                m_query += " )";
             }
             else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
                 (ltypeSpecial == TYPE_NUMBER))
@@ -756,7 +756,7 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
         }
     }
 
-    m_filter += ")";
+    m_query += ")";
 
     // Setting passdown flag so the filter result set is returned.
     m_isPassedDown = true;
@@ -919,41 +919,41 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     out_filter += L"\"";
 
     if(m_table->IsStructuredType()) {
-        m_filter += "(RECORD." + in_columnName;
+        m_query += "(RECORD." + in_columnName;
     }
     else 
-        m_filter += "(RAW_TEXT";
+        m_query += "(RAW_TEXT";
 
-    m_filter += " ";
-    m_filter += in_RelationalOp;
-    m_filter += " ";
+    m_query += " ";
+    m_query += in_RelationalOp;
+    m_query += " ";
 
     if(regex) {
-        m_filter += "PCRE2(";
-        m_filter += out_filter.c_str();
+        m_query += "PCRE2(";
+        m_query += out_filter.c_str();
     }
     else {
         if(edit) {
-            m_filter += "EDIT_DISTANCE(";
+            m_query += "EDIT_DISTANCE(";
             sprintf(distance, "%d", edit);
         }
         else {
-            m_filter += "HAMMING(";
+            m_query += "HAMMING(";
             sprintf(distance, "%d", hamming);
         }
-        m_filter += out_filter.c_str();
-        m_filter += ",DISTANCE=\"" + string(distance) + "\"";
+        m_query += out_filter.c_str();
+        m_query += ",DISTANCE=\"" + string(distance) + "\"";
     }
     if(!case_sensitive) 
-        m_filter += ",CASE=\"FALSE\"";
+        m_query += ",CASE=\"FALSE\"";
     if(width) {
         sprintf(surrounding, "%d", width);
-        m_filter += ",WIDTH=\"" + string(surrounding) + "\"";
+        m_query += ",WIDTH=\"" + string(surrounding) + "\"";
     }
     if(line)
-        m_filter += ",LINE=\"TRUE\"";
+        m_query += ",LINE=\"TRUE\"";
 
-    m_filter += "))";
+    m_query += "))";
 }
 
 #include <algorithm>
@@ -971,14 +971,14 @@ void R1FilterHandler::ConstructDateComparisonFilter(
         sscanf(in_dateLiteral.c_str(), "%04d-%02d-%02d", &year, &mon, &day);
 
     if(m_table->IsStructuredType()) {
-        m_filter += "(RECORD." + in_columnName;
+        m_query += "(RECORD." + in_columnName;
     }
     else 
-        m_filter += "(RAW_TEXT";
+        m_query += "(RAW_TEXT";
 
-    m_filter += " ";
-    m_filter += in_RelationalOp;
-    m_filter += " DATE(";
+    m_query += " ";
+    m_query += in_RelationalOp;
+    m_query += " DATE(";
 
     unsigned typeCustom = in_typeCustom;
     string formatSpec = in_formatCustom.substr(0,14);
@@ -1041,32 +1041,32 @@ void R1FilterHandler::ConstructDateComparisonFilter(
         break;
     }
 
-    m_filter += outfmt.c_str();
+    m_query += outfmt.c_str();
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
     case SE_COMP_EQ:
-        m_filter += " = ";
+        m_query += " = ";
         break;
     case SE_COMP_NE:
-        m_filter += " != ";
+        m_query += " != ";
         break;
     case SE_COMP_GT:
-        m_filter += " > ";
+        m_query += " > ";
         break;
     case SE_COMP_GE:
-        m_filter += " >= ";
+        m_query += " >= ";
         break;
     case SE_COMP_LT:
-        m_filter += " < ";
+        m_query += " < ";
         break;
     case SE_COMP_LE:
-        m_filter += " <= ";
+        m_query += " <= ";
         break;
     }
 
-    m_filter += outdate;
-    m_filter += "))";
+    m_query += outdate;
+    m_query += "))";
 }
 
 void R1FilterHandler::ConstructTimeComparisonFilter(
@@ -1120,51 +1120,51 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
     case TIME_12MMSS: {
         int twelve_hour = hour % 12;
         sprintf(outtime, formatSpec.c_str(), twelve_hour ? twelve_hour : 12, min, sec);
-        m_filter += "(";
+        m_query += "(";
         break;
         }
     }
 
     if(m_table->IsStructuredType()) {
-        m_filter += "(RECORD." + in_columnName;
+        m_query += "(RECORD." + in_columnName;
     }
     else 
-        m_filter += "(RAW_TEXT";
+        m_query += "(RAW_TEXT";
 
-    m_filter += " ";
-    m_filter += in_RelationalOp;
-    m_filter += " TIME(";
-    m_filter += outfmt.c_str();
+    m_query += " ";
+    m_query += in_RelationalOp;
+    m_query += " TIME(";
+    m_query += outfmt.c_str();
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
     case SE_COMP_EQ:
-        m_filter += " = ";
+        m_query += " = ";
         break;
     case SE_COMP_NE:
-        m_filter += " != ";
+        m_query += " != ";
         break;
     case SE_COMP_GT:
-        m_filter += " > ";
+        m_query += " > ";
         break;
     case SE_COMP_GE:
-        m_filter += " >= ";
+        m_query += " >= ";
         break;
     case SE_COMP_LT:
-        m_filter += " < ";
+        m_query += " < ";
         break;
     case SE_COMP_LE:
-        m_filter += " <= ";
+        m_query += " <= ";
         break;
     }
 
-    m_filter += outtime;
-    m_filter += "))";
+    m_query += outtime;
+    m_query += "))";
 
     if(in_typeCustom == TIME_12MMSS) {
-        m_filter += " AND (RECORD." + in_columnName + " CONTAINS \"";
-        m_filter += (hour < 12) ? "AM" : "PM";
-        m_filter += "\"))";
+        m_query += " AND (RECORD." + in_columnName + " CONTAINS \"";
+        m_query += (hour < 12) ? "AM" : "PM";
+        m_query += "\"))";
     }
 }
 
@@ -1178,41 +1178,41 @@ void R1FilterHandler::ConstructNumberComparisonFilter(
     string numLiteral = in_exprValue.GetAsPlatformString();
 
     if(m_table->IsStructuredType()) {
-        m_filter += "(RECORD." + in_columnName;
+        m_query += "(RECORD." + in_columnName;
     }
     else 
-        m_filter += "(RAW_TEXT";
+        m_query += "(RAW_TEXT";
 
-    m_filter += " ";
-    m_filter += in_RelationalOp;
-    m_filter += " NUMBER(NUM";
+    m_query += " ";
+    m_query += in_RelationalOp;
+    m_query += " NUMBER(NUM";
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
     case SE_COMP_EQ:
-        m_filter += " = ";
+        m_query += " = ";
         break;
     case SE_COMP_NE:
-        m_filter += " != ";
+        m_query += " != ";
         break;
     case SE_COMP_GT:
-        m_filter += " > ";
+        m_query += " > ";
         break;
     case SE_COMP_GE:
-        m_filter += " >= ";
+        m_query += " >= ";
         break;
     case SE_COMP_LT:
-        m_filter += " < ";
+        m_query += " < ";
         break;
     case SE_COMP_LE:
-        m_filter += " <= ";
+        m_query += " <= ";
         break;
     }
 
-    m_filter += "\"" + numLiteral + "\", ";
-    m_filter += "\"" + in_formatCustom.substr(0,1) + "\", ";
-    m_filter += "\"" + in_formatCustom.substr(1,1) + "\"";
-    m_filter += "))";
+    m_query += "\"" + numLiteral + "\", ";
+    m_query += "\"" + in_formatCustom.substr(0,1) + "\", ";
+    m_query += "\"" + in_formatCustom.substr(1,1) + "\"";
+    m_query += "))";
 }
 
 void R1FilterHandler::ConstructCurrencyComparisonFilter(
@@ -1225,42 +1225,42 @@ void R1FilterHandler::ConstructCurrencyComparisonFilter(
     string numLiteral = in_exprValue.GetAsPlatformString();
 
     if(m_table->IsStructuredType()) {
-        m_filter += "(RECORD." + in_columnName;
+        m_query += "(RECORD." + in_columnName;
     }
     else 
-        m_filter += "(RAW_TEXT";
+        m_query += "(RAW_TEXT";
 
-    m_filter += " ";
-    m_filter += in_RelationalOp;
-    m_filter += " CURRENCY(CUR";
+    m_query += " ";
+    m_query += in_RelationalOp;
+    m_query += " CURRENCY(CUR";
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
     case SE_COMP_EQ:
-        m_filter += " = ";
+        m_query += " = ";
         break;
     case SE_COMP_NE:
-        m_filter += " != ";
+        m_query += " != ";
         break;
     case SE_COMP_GT:
-        m_filter += " > ";
+        m_query += " > ";
         break;
     case SE_COMP_GE:
-        m_filter += " >= ";
+        m_query += " >= ";
         break;
     case SE_COMP_LT:
-        m_filter += " < ";
+        m_query += " < ";
         break;
     case SE_COMP_LE:
-        m_filter += " <= ";
+        m_query += " <= ";
         break;
     }
 
-    m_filter += "\"" + in_formatCustom.substr(0,1) + numLiteral + "\", ";
-    m_filter += "\"" + in_formatCustom.substr(0,1) + "\", ";
-    m_filter += "\"" + in_formatCustom.substr(1,1) + "\", ";
-    m_filter += "\"" + in_formatCustom.substr(2,1) + "\"";
-    m_filter += "))";
+    m_query += "\"" + in_formatCustom.substr(0,1) + numLiteral + "\", ";
+    m_query += "\"" + in_formatCustom.substr(0,1) + "\", ";
+    m_query += "\"" + in_formatCustom.substr(1,1) + "\", ";
+    m_query += "\"" + in_formatCustom.substr(2,1) + "\"";
+    m_query += "))";
 }
 
 void R1FilterHandler::ConstructPCAPComparisonFilter(
@@ -1270,32 +1270,32 @@ void R1FilterHandler::ConstructPCAPComparisonFilter(
 {
     string searchLiteral = in_exprValue.GetAsPlatformString();
 
-    m_filter += "(" + in_columnName;
+    m_query += "(" + in_columnName;
 
     // Determine the math symbol for comparison type.
     switch (in_compOp) {
     case SE_COMP_EQ:
-        m_filter += " == ";
+        m_query += " == ";
         break;
     case SE_COMP_NE:
-        m_filter += " != ";
+        m_query += " != ";
         break;
     case SE_COMP_GT:
-        m_filter += " > ";
+        m_query += " > ";
         break;
     case SE_COMP_GE:
-        m_filter += " >= ";
+        m_query += " >= ";
         break;
     case SE_COMP_LT:
-        m_filter += " < ";
+        m_query += " < ";
         break;
     case SE_COMP_LE:
-        m_filter += " <= ";
+        m_query += " <= ";
         break;
     }
 
-    m_filter += searchLiteral;
-    m_filter += ")";
+    m_query += searchLiteral;
+    m_query += ")";
 }
 
 void R1FilterHandler::ConstructPCAPThinner(
@@ -1306,16 +1306,23 @@ void R1FilterHandler::ConstructPCAPThinner(
     string searchLiteral = in_exprValue.GetAsPlatformString();
     string constraint;
     char query[1024];
-
+    int compOp;
     switch (in_compOp) {
     case SE_COMP_EQ:
-        constraint = m_table->GetResultThinnerQuery(in_columnName, FILTER_EQ);
+        compOp = FILTER_EQ;
         break;
     case SE_COMP_NE:
-        constraint = m_table->GetResultThinnerQuery(in_columnName, FILTER_NE);
+        compOp = FILTER_NE;
         break;
     }
+    constraint = m_table->GetResultThinnerQuery(in_columnName, compOp);
+
+    ColFilter colFilter;
+    colFilter.compOp = compOp;
+    colFilter.searchLiteral = searchLiteral;
+    colFilter.colName = in_columnName.GetAsPlatformString();
+    m_colFilters.push_back(colFilter);
 
     snprintf(query, sizeof(query), constraint.c_str(), searchLiteral.c_str());
-    m_filter += query;
+    m_query += query;
 }

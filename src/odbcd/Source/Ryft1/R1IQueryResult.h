@@ -135,6 +135,14 @@ typedef struct _RyftOne_Column {
 } RyftOne_Column;
 typedef vector<RyftOne_Column> RyftOne_Columns;
 
+class ColFilter {
+public:
+    string colName;
+    string searchLiteral;
+    int compOp;
+};
+typedef vector<ColFilter> ColFilters;
+
 static int xCreate(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr);
 static int xConnect(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr);
 static int xDisconnect(sqlite3_vtab *in_pVTab);
@@ -163,7 +171,7 @@ public:
         __sqlite = NULL;
    }
 
-    void OpenQuery(string& in_name, vector<__catalog_entry__>::iterator in_catentry, 
+   void OpenQuery(string& in_name, vector<__catalog_entry__>::iterator in_catentry,
         string in_server, string in_token, string in_restPath, string in_rootPath, int in_lruMaxDepth, 
         long in_maxMatchCount, struct stat *in_settings_fstat)
     {
@@ -191,7 +199,7 @@ public:
         }
         
         __cols = __getColumns(in_catentry->meta_config);
-        __colFilters = in_catentry->meta_config.filters;
+        __metaFilters = in_catentry->meta_config.filters;
 
         resultCol rcol;
         for(int idx = 0; idx < __metaTags.size(); idx++) {
@@ -252,14 +260,19 @@ public:
         __queryFinished = false;
     }
 
-    virtual void AppendFilter(string in_filter)
+    virtual void AppendQuery(string in_query)
     {
         if(!__query.empty())
             __query += " AND ";
 
-        __query += in_filter;
+        __query += in_query;
     }
     
+    void SetColFilters(ColFilters in_colFilters)
+    {
+        __colFilters = in_colFilters;
+    }
+
     void PrepareUpdate()
     {
         int idx;
@@ -614,7 +627,7 @@ public:
         return true;
     }
 
-    bool IndexedResultEof() 
+    virtual bool IndexedResultEof() 
     {
         if(__idxCurRow > __idxNumRows)
             return true;
@@ -831,7 +844,6 @@ protected:
     string __name;
     string __extension;
     vector<string> __metaTags;
-    vector<__meta_config__::__meta_filter__> __colFilters;
 
     bool __no_top;
     string __delimiter;
@@ -845,6 +857,8 @@ protected:
     Cursor __cursor;
 
     RyftOne_Columns __cols;
+    vector<__meta_config__::__meta_filter__> __metaFilters;
+    ColFilters __colFilters;
 
     ILogger* __log;
 
