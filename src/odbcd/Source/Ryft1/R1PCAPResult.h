@@ -14,7 +14,7 @@
 #include <linux/icmp.h>
 #include <netinet/ether.h>
 #include <netinet/ip.h>
-#include <linux/ipv6.h>
+#include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <arpa/inet.h>

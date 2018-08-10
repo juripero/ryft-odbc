@@ -294,7 +294,7 @@ bool RyftOne_PCAPResult::__internalFetch()
         const struct vlan_hdr* vlanHeader;
         struct mpls_label mplsHeader;
         const struct ip* ipHeader;
-        const struct ipv6hdr *ipv6Header;
+        const struct ip6_hdr *ipv6Header;
         const struct tcphdr* tcpHeader;
         const struct udphdr* udpHeader;
         unsigned short ethType;
@@ -326,12 +326,12 @@ bool RyftOne_PCAPResult::__internalFetch()
         }
         bool isIPv6 = (ethType == ETHERTYPE_IPV6);
         if (isIPv6) {
-            ipv6Header = (struct ipv6hdr *)(pkt + traverse);
-            traverse += sizeof(struct ipv6hdr);
+            ipv6Header = (struct ip6_hdr *)(pkt + traverse);
+            traverse += sizeof(struct ip6_hdr);
         }
 
-        bool isTCP = (isIP && (ipHeader->ip_p == IPPROTO_TCP)) || (isIPv6 && (ipv6Header->nexthdr == IPPROTO_TCP));
-        bool isUDP = (isIP && (ipHeader->ip_p == IPPROTO_UDP)) || (isIPv6 && (ipv6Header->nexthdr == IPPROTO_UDP));
+        bool isTCP = (isIP && (ipHeader->ip_p == IPPROTO_TCP)) || (isIPv6 && (ipv6Header->ip6_nxt == IPPROTO_TCP));
+        bool isUDP = (isIP && (ipHeader->ip_p == IPPROTO_UDP)) || (isIPv6 && (ipv6Header->ip6_nxt == IPPROTO_UDP));
         if (isTCP) {
             tcpHeader = (tcphdr *)(pkt + traverse);
             traverse += tcpHeader->th_off * 4; // number of 32bit words in the TCP header
@@ -589,12 +589,12 @@ bool RyftOne_PCAPResult::__internalFetch()
                 break;
             case IPV6_SRC:
                 if (isIPv6) {
-                    inet_ntop(AF_INET6, &(ipv6Header->saddr), ptr, min(INET6_ADDRSTRLEN, len));
+                    inet_ntop(AF_INET6, &(ipv6Header->ip6_src), ptr, min(INET6_ADDRSTRLEN, len));
                 }
                 break;
             case IPV6_DST:
                 if (isIPv6) {
-                    inet_ntop(AF_INET6, &(ipv6Header->daddr), ptr, min(INET6_ADDRSTRLEN, len));
+                    inet_ntop(AF_INET6, &(ipv6Header->ip6_dst), ptr, min(INET6_ADDRSTRLEN, len));
                 }
                 break;
             case IPV6_SRC_SA_MAC:
