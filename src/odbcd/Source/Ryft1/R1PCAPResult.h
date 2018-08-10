@@ -14,7 +14,7 @@
 #include <linux/icmp.h>
 #include <netinet/ether.h>
 #include <netinet/ip.h>
-#include <netinet/in.h>
+#include <linux/ipv6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <arpa/inet.h>
@@ -94,10 +94,11 @@ struct mpls_label {
 #define DOMAIN_IP               0x00000800
 #define DOMAIN_IPV6             0x00001000
 #define DOMAIN_ICMP             0x00002000
-#define DOMAIN_LAYER4           0x00004000
-#define DOMAIN_TCP              0x00008000
-#define DOMAIN_UDP              0x00010000
-#define DOMAIN_HTTP             0x00020000
+#define DOMAIN_ICMPV6           0x00004000
+#define DOMAIN_LAYER4           0x00008000
+#define DOMAIN_TCP              0x00010000
+#define DOMAIN_UDP              0x00020000
+#define DOMAIN_HTTP             0x00040000
 
 #define FRAME_TIME              DOMAIN_FRAME | 1
 #define FRAME_NUMBER            DOMAIN_FRAME | 2
@@ -134,12 +135,22 @@ struct mpls_label {
 #define IP_GEOIP_DST_COUNTRY    DOMAIN_IP | 10
 #define IP_TTL                  DOMAIN_IP | 11
 
+#define IPV6_SRC                DOMAIN_IPV6 | 1
+#define IPV6_SRC_SA_MAC         DOMAIN_IPV6 | 2
+#define IPV6_DST                DOMAIN_IPV6 | 3
+#define IPV6_DST_SA_MAC         DOMAIN_IPV6 | 4
+
 #define ICMP_TYPE               DOMAIN_ICMP | 1
 #define ICMP_CODE               DOMAIN_ICMP | 2
 #define ICMP_CHECKSUM           DOMAIN_ICMP | 3
 #define ICMP_IDENT              DOMAIN_ICMP | 4
 #define ICMP_SEQ_LE             DOMAIN_ICMP | 5
 #define ICMP_DATA               DOMAIN_ICMP | 6
+
+#define ICMPV6_TYPE             DOMAIN_ICMPV6 | 1
+#define ICMPV6_CODE             DOMAIN_ICMPV6 | 2
+#define ICMPV6_CHECKSUM         DOMAIN_ICMPV6 | 3
+#define ICMPV6_DATA             DOMAIN_ICMPV6 | 4
 
 #define PAYLOAD                 DOMAIN_LAYER4 | 1
 

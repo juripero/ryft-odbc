@@ -122,6 +122,18 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colAlias.compare("ip.ttl")) {
             colQuantity |= IP_TTL;
         }
+        else if (!colAlias.compare("ipv6.src")) {
+            colQuantity |= IPV6_SRC;
+        }
+        else if (!colAlias.compare("ipv6.src_sa_mac")) {
+            colQuantity |= IPV6_SRC_SA_MAC;
+        }
+        else if (!colAlias.compare("ipv6.dst")) {
+            colQuantity |= IPV6_DST;
+        }
+        else if (!colAlias.compare("ipv6.dst_sa_mac")) {
+            colQuantity |= IPV6_DST_SA_MAC;
+        }
         else if (!colAlias.compare("icmp.type")) {
             colQuantity |= ICMP_TYPE;
         }
@@ -282,6 +294,7 @@ bool RyftOne_PCAPResult::__internalFetch()
         const struct vlan_hdr* vlanHeader;
         struct mpls_label mplsHeader;
         const struct ip* ipHeader;
+        const struct ipv6hdr *ipv6Header;
         const struct tcphdr* tcpHeader;
         const struct udphdr* udpHeader;
         unsigned short ethType;
@@ -311,9 +324,14 @@ bool RyftOne_PCAPResult::__internalFetch()
             ipHeader = (struct ip *)(pkt + traverse);
             traverse += ipHeader->ip_hl * 4;
         }
+        bool isIPv6 = (ethType == ETHERTYPE_IPV6);
+        if (isIPv6) {
+            ipv6Header = (struct ipv6hdr *)(pkt + traverse);
+            traverse += sizeof(struct ipv6hdr);
+        }
 
-        bool isTCP = isIP && (ipHeader->ip_p == IPPROTO_TCP);
-        bool isUDP = isIP && (ipHeader->ip_p == IPPROTO_UDP);
+        bool isTCP = (isIP && (ipHeader->ip_p == IPPROTO_TCP)) || (isIPv6 && (ipv6Header->nexthdr == IPPROTO_TCP));
+        bool isUDP = (isIP && (ipHeader->ip_p == IPPROTO_UDP)) || (isIPv6 && (ipv6Header->nexthdr == IPPROTO_UDP));
         if (isTCP) {
             tcpHeader = (tcphdr *)(pkt + traverse);
             traverse += tcpHeader->th_off * 4; // number of 32bit words in the TCP header
@@ -372,6 +390,8 @@ bool RyftOne_PCAPResult::__internalFetch()
                     proto += ":vlan:ethertype";
                 if (isIP)
                     proto += ":ip";
+                if (isIPv6)
+                    proto += ":ipv6";
                 if (isTCP) {
                     proto += ":tcp";
                     s_port = tcpHeader->source;
@@ -566,6 +586,19 @@ bool RyftOne_PCAPResult::__internalFetch()
                 if (isIP) {
                     snprintf(ptr, len, "%d", ipHeader->ip_ttl);
                 }
+                break;
+            case IPV6_SRC:
+                if (isIPv6) {
+                    inet_ntop(AF_INET6, &(ipv6Header->saddr), ptr, min(INET6_ADDRSTRLEN, len));
+                }
+                break;
+            case IPV6_DST:
+                if (isIPv6) {
+                    inet_ntop(AF_INET6, &(ipv6Header->daddr), ptr, min(INET6_ADDRSTRLEN, len));
+                }
+                break;
+            case IPV6_SRC_SA_MAC:
+            case IPV6_DST_SA_MAC:
                 break;
             case ICMP_TYPE:
             case ICMP_CODE:
@@ -765,13 +798,22 @@ bool RyftOne_PCAPResult::__applyColFilter()
             for (itrFilter = __appliedFilters[colidx].begin(); !criteriaMet && itrFilter != __appliedFilters[colidx].end(); itrFilter++) {
                 switch (itrFilter->compOp) {
                 case FILTER_EQ:
-                    if (!itrFilter->searchLiteral.compare(ptr))
+                    if (*ptr && !itrFilter->searchLiteral.compare(ptr))
                         criteriaMet = true;
                     break;
                 case FILTER_NE:
-                    if (itrFilter->searchLiteral.compare(ptr))
+                    if (*ptr && itrFilter->searchLiteral.compare(ptr))
                         criteriaMet = true;
                     break;
+                case FILTER_LIKE:
+                    if (*ptr && strstr(ptr, itrFilter->searchLiteral.c_str()))
+                        criteriaMet = true;
+                    break;
+                case FILTER_NOT_LIKE:
+                    if (*ptr && !strstr(ptr, itrFilter->searchLiteral.c_str()))
+                        criteriaMet = true;
+                    break;
+
                 }
             }
             if (!criteriaMet)

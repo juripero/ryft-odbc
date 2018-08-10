@@ -287,8 +287,19 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
     m_table->GetTypeFormatSpecifier(colRef.m_colIndex, &typeSpecial, formatSpecial);
 
     if (m_table->IsPCAPDatabase() && columnName != L"payload") {
-        // If this is a PCAP database and we are not doing a Ryft search on the payload, fail the passdown request
-        return false;
+
+        if (m_table->HasResultThinner(columnName)) {
+
+            // Contruct the filter string based upon built in filters
+            if (!m_negate) {
+                ConstructPCAPThinner(columnName, literalVal, FILTER_LIKE);
+            }
+            else
+                ConstructPCAPThinner(columnName, literalVal, FILTER_NOT_LIKE);
+
+            m_isPassedDown = true;
+            return true;
+        }
     }
     else if((exprLiteralType == PS_LITERAL_DATE) && 
         ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
@@ -412,7 +423,11 @@ bool R1FilterHandler::PassdownSimpleComparison(
         if (((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE)) && m_table->HasResultThinner(columnName)) {
 
             // Contruct the filter string based upon built in filters
-            ConstructPCAPThinner(columnName, literalVal, in_compOp);
+            if (in_compOp == SE_COMP_EQ) {
+                ConstructPCAPThinner(columnName, literalVal, FILTER_EQ);
+            }
+            else
+                ConstructPCAPThinner(columnName, literalVal, FILTER_NE);
 
             m_isPassedDown = true;
             return true;
@@ -1301,24 +1316,15 @@ void R1FilterHandler::ConstructPCAPComparisonFilter(
 void R1FilterHandler::ConstructPCAPThinner(
     simba_wstring in_columnName,
     const simba_wstring& in_exprValue,
-    Simba::SQLEngine::SEComparisonType in_compOp)
+    int in_compOp)
 {
     string searchLiteral = in_exprValue.GetAsPlatformString();
     string constraint;
     char query[1024];
-    int compOp;
-    switch (in_compOp) {
-    case SE_COMP_EQ:
-        compOp = FILTER_EQ;
-        break;
-    case SE_COMP_NE:
-        compOp = FILTER_NE;
-        break;
-    }
-    constraint = m_table->GetResultThinnerQuery(in_columnName, compOp);
+    constraint = m_table->GetResultThinnerQuery(in_columnName, in_compOp);
 
     ColFilter colFilter;
-    colFilter.compOp = compOp;
+    colFilter.compOp = in_compOp;
     colFilter.searchLiteral = searchLiteral;
     colFilter.colName = in_columnName.GetAsPlatformString();
     m_colFilters.push_back(colFilter);

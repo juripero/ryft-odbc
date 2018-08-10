@@ -303,7 +303,7 @@ namespace RyftOne
         void ConstructPCAPThinner(
             simba_wstring in_columnName,
             const simba_wstring& in_exprValue,
-            Simba::SQLEngine::SEComparisonType in_compOp);
+            int in_compOp);
 
 
         // The table on which to apply filters. (NOT OWN)

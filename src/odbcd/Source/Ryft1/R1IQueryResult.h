@@ -721,7 +721,7 @@ protected:
 
         if (query.empty()) {
             if (isPCAP) {
-                query = "(ip.src != 255.255.255.255)";
+                query = "(eth.src != 00:00:00:00:00:00)";
             }
             else
                 query = "(RECORD CONTAINS ?)";

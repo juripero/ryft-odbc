@@ -73,8 +73,10 @@ public:
     string record_delimiter;
     string field_delimiter;
     // PCAP
-    #define FILTER_EQ   0
-    #define FILTER_NE   1
+    #define FILTER_EQ           0
+    #define FILTER_NE           1
+    #define FILTER_LIKE         2
+    #define FILTER_NOT_LIKE     3
     class __meta_filter__ {
     public:
         string id;
