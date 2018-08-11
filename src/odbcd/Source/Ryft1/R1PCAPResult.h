@@ -11,7 +11,6 @@
 #include <string.h>
 #include <pcap.h>
 #include <net/ethernet.h>
-#include <linux/icmp.h>
 #include <netinet/ether.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
@@ -29,7 +28,6 @@
 #include <iostream>
 #include <map>
 using namespace std;
-
 
 /*
 * 	struct vlan_hdr - vlan header

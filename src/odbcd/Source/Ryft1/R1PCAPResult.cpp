@@ -844,8 +844,10 @@ string RyftOne_PCAPResult::GetResultThinnerQuery(string columnName, int type)
     if (itr != __metaFilters.end()) {
         switch (type) {
         case FILTER_EQ:
+        case FILTER_LIKE:
             return itr->eq;
         case FILTER_NE:
+        case FILTER_NOT_LIKE:
             return itr->ne;
         default:
             return "";
