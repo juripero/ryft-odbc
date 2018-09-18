@@ -926,11 +926,10 @@ void RyftOne_PCAPResult::__loadTable(string& in_name, vector<__catalog_entry__>:
 void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method, string& uri, string& version, map<string, string>& headers)
 {
     membuf httpBuf(ptr, len);
-    istream in(&httpBuf);
     string reqLine;
     char *dup;
     char *token;
-    my_getline(in, reqLine);
+    my_getline(httpBuf, reqLine);
     if (!reqLine.empty()) {
         dup = strdup(reqLine.c_str());
         token = strtok(dup, " ");
@@ -939,7 +938,7 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
             token = strtok(NULL, " ");
             if (token) {
                 uri = token;
-                token = strtok(NULL, " ");
+                token = strtok(NULL, "\r\n");
                 if (token)
                     version = token;
             }
@@ -950,18 +949,17 @@ void RyftOne_PCAPResult::__loadHttpRequest(char *ptr, size_t len, string& method
         return;
     if (uri.empty())
         return;
-    __readHeaders(in, headers);
+    __readHeaders(httpBuf, headers);
 }
 
 int RyftOne_PCAPResult::__loadHttpResponse(char *ptr, size_t len, string& version, string& status, map<string, string>& headers)
 {
     membuf httpBuf(ptr, len);
-    istream in(&httpBuf);
     string resLine;
     int code = 0;
     char *dup;
     char *token;
-    my_getline(in, resLine);
+    my_getline(httpBuf, resLine);
     if (!resLine.empty()) {
         dup = strdup(resLine.c_str());
         token = strtok(dup, " ");
@@ -981,24 +979,24 @@ int RyftOne_PCAPResult::__loadHttpResponse(char *ptr, size_t len, string& versio
         return code;
     if (code == 0 || status.empty())
         return code;
-    __readHeaders(in, headers);
+    __readHeaders(httpBuf, headers);
     return code;
 }
 
-void RyftOne_PCAPResult::__readHeaders(istream& in, map<string, string>& headers) 
+void RyftOne_PCAPResult::__readHeaders(membuf& httpBuf, map<string, string>& headers) 
 {
     char *dup;
     char *token;
     string header;
-    while (!in.eof()) {
-        my_getline(in, header);
+    while (httpBuf.in_avail()) {
+        my_getline(httpBuf, header);
         size_t idx;
         if (header == "\r\n")
             break;
         dup = strdup(header.c_str());
         token = strtok(dup, ":");
         if (token) {
-            token = strtok(NULL, "");
+            token = strtok(NULL, "\r\n");
             while (token && is_whitespace(*token))
                 token++;
             if (token)

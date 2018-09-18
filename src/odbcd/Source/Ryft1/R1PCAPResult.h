@@ -193,30 +193,27 @@ const char whitespace[] = " \f\n\r\t\v";
 #define is_whitespace(c) \
     ((c) && strchr(whitespace, (c)))
 
-inline void my_getline(istream& in, string&out) {
-    out.clear();
-    for (char cstr1 = in.get(); cstr1 != std::char_traits<char>::eof(); cstr1 = in.get()) {
-        if (cstr1 == '\r' || cstr1 == '\n') {
-            char cstr2 = in.get();
-            if (cstr1 == '\r' && cstr2 == '\n' ||
-                cstr1 == '\n' && cstr2 == 'r') {
-                out += "\r\n";
-                break;
-            }
-            else
-                in.unget();
-        }
-        else 
-            out += cstr1;
-    }
-}
-
 struct membuf : std::streambuf
 {
     membuf(char * begin, size_t len) {
         this->setg(begin, begin, begin + len);
     }
 };
+
+inline void my_getline(membuf& in, string&out) {
+    out.clear();
+    for (char cstr1 = in.sbumpc(); in.in_avail(); cstr1 = in.sbumpc()) {
+        if (cstr1 == '\r' || cstr1 == '\n') {
+            char cstr2 = in.sbumpc();
+            if (cstr2 != '\r' && cstr2 != '\n') 
+                in.sungetc();
+            out += "\r\n";
+            break;
+        }
+        else 
+            out += cstr1;
+    }
+}
 
 typedef bool (*comparitor)(const struct ether_addr *a1, const struct ether_addr *a2);
 
@@ -263,7 +260,7 @@ private:
 
     void __loadHttpRequest(char *ptr, size_t len, string& method, string& uri, string& version, map<string, string>& headers);
     int __loadHttpResponse(char *ptr, size_t len, string& version, string& status, map<string, string>& headers);
-    void __readHeaders(istream& in, map<string, string>& headers);
+    void __readHeaders(membuf& httpBuf, map<string, string>& headers);
 
     void __loadManufs(string& manufPath);
     bool __getManufAddr(char *ptr, size_t len, const struct ether_addr *);
