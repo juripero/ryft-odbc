@@ -152,6 +152,24 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colAlias.compare("icmp.data.data")) {
             colQuantity |= ICMP_DATA;
         }
+        else if (!colAlias.compare("icmpv6.type")) {
+            colQuantity |= ICMPV6_TYPE;
+        }
+        else if (!colAlias.compare("icmpv6.code")) {
+            colQuantity |= ICMPV6_CODE;
+        }
+        else if (!colAlias.compare("icmpv6.checksum")) {
+            colQuantity |= ICMPV6_CHECKSUM;
+        }
+        else if (!colAlias.compare("icmpv6.echo.identifier")) {
+            colQuantity |= ICMPV6_IDENT;
+        }
+        else if (!colAlias.compare("icmpv6.echo.sequence_number")) {
+            colQuantity |= ICMPV6_SEQUENCE;
+        }
+        else if (!colAlias.compare("icmpv6.data.data")) {
+            colQuantity |= ICMPV6_DATA;
+        }
         else if (!colAlias.compare("payload")) {
             colQuantity |= PAYLOAD;
         }
@@ -295,6 +313,7 @@ bool RyftOne_PCAPResult::__internalFetch()
         struct mpls_label mplsHeader;
         const struct ip* ipHeader;
         const struct ip6_hdr *ipv6Header;
+        const struct icmphdr *icmpHeader;
         const struct tcphdr* tcpHeader;
         const struct udphdr* udpHeader;
         unsigned short ethType;
@@ -328,6 +347,14 @@ bool RyftOne_PCAPResult::__internalFetch()
         if (isIPv6) {
             ipv6Header = (struct ip6_hdr *)(pkt + traverse);
             traverse += sizeof(struct ip6_hdr);
+        }
+        bool isICMP = (isIP && (ipHeader->ip_p == IPPROTO_ICMP));
+        bool isICMPv6 = (isIPv6 && (ipv6Header->ip6_nxt == IPPROTO_ICMPV6));
+        if (isICMP || isICMPv6) {
+            icmpHeader = (struct icmphdr *)(pkt + traverse);
+            traverse += sizeof(struct icmphdr);
+            payloadLen = hdr.len - traverse;
+            payloadData = (u_char *)(pkt + traverse);
         }
 
         bool isTCP = (isIP && (ipHeader->ip_p == IPPROTO_TCP)) || (isIPv6 && (ipv6Header->ip6_nxt == IPPROTO_TCP));
@@ -392,6 +419,10 @@ bool RyftOne_PCAPResult::__internalFetch()
                     proto += ":ip";
                 if (isIPv6)
                     proto += ":ipv6";
+                if (isICMP)
+                    proto += ":icmp";
+                if (isICMPv6)
+                    proto += ":icmpv6";
                 if (isTCP) {
                     proto += ":tcp";
                     s_port = tcpHeader->source;
@@ -468,9 +499,6 @@ bool RyftOne_PCAPResult::__internalFetch()
                 if (isVLAN) {
                     snprintf(ptr, len, "%d", ethType);
                 }
-                break;
-            case VLAN_PADDING:
-            case VLAN_TRAILER:
                 break;
             case MPLS_LABEL:
                 if (isMPLS) {
@@ -597,16 +625,50 @@ bool RyftOne_PCAPResult::__internalFetch()
                     inet_ntop(AF_INET6, &(ipv6Header->ip6_dst), ptr, min(INET6_ADDRSTRLEN, len));
                 }
                 break;
-            case IPV6_SRC_SA_MAC:
-            case IPV6_DST_SA_MAC:
-                break;
             case ICMP_TYPE:
-            case ICMP_CODE:
-            case ICMP_CHECKSUM:
-            case ICMP_IDENT:
-            case ICMP_SEQ_LE:
-            case ICMP_DATA:
+            case ICMPV6_TYPE:
+                if (isICMP || isICMPv6) {
+                    snprintf(ptr, len, "%d", icmpHeader->type);
+                }
                 break;
+            case ICMP_CODE:
+            case ICMPV6_CODE:
+                if (isICMP || isICMPv6) {
+                    snprintf(ptr, len, "%d", icmpHeader->code);
+                }
+                break;
+            case ICMP_CHECKSUM:
+            case ICMPV6_CHECKSUM:
+                if (isICMP || isICMPv6) {
+                    unsigned short us;
+                    us = ntohs(icmpHeader->checksum);
+                    snprintf(ptr, len, "%d", us);
+                }
+                break;
+            case ICMP_IDENT:
+            case ICMPV6_IDENT:
+                if ((isICMP && (icmpHeader->type == ICMP_ECHO || icmpHeader->type == ICMP_ECHOREPLY)) ||
+                    (isICMPv6 && (icmpHeader->type == ICMPV6_ECHO || icmpHeader->type == ICMPV6_ECHOREPLY))) {
+                    uint16_t us;
+                    us = ntohs(icmpHeader->un.echo.id);
+                    snprintf(ptr, len, "%d", us);
+                }
+                break;
+            case ICMP_SEQ_LE:
+                if (isICMP && (icmpHeader->type == ICMP_ECHO || icmpHeader->type == ICMP_ECHOREPLY)) {
+                    snprintf(ptr, len, "%d", icmpHeader->un.echo.sequence);
+                }
+                break;
+            case ICMPV6_SEQUENCE:
+                if (isICMPv6 && (icmpHeader->type == ICMPV6_ECHO || icmpHeader->type == ICMPV6_ECHOREPLY)) {
+                    uint16_t us;
+                    us = ntohs(icmpHeader->un.echo.sequence);
+                    snprintf(ptr, len, "%d", us);
+                }
+                break;
+            case ICMP_DATA:
+            case ICMPV6_DATA:
+                // fallthrough to payload case
             case PAYLOAD: {
                 if (payloadLen) {
                     string payload(payloadLen, '.');

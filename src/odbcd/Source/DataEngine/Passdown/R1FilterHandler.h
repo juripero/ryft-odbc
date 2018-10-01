@@ -309,6 +309,7 @@ namespace RyftOne
         // The table on which to apply filters. (NOT OWN)
         Simba::Support::SharedPtr<R1Table> m_table;
 
+        int m_limit;
         bool m_negate;
         simba_wstring m_query;
         ColFilters m_colFilters;

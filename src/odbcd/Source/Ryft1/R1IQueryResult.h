@@ -159,7 +159,7 @@ static int xRename(sqlite3_vtab *pVtab, const char *zNew);
 
 class IQueryResult {
 public:
-    IQueryResult(ILogger *log) : __log(log), __sqlite(0), __stmt(0) { ; }
+    IQueryResult(ILogger *log) : __log(log), __sqlite(0), __stmt(0), __limit(0) { ; }
    ~IQueryResult()
     {
         if(__stmt) 
@@ -233,11 +233,11 @@ public:
 
         __metafile_stat = in_catentry->meta_config.metafile_stat;
 
-        dbpath += "/caches_v3.bin";
+        dbpath += "/caches_v4.bin";
         int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
 
         char *errp = NULL;
-        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT, IDX_FILE TEXT, NUM_ROWS INTEGER, LRU_TIME BIGINT)", NULL, NULL, &errp);
+        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT, IDX_FILE TEXT, NUM_ROWS INTEGER, LRU_TIME BIGINT, QUERY_LIMIT INT)", NULL, NULL, &errp);
         if(errp)
             sqlite3_free(errp);
 
@@ -268,6 +268,11 @@ public:
         __query += in_query;
     }
     
+    void SetLimit(int in_limit)
+    {
+        __limit = in_limit;
+    }
+
     void SetColFilters(ColFilters in_colFilters)
     {
         __colFilters = in_colFilters;
@@ -449,7 +454,14 @@ public:
 
     bool IsNull(int colIdx)
     {
-        return (sqlite3_column_type(__stmt, colIdx) == SQLITE_NULL);
+        switch (__cols[colIdx].m_dtType) {
+        case TYPE_META_FILE:
+        case TYPE_META_OFFSET:
+        case TYPE_META_LENGTH:
+            return false;
+        default:
+            return (sqlite3_column_type(__stmt, colIdx) == SQLITE_NULL);
+        }
     }
 
     const char * GetStringValue(int colIdx)
@@ -746,7 +758,7 @@ protected:
                 *pstr = toupper(*pstr);
             tableName = stringId;
 
-            if (!__initTable(query, tableName)) {
+            if (!__initTable(query, tableName, __limit)) {
                 __dropTable(query);
                 return false;
             }
@@ -779,10 +791,13 @@ protected:
                 url += "&index=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
                 url += "&local=true";
             }
-            if (useLimit) {
+            if (useLimit || __limit) {
                 char max_count[128];
+                int limit = __limit;
+                if (useLimit)
+                    limit = __maxMatchCount;
                 snprintf(max_count, sizeof(max_count),
-                    "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d&backend-option=-vv", __maxMatchCount);
+                    "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d&backend-option=-vv", limit);
                 url += max_count;
             }
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -849,6 +864,7 @@ protected:
     string __delimiter;
 
     string __query;
+    int __limit;
 
     string __idxFile;
     long __idxNumRows;
@@ -936,7 +952,7 @@ private:
         while (lru_entry);
     }
 
-    bool __initTable(string& query, string& tableName)
+    bool __initTable(string& query, string& tableName, int limit)
     {
         char * errp;
 
@@ -1019,7 +1035,7 @@ private:
 
         string escapedQuery;
         CopyEscapedLiteral(escapedQuery, query);
-        sql = sqlite3_mprintf("INSERT INTO \"__DIRECTORY__\" VALUES ('%s','%s', NULL, NULL, 0)", tableName.c_str(), escapedQuery.c_str());
+        sql = sqlite3_mprintf("INSERT INTO \"__DIRECTORY__\" VALUES ('%s','%s', NULL, NULL, 0, %d)", tableName.c_str(), escapedQuery.c_str(), limit);
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -1119,6 +1135,21 @@ private:
             __dropTable(query);
             return false;
         }
+
+        // check limit
+        int limit = 0;
+        if (prows[ncols + 5])
+            limit = atoi(prows[ncols + 5]);
+        if (!__limit && limit && (limit == __idxNumRows)) {
+            __dropTable(query);
+            return false;
+        }
+        if(__limit && limit && __limit > limit) {
+            __dropTable(query);
+            return false;
+        }
+        __idxNumRows = (__limit && __idxNumRows > __limit) ? __limit : __idxNumRows;
+
         sqlite3_free_table(prows);
 
         // check stat against .meta.table

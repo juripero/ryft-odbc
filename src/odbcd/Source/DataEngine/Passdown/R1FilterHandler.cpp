@@ -129,7 +129,8 @@ R1FilterHandler::R1FilterHandler(
     m_ryft1(ryft1),
     m_table(in_table),
     m_isPassedDown(false),
-    m_negate(false)
+    m_negate(false),
+    m_limit(0)
 {
     assert(!in_table.IsNull());
 }
@@ -156,7 +157,7 @@ SharedPtr<DSIExtResultSet> R1FilterHandler::TakeResult()
     }
 
     // Return filter result.
-    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_query, m_colFilters));
+    return SharedPtr<DSIExtResultSet>(new R1FilterResult(m_table, m_query, m_limit, m_colFilters));
 }
 
 // Protected =======================================================================================
@@ -812,6 +813,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     int edit = 0;
     int width = 0;
     bool line = false;
+    bool limit = 0;
     char distance[10];
     char surrounding[10];
     bool case_sensitive = 1;
@@ -905,10 +907,20 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 pfilter += idx1-1;
                 break;
                 }
-            case L'l':
-            case L'L': 
+            case L'n':
+            case L'N': 
+                line = true;
                 line = true;
                 break;
+            case L'l':
+            case L'L': {
+                wstring num_limit;
+                for (idx1 = 1; pfilter[idx1] && (pfilter[idx1] >= L'0' && pfilter[idx1] <= L'9'); idx1++)
+                    num_limit += pfilter[idx1];
+                swscanf(num_limit.c_str(), L"%d", &limit);
+                pfilter += idx1 - 1;
+                break;
+                }
             case L'i':
             case L'I':
                 case_sensitive = false;
@@ -969,6 +981,8 @@ void R1FilterHandler::ConstructStringComparisonFilter(
         m_query += ",LINE=\"TRUE\"";
 
     m_query += "))";
+    if(limit > m_limit)
+        m_limit = limit;
 }
 
 #include <algorithm>

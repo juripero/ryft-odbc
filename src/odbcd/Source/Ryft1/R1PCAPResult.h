@@ -16,6 +16,8 @@
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
+#include <netinet/ip_icmp.h>
+
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <GeoIP.h>
@@ -79,6 +81,9 @@ struct mpls_label {
 #define MPLS_LABEL_EXTENSION	15 /* RFC7274 */
 
 #define MPLS_LABEL_FIRST_UNRESERVED	16 /* RFC3032 */
+
+#define ICMPV6_ECHO             128
+#define ICMPV6_ECHOREPLY        129
 
 #include "R1IQueryResult.h"
 
@@ -148,7 +153,9 @@ struct mpls_label {
 #define ICMPV6_TYPE             DOMAIN_ICMPV6 | 1
 #define ICMPV6_CODE             DOMAIN_ICMPV6 | 2
 #define ICMPV6_CHECKSUM         DOMAIN_ICMPV6 | 3
-#define ICMPV6_DATA             DOMAIN_ICMPV6 | 4
+#define ICMPV6_IDENT            DOMAIN_ICMPV6 | 4
+#define ICMPV6_SEQUENCE         DOMAIN_ICMPV6 | 5
+#define ICMPV6_DATA             DOMAIN_ICMPV6 | 6
 
 #define PAYLOAD                 DOMAIN_LAYER4 | 1
 

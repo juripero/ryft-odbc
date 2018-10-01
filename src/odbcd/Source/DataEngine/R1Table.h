@@ -52,6 +52,8 @@ namespace RyftOne
 
         void AppendQuery(simba_wstring &in_query);
 
+        void SetLimit(int in_limit);
+
         void SetColFilters(ColFilters in_colFilters);
 
         /// @brief Append an empty row to the end of the result set.
