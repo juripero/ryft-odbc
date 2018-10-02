@@ -293,7 +293,7 @@ bool RyftOne_PCAPResult::FetchNextIndexedResult()
 
 bool RyftOne_PCAPResult::IndexedResultEof()
 {
-    while (__idxCurRow <= __idxNumRows) {
+    while (__idxCurRow < __idxNumRows) {
         if (__internalFetch() && __applyColFilter())
             return false;
     }
