@@ -227,6 +227,13 @@ namespace RyftOne
             const simba_wstring& in_exprValue,
             simba_wstring in_RelationalOp);
 
+        /// @brief Pull option values from the literal string. 
+        ///
+        /// @param in_exprValue         Right side expression value as a simba_wstring.
+        void GetOptions(
+            simba_wstring& in_exprValue
+        );
+
         /// @brief Construct the date filter string. 
         ///
         /// @param in_columnName        Name of the column. Cannot be NULL.

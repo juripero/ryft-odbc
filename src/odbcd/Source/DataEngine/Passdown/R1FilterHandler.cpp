@@ -302,10 +302,13 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
             return true;
         }
     }
-    else if((exprLiteralType == PS_LITERAL_DATE) && 
+    else if(((exprLiteralType == PS_LITERAL_DATE) || (exprLiteralType == PS_LITERAL_CHARSTR)) && 
         ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
             (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP))) 
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         // Construct the filter string for input to Ryft.
         ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
 
@@ -313,19 +316,25 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         m_isPassedDown = true;
         return true;
     }
-    else if((exprLiteralType == PS_LITERAL_TIME) && 
+    else if(((exprLiteralType == PS_LITERAL_TIME) || (exprLiteralType == PS_LITERAL_CHARSTR)) && 
         ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME) || 
             (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
 
         // Setting passdown flag so the filter result set is returned.
         m_isPassedDown = true;
         return true;
     }
-    else if ((exprLiteralType == PS_LITERAL_TIMESTAMP) &&
+    else if (((exprLiteralType == PS_LITERAL_TIMESTAMP) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
         ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         // Construct the filter string for input to Ryft.
         m_query += "(";
         ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, SE_COMP_EQ, relationalOp);
@@ -338,9 +347,13 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         m_isPassedDown = true;
         return true;
     }
-    else if (((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+    else if (((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+                (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
         (typeSpecial == TYPE_NUMBER))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         if (negate)
             literalVal = "-" + rExpr->GetAsLiteral()->GetLiteralValue();
 
@@ -351,9 +364,13 @@ bool R1FilterHandler::PassdownLikePredicate(AELikePredicate* in_node)
         m_isPassedDown = true;
         return true;
     }
-    else if (((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+    else if (((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+                (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
         (typeSpecial == TYPE_CURRENCY))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+    
         if (negate)
             literalVal = "-" + rExpr->GetAsLiteral()->GetLiteralValue();
 
@@ -437,6 +454,8 @@ bool R1FilterHandler::PassdownSimpleComparison(
                  (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
                  (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)) {
 
+            GetOptions(literalVal);
+
             // Construct the filter string for input to Ryft.
             ConstructPCAPComparisonFilter(columnName, literalVal, in_compOp);
 
@@ -445,13 +464,16 @@ bool R1FilterHandler::PassdownSimpleComparison(
             return true;
         }
     }
-    else if((exprLiteralType == PS_LITERAL_DATE) && 
+    else if(((exprLiteralType == PS_LITERAL_DATE) || (exprLiteralType == PS_LITERAL_CHARSTR)) && 
         ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
             (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
          (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
          (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         // Construct the filter string for input to Ryft.
         ConstructDateComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
 
@@ -459,25 +481,31 @@ bool R1FilterHandler::PassdownSimpleComparison(
         m_isPassedDown = true;
         return true;
     }
-    else if((exprLiteralType == PS_LITERAL_TIME) && 
+    else if(((exprLiteralType == PS_LITERAL_TIME) || (exprLiteralType == PS_LITERAL_CHARSTR)) && 
         ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME) || 
             (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
          (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
          (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         ConstructTimeComparisonFilter(columnName, typeSpecial, formatSpecial, literalVal, in_compOp, "CONTAINS");
 
         // Setting passdown flag so the filter result set is returned.
         m_isPassedDown = true;
         return true;
     }
-    else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
+    else if(((exprLiteralType == PS_LITERAL_TIMESTAMP) || (exprLiteralType = PS_LITERAL_CHARSTR)) && 
         ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
          (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
          (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         // capture the dateLiteral before it is altered.
         simba_wstring dateLiteral = literalVal;
 
@@ -514,13 +542,17 @@ bool R1FilterHandler::PassdownSimpleComparison(
         m_isPassedDown = true;
         return true;
     }
-    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
-        (typeSpecial == TYPE_NUMBER) &&
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+                (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
+        (typeSpecial == TYPE_NUMBER) && 
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
          (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
          (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
     {
-        if (in_rightExpr.second) 
+        if(exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
+        if (in_rightExpr.second)
             literalVal = "-" + in_rightExpr.first->GetLiteralValue();
 
         // Construct the filter string for input to Ryft.
@@ -530,12 +562,16 @@ bool R1FilterHandler::PassdownSimpleComparison(
         m_isPassedDown = true;
         return true;
     }
-    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
+    else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
+                (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
         (typeSpecial == TYPE_CURRENCY) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE) || 
          (in_compOp == SE_COMP_GT) || (in_compOp == SE_COMP_GE) ||
          (in_compOp == SE_COMP_LT) || (in_compOp == SE_COMP_LE)))
     {
+        if (exprLiteralType == PS_LITERAL_CHARSTR)
+            GetOptions(literalVal);
+
         if (in_rightExpr.second) 
             literalVal = "-" + in_rightExpr.first->GetLiteralValue();
 
@@ -547,7 +583,7 @@ bool R1FilterHandler::PassdownSimpleComparison(
         return true;
     }
     else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || 
-        (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
+                (exprLiteralType == PS_LITERAL_DECIMAL) || (exprLiteralType == PS_LITERAL_CHARSTR)) &&
         ((in_compOp == SE_COMP_EQ) || (in_compOp == SE_COMP_NE)))
     {
         if (in_rightExpr.second) 
@@ -983,6 +1019,51 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     m_query += "))";
     if(limit > m_limit)
         m_limit = limit;
+}
+
+void R1FilterHandler::GetOptions(simba_wstring& in_exprValue)
+{
+    wstring out_filter;
+    const wchar_t *pfilter;
+    const wchar_t *pOpt = NULL;
+    size_t idx1, idx2;
+    bool limit = 0;
+
+    wstring in_filter = in_exprValue.GetAsPlatformWString();
+    for (pfilter = in_filter.c_str(); *pfilter; pfilter++) {
+        switch (*pfilter) {
+        case L'-':
+            pOpt = pfilter;
+            pfilter++;
+            switch (*pfilter) {
+            case L'l':
+            case L'L': {
+                wstring num_limit;
+                for (idx1 = 1; pfilter[idx1] && (pfilter[idx1] >= L'0' && pfilter[idx1] <= L'9'); idx1++)
+                    num_limit += pfilter[idx1];
+                swscanf(num_limit.c_str(), L"%d", &limit);
+                pfilter += idx1 - 1;
+                break;
+            }
+            case L'-':
+                out_filter += L"-";
+                break;
+            default:
+                R1THROWGEN1("InvalidOption", pOpt);
+            }
+            // skip whitespace after the filter
+            for (; iswhitespace(*(pfilter + 1)); pfilter++);
+            break;
+        default:
+            out_filter += *pfilter;
+            break;
+        }
+    }
+
+    if (limit > m_limit)
+        m_limit = limit;
+
+    in_exprValue = out_filter.c_str();
 }
 
 #include <algorithm>
