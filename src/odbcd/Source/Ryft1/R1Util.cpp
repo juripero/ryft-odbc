@@ -80,7 +80,7 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
             }
             else {
                 *out_typeCustom = DATETIME_DDMMYYYY_24MMSS;
-                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
+                sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
                 charCols = 19;
             }
         }
@@ -104,7 +104,7 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
             }
             else {
                 *out_typeCustom = DATETIME_MMDDYYYY_24MMSS;
-                sprintf(formatSpec, "%%02d%c%%02d%c%%02d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
+                sprintf(formatSpec, "%%02d%c%%02d%c%%04d%c%%02d%c%%02d%c%%02d", format[2], format[5], format[10], format[13], format[16]);
                 charCols = 19;
             }
         }
