@@ -1,0 +1,78 @@
+ 
+# table metadata definition file
+
+table_name    = "PCAP"
+table_remarks = "PCAP Sample Database"	
+version       = 2
+data_type     = "PCAP"
+file_glob     = "*.pcap"
+
+columns = {
+#	frame_time = ( "frame_time", "VARCHAR(80)", "frame.time" ),
+      frame_time = ( "frame_time", "DATETIME(YYYY-MM-DD HH:MM:SS.SSS)", "frame.time" ),
+	frame_number = ( "frame_number", "INTEGER", "frame.number" ),
+	frame_len = ( "frame_len", "INTEGER", "frame.len" ),
+	frame_protocols = ( "frame_protocols", "VARCHAR(256)", "frame.protocols" ),
+	eth_src = ( "eth_src", "VARCHAR(80)", "eth.src" ),
+	eth_src_resolved = ( "eth_src_resolved", "VARCHAR(80)", "eth.src_resolved" ),
+	eth_dst = ( "eth_dst", "VARCHAR(80)", "eth.dst" ),
+	eth_dst_resolved = ( "eth_dst_resolved", "VARCHAR(80)", "eth.dst_resolved" ), 
+	mpls_label = ( "mpls_label", "INTEGER", "mpls.label" ),
+	mpls_exp = ( "mpls_exp", "INTEGER", "mpls.exp" ),
+	mpls_bottom = ( "mpls_bottom", "INTEGER", "mpls.bottom" ),
+	mpls_ttl = ( "mpls_ttl", "INTEGER", "mpls.ttl" ),
+	vlan_priority = ( "vlan_priority", "INTEGER", "vlan.priority" ),
+	vlan_cfi = ( "vlan_cfi", "INTEGER", "vlan.cfi" ),
+	vlan_id = ( "vlan_id", "INTEGER", "vlan.id" ),
+	vlan_len = ( "vlan_len", "INTEGER", "vlan.len" ),
+	vlan_etype = ( "vlan_etype", "INTEGER", "vlan.etype" ),
+	vlan_padding = ( "vlan_padding", "INTEGER", "vlan.padding" ),
+	vlan_trailer = ( "vlan_trailer", "VARCHAR(80)", "vlan.trailer" ),
+	ip_src = ( "ip_src", "VARCHAR(80)", "ip.src" ),
+	ip_dst = ( "ip_dst", "VARCHAR(80)", "ip.dst" ),
+	ip_src_lat = ( "ip_src_lat", "DOUBLE", "ip.geoip.src_lat" ),
+	ip_src_lon = ( "ip_src_lon", "DOUBLE", "ip.geoip.src_lon" ),
+	ip_src_city = ( "ip_src_city", "VARCHAR(80)", "ip.geoip.src_city" ),
+	ip_src_country = ( "ip_src_country", "VARCHAR(80)", "ip.geoip.src_country" ),
+	ip_dst_lat = ( "ip_dst_lat", "DOUBLE", "ip.geoip.dst_lat" ),
+	ip_dst_lon = ( "ip_dst_lon", "DOUBLE", "ip.geoip.dst_lon" ),
+	ip_dst_city = ( "ip_dst_city", "VARCHAR(80)", "ip.geoip.dst_city" ),
+	ip_dst_country = ( "ip_dst_country", "VARCHAR(80)", "ip.geoip.dst_country" ),
+	ip_ttl = ( "ip-ttl", "INTEGER", "ip.ttl" ),
+    ipv6_src = ( "ipv6_src", "VARCHAR(80)", "ipv6.src" ),
+    ipv6_dst = ( "ipv6_dst", "VARCHAR(80)", "ipv6.dst" ),
+	payload = ( "payload", "VARCHAR(1024)", "payload" ),
+	tcp_srcport = ( "tcp_srcport", "INTEGER", "tcp.srcport"),
+	tcp_dstport = ( "tcp_dstport", "INTEGER", "tcp.dstport"),
+	tcp_len = ( "tcp_len", "INTEGER", "tcp.len" ),
+	tcp_seq = ( "tcp_seq", "INTEGER", "tcp.seq" ),
+	tcp_ack = ( "tcp_ack", "INTEGER", "tcp.ack" ),
+	tcp_flags_reset = ( "tcp_flags_reset", "INTEGER", "tcp.flags.reset" ),
+	tcp_flags_syn = ( "tcp_flags_syn", "INTEGER", "tcp.flags.syn" ),
+	tcp_flags_fin = ( "tcp_flags_fin", "INTEGER", "tcp.flags.fin" ),
+	udp_srcport = ( "udp_srcport", "INTEGER", "udp.srcport"),
+	udp_dstport = ( "udp_dstport", "INTEGER", "udp.dstport"),
+	udp_length = ( "udp_length", "INTEGER", "udp.length" ),
+	http_content_enc = ( "http_content_enc", "VARCHAR(80)", "http.content_encoding" ),
+	http_content_len = ( "http_content_len", "INTEGER", "http.content_length" ),
+	http_content_type = ( "http_content_type", "VARCHAR(80)", "http.content_type" ),
+	http_req_host = ( "http_req_host", "VARCHAR(80)", "http.request.host" ),
+	http_req_method = ( "http_req_method", "VARCHAR(20)", "http.request.method" ),
+	http_req_uri = ( "http_req_uri", "VARCHAR(255)", "http.request.uri" ),
+	http_req_headers = ( "http_req_headers", "VARCHAR(255)", "http.request.headers" ),
+	http_req_connection = ( "http_req_connection", "VARCHAR(20)", "http.request.connection" ),
+	http_req_referer = ( "http_req_referer", "VARCHAR(80)", "http.request.referer" ),
+	http_req_auth = ( "http_req_auth", "VARCHAR(40)", "http.request.authorization" ),
+	http_req_user_agent = ( "http_req_user_agent", "VARCHAR(80)", "http.request.user_agent" ),
+	http_req_version = ( "http_req_version", "VARCHAR(10)", "http.request.version" ),
+	http_res_headers = ( "http_res_headers", "VARCHAR(255)", "http.response.headers" ),
+	http_res_code = ( "http_res_code", "INTEGER", "http.response.code" ),
+	http_res_phrase = ( "http_res_phrase", "VARCHAR(40)", "http.response.phrase" ),
+	http_res_www_auth = ( "http_res_www_auth", "VARCHAR(80)", "http.response.www_authenticate" ),
+	http_res_number = ( "http_res_number", "INTEGER", "http.response_number" ),
+}
+
+filters = {
+	http_req_method = ( "http.request.method", "(tcp.dstport == 80 && (RECORD.payload CONTAINS EXACT (\"%s\")))", "(tcp.dstport == 80)" ),  
+    http_req_uri = ( "http.request.uri", "(tcp.dstport == 80 && (RECORD.payload CONTAINS EXACT (\"%s\")))", "(tcp.dstport == 80)" ),
+}
