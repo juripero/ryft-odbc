@@ -83,6 +83,11 @@ columns = {
 	http_res_www_auth = ( "http_res_www_auth", "VARCHAR(80)", "http.response.www_authenticate" ),
 	http_res_number = ( "http_res_number", "INTEGER", "http.response_number" ),
 }
+# filters are used by the connector to invoke a post-process search on the payload. Filters work like this: 
+# The first entry in the filter must match a valid column identifier, example “http.request.method”. The first query is the “equals” case – the query string that should be applied if the query is http_req_method = ‘GET’ for example. 
+# The 2nd query is the not equals case, http_req_method != ‘GET’. The %s will get replaced with the string literal ‘GET’ prior to execution of the query. In theory we could filter on any valid column this way. 
+# in SQL syntax, the 'like' clause triggers a post process search of "exists" or "not exists" for the "string" you are searching. (basically the string is contained within the entire content of the field, ie: ILSVR is part of the /imagenet_valTargetDirectory/ILSVRC2012_|)
+# the equals/not equals clause triggers a post process search for the field being equal/not equal to the "string" you are searching. 
 
 filters = {
 	http_req_method = ( "http.request.method", "(tcp.dstport == 80 && (RECORD.payload CONTAINS EXACT (\"%s\")))", "(tcp.dstport == 80)" ),  
