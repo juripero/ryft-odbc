@@ -125,14 +125,8 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colAlias.compare("ipv6.src")) {
             colQuantity |= IPV6_SRC;
         }
-        else if (!colAlias.compare("ipv6.src_sa_mac")) {
-            colQuantity |= IPV6_SRC_SA_MAC;
-        }
         else if (!colAlias.compare("ipv6.dst")) {
             colQuantity |= IPV6_DST;
-        }
-        else if (!colAlias.compare("ipv6.dst_sa_mac")) {
-            colQuantity |= IPV6_DST_SA_MAC;
         }
         else if (!colAlias.compare("icmp.type")) {
             colQuantity |= ICMP_TYPE;
@@ -241,9 +235,6 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         }
         else if (!colAlias.compare("http.request.version")) {
             colQuantity |= HTTP_REQ_VERSION;
-        }
-        else if (!colAlias.compare("http.response.headers")) {
-            colQuantity |= HTTP_RES_HEADERS;
         }
         else if (!colAlias.compare("http.response.code")) {
             colQuantity |= HTTP_RES_CODE;
