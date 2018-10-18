@@ -19,13 +19,16 @@ using namespace Simba::Support;
 // Public ==========================================================================================
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 R1FilterResult::R1FilterResult(
-    SharedPtr<R1Table> in_table, const simba_wstring& in_filter) : 
+    SharedPtr<R1Table> in_table, const simba_wstring& in_query, int in_limit, ColFilters& in_colFilters) : 
         m_table(in_table),
-        m_filter(in_filter),
+        m_query(in_query),
+        m_limit(in_limit),
         m_hasStartedFetch(false)
 {
     assert(!in_table.IsNull());
-    m_table->AppendFilter(m_filter);
+    m_table->AppendQuery(m_query);
+    m_table->SetLimit(m_limit);
+    m_table->SetColFilters(in_colFilters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

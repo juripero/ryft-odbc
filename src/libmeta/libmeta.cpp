@@ -42,10 +42,14 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
     char path[PATH_MAX];
     config_setting_t *view;
     config_setting_t *viewList;
+    config_setting_t *filter;
+    config_setting_t *filterList;
     __meta_view__ v;
+    __meta_filter__ f;
     const char *result;
     int value;
     int idx;
+    vector<__meta_config__::__meta_col__>::iterator colItr;
 
     strcpy(path, in_dir.c_str());
     strcat(path, "/");
@@ -115,6 +119,9 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                 else if(!strcasecmp(result, "CSV")) {
                     data_type = dataType_CSV;
                 }
+                else if (!strcasecmp(result, "PCAP")) {
+                    data_type = dataType_PCAP;
+                }
             }
             if(CONFIG_TRUE == config_lookup_string(&tableMeta, "file_glob", &result)) 
                 file_glob = result;
@@ -137,6 +144,12 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                 if(CONFIG_TRUE == config_lookup_string(&tableMeta, "field_delimiter", &result))
                     field_delimiter = result;
                 break;
+            case dataType_PCAP:
+                // map pcap values to column names
+                for (colItr = columns.begin(); colItr != columns.end(); colItr++) {
+                    colItr->json_or_xml_tag = colItr->description;
+                }
+                break;
             }
             break;
         }
@@ -148,6 +161,15 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
             v.restriction = config_setting_get_string_elem(view, 1);
             v.description = config_setting_get_string_elem(view, 2);
             views.push_back(v);
+        }
+
+        filterList = config_lookup(&tableMeta, "filters");
+        for (idx = 0; filterList && (filter = config_setting_get_elem(filterList, idx)); idx++) {
+            f.id = filter->name;
+            f.filter_name = config_setting_get_string_elem(filter, 0);
+            f.eq = config_setting_get_string_elem(filter, 1);
+            f.ne = config_setting_get_string_elem(filter, 2);
+            filters.push_back(f);
         }
     }
     config_destroy(&tableMeta);

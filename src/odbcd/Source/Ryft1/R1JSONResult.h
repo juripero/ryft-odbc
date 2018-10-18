@@ -1,7 +1,7 @@
 // =================================================================================================
 ///  @file R1JSONResult.h
 ///
-///  Implements the result class for XML data searches
+///  Implements the result class for JSON data searches
 ///
 ///  Copyright (C) 2016 Ryft Systems, Inc.
 // =================================================================================================

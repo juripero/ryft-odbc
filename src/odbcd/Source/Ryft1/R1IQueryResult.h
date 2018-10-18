@@ -87,6 +87,11 @@ __inline void CopyEscapedLiteral(string& dest, string& src)
         ;
     }
 }
+
+#define GLOB_DATA       0
+#define GLOB_METAFILE   1
+#define GLOB_SETTINGS   2
+
 #define SC_NUMERIC  0
 #define SC_TEXT     1
 #define SC_REAL     2
@@ -130,6 +135,14 @@ typedef struct _RyftOne_Column {
 } RyftOne_Column;
 typedef vector<RyftOne_Column> RyftOne_Columns;
 
+class ColFilter {
+public:
+    string colName;
+    string searchLiteral;
+    int compOp;
+};
+typedef vector<ColFilter> ColFilters;
+
 static int xCreate(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr);
 static int xConnect(sqlite3* in_sqlite, void *in_qresult, int in_argc, const char * const * in_argv, sqlite3_vtab **out_ppVTab, char**out_pzErr);
 static int xDisconnect(sqlite3_vtab *in_pVTab);
@@ -146,7 +159,7 @@ static int xRename(sqlite3_vtab *pVtab, const char *zNew);
 
 class IQueryResult {
 public:
-    IQueryResult(ILogger *log) : __log(log), __sqlite(0), __stmt(0) { ; }
+    IQueryResult(ILogger *log) : __log(log), __sqlite(0), __stmt(0), __limit(0) { ; }
    ~IQueryResult()
     {
         if(__stmt) 
@@ -158,8 +171,9 @@ public:
         __sqlite = NULL;
    }
 
-    void OpenQuery(string& in_name, vector<__catalog_entry__>::iterator in_catentry, 
-        string in_server, string in_token, string in_restPath, string in_rootPath, int in_lruMaxDepth)
+   void OpenQuery(string& in_name, vector<__catalog_entry__>::iterator in_catentry,
+        string in_server, string in_token, string in_restPath, string in_rootPath, int in_lruMaxDepth, 
+        long in_maxMatchCount, struct stat *in_settings_fstat)
     {
         __query.clear();
 
@@ -168,6 +182,8 @@ public:
         __restPath = in_restPath;
         __rootPath = in_rootPath;
         __lruMaxDepth = in_lruMaxDepth;
+        __maxMatchCount = in_maxMatchCount;
+        __settings_fstat = *in_settings_fstat;
 
         // JSON, XML, Unstructured
         __dataType = in_catentry->meta_config.data_type;
@@ -183,6 +199,7 @@ public:
         }
         
         __cols = __getColumns(in_catentry->meta_config);
+        __metaFilters = in_catentry->meta_config.filters;
 
         resultCol rcol;
         for(int idx = 0; idx < __metaTags.size(); idx++) {
@@ -216,11 +233,11 @@ public:
 
         __metafile_stat = in_catentry->meta_config.metafile_stat;
 
-        dbpath += "/caches_v3.bin";
+        dbpath += "/caches_v4.bin";
         int sqlret = sqlite3_open(dbpath.c_str(), &__sqlite);
 
         char *errp = NULL;
-        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT, IDX_FILE TEXT, NUM_ROWS INTEGER, LRU_TIME BIGINT)", NULL, NULL, &errp);
+        sqlret = sqlite3_exec(__sqlite, "CREATE TABLE \"__DIRECTORY__\" (ID TEXT, QUERY TEXT, IDX_FILE TEXT, NUM_ROWS INTEGER, LRU_TIME BIGINT, QUERY_LIMIT INT)", NULL, NULL, &errp);
         if(errp)
             sqlite3_free(errp);
 
@@ -243,14 +260,24 @@ public:
         __queryFinished = false;
     }
 
-    virtual void AppendFilter(string in_filter)
+    virtual void AppendQuery(string in_query)
     {
         if(!__query.empty())
             __query += " AND ";
 
-        __query += in_filter;
+        __query += in_query;
     }
     
+    void SetLimit(int in_limit)
+    {
+        __limit = in_limit;
+    }
+
+    void SetColFilters(ColFilters in_colFilters)
+    {
+        __colFilters = in_colFilters;
+    }
+
     void PrepareUpdate()
     {
         int idx;
@@ -425,6 +452,18 @@ public:
         __stmt = NULL;
     }
 
+    bool IsNull(int colIdx)
+    {
+        switch (__cols[colIdx].m_dtType) {
+        case TYPE_META_FILE:
+        case TYPE_META_OFFSET:
+        case TYPE_META_LENGTH:
+            return false;
+        default:
+            return (sqlite3_column_type(__stmt, colIdx) == SQLITE_NULL);
+        }
+    }
+
     const char * GetStringValue(int colIdx)
     {
         switch(__cols[colIdx].m_dtType) {
@@ -509,7 +548,22 @@ public:
         return __isStructuredType();
     }
 
-    bool OpenIndexedResult()
+    bool IsPCAPDatabase()
+    {
+        return __dataType == dataType_PCAP;
+    }
+
+    virtual bool HasResultThinner(string columnName) 
+    {
+        return false;
+    }
+
+    virtual string GetResultThinnerQuery(string columnName, int type) 
+    {
+        return "";
+    }
+
+    virtual bool OpenIndexedResult()
     {
         __idxFD = fopen(__idxFile.c_str(), "r");
         if(__idxFD == NULL) 
@@ -533,7 +587,7 @@ public:
         return FetchNextIndexedResult();
     }
 
-    bool CloseIndexedResult()
+    virtual bool CloseIndexedResult()
     {
         fclose(__idxFD);
 
@@ -550,7 +604,7 @@ public:
         return true;
     }
 
-    bool FetchNextIndexedResult()
+    virtual bool FetchNextIndexedResult()
     {
         __idxFilename[0] = '\0';
         char * offset = NULL;
@@ -585,7 +639,7 @@ public:
         return true;
     }
 
-    bool IndexedResultEof() 
+    virtual bool IndexedResultEof() 
     {
         if(__idxCurRow > __idxNumRows)
             return true;
@@ -674,9 +728,19 @@ protected:
         string query(__query);
         bool ret = false;
         string tableName;
+        bool isPCAP = IsPCAPDatabase();
+        bool useLimit = false;
 
-        if(query.empty()) 
-            query = "( RECORD CONTAINS ? )";
+        if (query.empty()) {
+            if (isPCAP) {
+                query = "(eth.src != 00:00:00:00:00:00)";
+            }
+            else
+                query = "(RECORD CONTAINS ?)";
+
+            // max count limit applies for unrestricted selects
+            useLimit = (__maxMatchCount != 0);
+        }
 
         INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Executing query = %s", query.c_str());
 
@@ -694,7 +758,7 @@ protected:
                 *pstr = toupper(*pstr);
             tableName = stringId;
 
-            if (!__initTable(query, tableName)) {
+            if (!__initTable(query, tableName, __limit)) {
                 __dropTable(query);
                 return false;
             }
@@ -709,13 +773,33 @@ protected:
                 curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header);
             }
 
-            string url = __restServer + "/count?query=" + RyftOne_Util::UrlEncode(query);
+            string url = __restServer;
+            if (isPCAP) {
+                url += "/pcap/count?query=" + RyftOne_Util::UrlEncode(query);
+            }
+            else
+                url += "/count?query=" + RyftOne_Util::UrlEncode(query);
+
             string relPath = RyftOne_Util::UrlEncode(__path.c_str() + __restPath.length());
 
-            url += "&files=" + relPath + RyftOne_Util::UrlEncode("/") + "*." + __extension; 
-            url += "&index=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
-            url += "&local=true";
-
+            if (isPCAP) {
+                url += "&file=" + relPath + RyftOne_Util::UrlEncode("/") + "*." + __extension;
+                url += "&data=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".pcap";
+            }
+            else {
+                url += "&files=" + relPath + RyftOne_Util::UrlEncode("/") + "*." + __extension;
+                url += "&index=" + relPath + RyftOne_Util::UrlEncode("/.caches/") + tableName + ".txt";
+                url += "&local=true";
+            }
+            if (useLimit || __limit) {
+                char max_count[128];
+                int limit = __limit;
+                if (useLimit)
+                    limit = __maxMatchCount;
+                snprintf(max_count, sizeof(max_count),
+                    "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d&backend-option=-vv", limit);
+                url += max_count;
+            }
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
             char resultsPath[PATH_MAX];
@@ -780,9 +864,22 @@ protected:
     string __delimiter;
 
     string __query;
+    int __limit;
+
+    string __idxFile;
+    long __idxNumRows;
+    long __idxCurRow;
+
+    Cursor __cursor;
+
+    RyftOne_Columns __cols;
+    vector<__meta_config__::__meta_filter__> __metaFilters;
+    ColFilters __colFilters;
+
+    ILogger* __log;
 
 private:
-    ILogger* __log;
+    struct stat __settings_fstat;
 
     string __restServer;
     string __restToken;
@@ -790,6 +887,7 @@ private:
     string __rootPath;
 
     int __lruMaxDepth;
+    long __maxMatchCount;
 
     inline void __odbcRoot(char *path) {
         strcpy(path, __rootPath.c_str());
@@ -798,8 +896,6 @@ private:
 
     bool __queryFinished;
 
-    RyftOne_Columns __cols;
-
     DataType __dataType;
 
     sqlite3 *__sqlite;
@@ -807,13 +903,7 @@ private:
     sqlite3_module __vtab_mod;
     struct stat __metafile_stat;
 
-    Cursor __cursor;
-
-    string __idxFile;
-    long __idxNumRows;
-    long __idxCurRow;
     FILE * __idxFD;
-
     int __cachedFD;
     char * __cachedFile;
     char * __idxLine;
@@ -862,7 +952,7 @@ private:
         while (lru_entry);
     }
 
-    bool __initTable(string& query, string& tableName)
+    bool __initTable(string& query, string& tableName, int limit)
     {
         char * errp;
 
@@ -908,12 +998,21 @@ private:
             return false;
 
         // store fstat for .meta.table
-        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,1)", tableName.c_str(), __metafile_stat.st_dev, __metafile_stat.st_ino, __metafile_stat.st_mtime);
+        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,%d)", tableName.c_str(), __metafile_stat.st_dev, __metafile_stat.st_ino, __metafile_stat.st_mtime, GLOB_METAFILE);
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
             sqlite3_free(errp);
         if(sqlret != SQLITE_OK) 
+            return false;
+
+        // store fstat for settings file
+        sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,%d)", tableName.c_str(), __settings_fstat.st_dev, __settings_fstat.st_ino, __settings_fstat.st_mtime, GLOB_SETTINGS);
+        sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
+        sqlite3_free(sql);
+        if (errp)
+            sqlite3_free(errp);
+        if (sqlret != SQLITE_OK)
             return false;
 
         int fd;
@@ -925,7 +1024,7 @@ private:
                 return false;
             fstat(fd, &sb);
             close(fd);
-            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,0)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime);
+            sql = sqlite3_mprintf("INSERT INTO \"__FGLOB_STAT_%s__\" VALUES (%lld,%lld,%lld,%d)", tableName.c_str(), sb.st_dev, sb.st_ino, sb.st_mtime, GLOB_DATA);
             sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
             sqlite3_free(sql);
             if(errp)
@@ -936,7 +1035,7 @@ private:
 
         string escapedQuery;
         CopyEscapedLiteral(escapedQuery, query);
-        sql = sqlite3_mprintf("INSERT INTO \"__DIRECTORY__\" VALUES ('%s','%s', NULL, NULL, 0)", tableName.c_str(), escapedQuery.c_str());
+        sql = sqlite3_mprintf("INSERT INTO \"__DIRECTORY__\" VALUES ('%s','%s', NULL, NULL, 0, %d)", tableName.c_str(), escapedQuery.c_str(), limit);
         sqlret = sqlite3_exec(__sqlite, sql, NULL, NULL, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -1036,10 +1135,25 @@ private:
             __dropTable(query);
             return false;
         }
+
+        // check limit
+        int limit = 0;
+        if (prows[ncols + 5])
+            limit = atoi(prows[ncols + 5]);
+        if (!__limit && limit && (limit == __idxNumRows)) {
+            __dropTable(query);
+            return false;
+        }
+        if(__limit && limit && __limit > limit) {
+            __dropTable(query);
+            return false;
+        }
+        __idxNumRows = (__limit && __idxNumRows > __limit) ? __limit : __idxNumRows;
+
         sqlite3_free_table(prows);
 
         // check stat against .meta.table
-        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = 1", tableName.c_str());
+        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = %d", tableName.c_str(), GLOB_METAFILE);
         sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
         sqlite3_free(sql);
         if(errp)
@@ -1060,6 +1174,34 @@ private:
             (atoll((const char *)prows[(ncols) + 2]) != (long long)__metafile_stat.st_mtime)) {
 
             INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss due to __METAFILE_STAT update");
+            sqlite3_free_table(prows);
+            __dropTable(query);
+            return false;
+        }
+        sqlite3_free_table(prows);
+
+        // check stat against settings file
+        sql = sqlite3_mprintf("SELECT * FROM \"__FGLOB_STAT_%s__\" WHERE \"__METAFILE_STAT\" = %d", tableName.c_str(), GLOB_SETTINGS);
+        sqlret = sqlite3_get_table(__sqlite, sql, &prows, &nrows, &ncols, &errp);
+        sqlite3_free(sql);
+        if (errp)
+            sqlite3_free(errp);
+        if (sqlret != SQLITE_OK) {
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "Error loading file __SETTINGS_STAT");
+            __dropTable(query);
+            return false;
+        }
+        if ((nrows) != 1) {
+            sqlite3_free_table(prows);
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "nrows(%d) != 1 on __SETTINGS_STAT", nrows);
+            __dropTable(query);
+            return false;
+        }
+        if ((atoll((const char *)prows[(ncols)+0]) != (long long)__settings_fstat.st_dev) ||
+            (atoll((const char *)prows[(ncols)+1]) != (long long)__settings_fstat.st_ino) ||
+            (atoll((const char *)prows[(ncols)+2]) != (long long)__settings_fstat.st_mtime)) {
+
+            INFO_LOG(__log, "RyftOne", "RyftOne_Result", "__loadFromSqlite", "cache miss due to __SETTINGS_STAT update");
             sqlite3_free_table(prows);
             __dropTable(query);
             return false;
@@ -1140,7 +1282,12 @@ private:
         fstat(fd, &sb);
 
         int matches = __getRowCount(fd, sb.st_size);
-        string idxPath = __path + s_R1Caches + "/" + tableName + ".txt";
+        string idxPath;
+        if (__dataType == dataType_PCAP) {
+            idxPath = __path + s_R1Caches + "/" + tableName + ".pcap";
+        }
+        else
+            idxPath = __path + s_R1Caches + "/" + tableName + ".txt";
 
         char * errp;
         char * sql = sqlite3_mprintf("UPDATE \"__DIRECTORY__\" SET IDX_FILE = '%s', NUM_ROWS = %d, LRU_TIME = %lld WHERE ID = '%s'", 
@@ -1525,7 +1672,11 @@ int xColumn(sqlite3_vtab_cursor *in_pVTabCursor, sqlite3_context* in_context, in
 {
     vtab_cursor * in_vtab_cursor = (vtab_cursor *)in_pVTabCursor;
     const char *out_text = in_vtab_cursor->__qresult->GetIndexedResultColumn(in_col);
-    sqlite3_result_text(in_context, out_text, -1, SQLITE_TRANSIENT);
+    if (out_text == NULL || *out_text == NULL) {
+        sqlite3_result_null(in_context);
+    }
+    else
+        sqlite3_result_text(in_context, out_text, -1, SQLITE_TRANSIENT);
     return SQLITE_OK;
 }
 

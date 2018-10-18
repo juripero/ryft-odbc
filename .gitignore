@@ -75,6 +75,10 @@ ipch/
 *.vsp
 *.vspx
 
+# Visual Studio browse files
+*.vC.db
+*.VC.opendb
+
 # TFS 2012 Local Workspace
 $tf/
 

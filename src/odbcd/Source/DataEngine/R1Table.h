@@ -50,7 +50,11 @@ namespace RyftOne
             IWarningListener* in_warningListener,
             bool in_isODBCV3);
 
-        void AppendFilter(simba_wstring &in_filter);
+        void AppendQuery(simba_wstring &in_query);
+
+        void SetLimit(int in_limit);
+
+        void SetColFilters(ColFilters in_colFilters);
 
         /// @brief Append an empty row to the end of the result set.
         ///
@@ -180,6 +184,14 @@ namespace RyftOne
             string& out_formatSpec);
 
         bool IsStructuredType();
+
+
+        // PCAP
+
+        bool IsPCAPDatabase();
+
+        bool HasResultThinner(simba_wstring& columnName);
+        string GetResultThinnerQuery(simba_wstring& columnName, simba_int16 type);
 
     // Protected ===================================================================================
     public:

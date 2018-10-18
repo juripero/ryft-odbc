@@ -51,9 +51,21 @@ R1Table::R1Table(
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void R1Table::AppendFilter(simba_wstring& in_filter)
+void R1Table::AppendQuery(simba_wstring& in_query)
 {
-    m_result->AppendFilter(in_filter.GetAsPlatformString());
+    m_result->AppendQuery(in_query.GetAsPlatformString());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void R1Table::SetLimit(int in_limit)
+{
+    m_result->SetLimit(in_limit);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void R1Table::SetColFilters(ColFilters in_colFilters)
+{
+    m_result->SetColFilters(in_colFilters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -129,6 +141,11 @@ bool R1Table::RetrieveData(
     assert(in_data);
 
     simba_int16 sqlType = in_data->GetMetadata()->GetTDWType();
+
+    if (m_result->IsNull(in_column)) {
+        in_data->SetNull(true);
+        return false;
+    }
 
     try {
         switch (sqlType) {
@@ -276,6 +293,24 @@ void R1Table::GetTypeFormatSpecifier(
 bool R1Table::IsStructuredType()
 {
     return m_result->IsStructuredType();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+bool R1Table::IsPCAPDatabase()
+{
+    return m_result->IsPCAPDatabase();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+bool R1Table::HasResultThinner(simba_wstring& columnName)
+{
+    return m_result->HasResultThinner(columnName.GetAsPlatformString());
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+string R1Table::GetResultThinnerQuery(simba_wstring& columnName, simba_int16 type)
+{
+    return m_result->GetResultThinnerQuery(columnName.GetAsPlatformString(), type);
 }
 
 // Protected =======================================================================================

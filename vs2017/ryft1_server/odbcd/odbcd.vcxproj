@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x86">
+      <Configuration>Debug</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x86">
+      <Configuration>Release</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{b7aa44b1-8645-4e37-b4d4-b96e20477c03}</ProjectGuid>
+    <Keyword>Linux</Keyword>
+    <RootNamespace>ryft1_odbcd</RootNamespace>
+    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <ApplicationType>Linux</ApplicationType>
+    <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
+    <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
+    <LinuxProjectType>{2238F9CD-F817-4ECC-BD14-2524D2669B35}</LinuxProjectType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <RemoteRootDir>~/development/ryft</RemoteRootDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>
+    </IncludePath>
+    <RemoteProjectDir>$(RemoteRootDir)/$(ProjectName)</RemoteProjectDir>
+    <RemoteCCompileToolExe>g++-4.4</RemoteCCompileToolExe>
+    <RemoteCppCompileToolExe>g++-4.4</RemoteCppCompileToolExe>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Connection.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Driver.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Environment.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Statement.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ColumnsMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProceduresMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TablesMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterHandler.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterResult.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1ProcedureFactory.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1UnloadProcedure.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\R1DataEngine.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\R1Table.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Main_Unix.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1Catalog.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1JSONResult.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1PCAPResult.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1RAWResult.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1Util.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1XMLResult.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Connection.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Driver.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Environment.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Statement.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ColumnsMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProceduresMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TablesMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterHandler.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterResult.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1OperationHandlerFactory.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1ProcedureFactory.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1UnloadProcedure.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\R1DataEngine.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\R1Table.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Resources\resource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Resources\VersionResource.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1Catalog.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1IQueryResult.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1JSONResult.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1PCAPResult.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1RAWResult.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1Util.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1XMLResult.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\RyftOne.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\odbcd\Makefiles\Makedepend\ryft1_odbcd.depend" />
+    <None Include="..\..\..\src\odbcd\Makefiles\ryft1_odbcd.mak" />
+    <None Include="..\..\..\src\odbcd\Source\exports_Linux.map" />
+    <None Include="..\..\..\src\odbcd\Source\Makefile" />
+    <None Include="..\..\..\src\odbcd\Source\Makefile_FLAGS.mak" />
+    <None Include="..\..\..\src\odbcd\Source\Makefile_SRCS.mak" />
+  </ItemGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);./Source;./Source/Core;./Source/DataEngine;./Source/DataEngine/Metadata;./Source/DataEngine/Passdown;./Source/DataEngine/Procedures;./Source/Ryft1;../libmeta;../libsqlite;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/DSI;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/DSI/Client;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/Support;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/Support/Exceptions;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/Support/TypedDataWrapper;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/SQLEngine;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/SQLEngine/AETree;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/SQLEngine/Parser;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/SQLEngine/DSIExt;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/SQLEngine/Executor;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/SQLEngine/Executor/ETree;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Include/Server;/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty/Expat/2.0.1;/usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include;$(IncludePath)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_MEMMOVE;BUILDSERVER;SERVERTARGET</PreprocessorDefinitions>
+      <ShowIncludes>true</ShowIncludes>
+      <Verbose>true</Verbose>
+      <CppLanguageStandard>Default</CppLanguageStandard>
+      <CLanguageStandard>Default</CLanguageStandard>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>-Wl,--whole-archive,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libSimbaDSI_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libSimbaSupport_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libAEProcessor_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libCore_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libDSIExt_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libExecutor_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libParser_debug.a;-Wl,--whole-archive,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libSimbaCSCommon_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libSimbaServer_debug.a,/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/Lib/Linux_x8664/libSimbaServerMain_debug.a;-licudata_sb64 -licui18n_sb64 -licuuc_sb64 -lpthread -lm;-lssl -lcrypto;-lconfig -lglib-2.0 -lldap -lcrypt -luuid -ljson -lcurl -lpcap -lGeoIP;-Wl,--no-whole-archive,/home/ryftuser/development/ryft/libmeta/Debug/libmeta.a;-Wl,--no-whole-archive,/home/ryftuser/development/ryft/libsqlite/Debug/libsqlite.a;-ldl;%(AdditionalDependencies)</AdditionalDependencies>
+      <VerboseOutput>false</VerboseOutput>
+      <LibraryDependencies>%(LibraryDependencies)</LibraryDependencies>
+      <AdditionalLibraryDirectories>/home/ubuntu/development/SimbaEngineSDK/10.0/DataAccessComponents/ThirdParty/icu/53.1/centos5/gcc4_4/release64/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

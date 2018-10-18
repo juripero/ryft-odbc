@@ -1,0 +1,233 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Connection.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Driver.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Environment.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Core\R1Statement.h">
+      <Filter>Source files\Core\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1OperationHandlerFactory.h">
+      <Filter>Source files\DataEngine\Passdown\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterResult.h">
+      <Filter>Source files\DataEngine\Passdown\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterHandler.h">
+      <Filter>Source files\DataEngine\Passdown\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1ProcedureFactory.h">
+      <Filter>Source files\DataEngine\Procedures\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1UnloadProcedure.h">
+      <Filter>Source files\DataEngine\Procedures\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ColumnsMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProceduresMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TablesMetadataSource.h">
+      <Filter>Source files\DataEngine\Metadata\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Resources\resource.h">
+      <Filter>Source files\Resources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Resources\VersionResource.h">
+      <Filter>Source files\Resources\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1Catalog.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1IQueryResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1JSONResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1RAWResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1Util.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1XMLResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\R1DataEngine.h">
+      <Filter>Source files\DataEngine\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\DataEngine\R1Table.h">
+      <Filter>Source files\DataEngine\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\odbcd\Source\RyftOne.h" />
+    <ClInclude Include="..\..\..\src\odbcd\Source\Ryft1\R1PCAPResult.h">
+      <Filter>Source files\Ryft1\Include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{385af0e6-b7bf-47d4-b984-73905ae6b522}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Core">
+      <UniqueIdentifier>{70004583-6992-4cdf-ad48-87d3ff63d748}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Core\Include">
+      <UniqueIdentifier>{67ad55da-e4e9-4a19-ad54-86e4d303eb45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine">
+      <UniqueIdentifier>{54fd5d9e-0ef8-4fdd-aac8-b6debfc1e9b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Include">
+      <UniqueIdentifier>{71c3f7dc-1b73-45f8-9c41-c5d427bfe932}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Metadata">
+      <UniqueIdentifier>{9630affb-a497-4893-b0b7-f9adb84c6c17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Metadata\Include">
+      <UniqueIdentifier>{ba0d0cbf-dac5-4d1c-8062-3282d20ea1e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Passdown">
+      <UniqueIdentifier>{6d6a0a98-447d-4a1a-b419-a7f6afc9c636}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Procedures">
+      <UniqueIdentifier>{4026f9fa-8518-45f3-bba1-9580868d2404}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Procedures\Include">
+      <UniqueIdentifier>{3f350837-e070-47cb-a9b4-8afaf62a4e82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\DataEngine\Passdown\Include">
+      <UniqueIdentifier>{9ff060a9-9d9c-445d-b3f2-178736f222bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Resources">
+      <UniqueIdentifier>{55afb8cb-ae98-486f-ac1a-41357b8cd709}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Resources\Include">
+      <UniqueIdentifier>{a4eede6d-d0dc-4576-94e0-65a0f5ecfae9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Ryft1">
+      <UniqueIdentifier>{98d7816f-abd0-41bf-8b2e-6a52037c623f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source files\Ryft1\Include">
+      <UniqueIdentifier>{a9a4b93c-9aa1-415a-8503-81226c12bf27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Makefiles">
+      <UniqueIdentifier>{a528a6ff-c395-4035-b5a9-758acb6e855a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Makefiles\Makedepend">
+      <UniqueIdentifier>{5d347416-7fed-4e06-8315-6a01805d20a0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Connection.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Driver.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Environment.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Core\R1Statement.cpp">
+      <Filter>Source files\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\R1DataEngine.cpp">
+      <Filter>Source files\DataEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\R1Table.cpp">
+      <Filter>Source files\DataEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1CatalogOnlyMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ColumnsMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProcedureColumnsMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1ProceduresMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1SchemaOnlyMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TablesMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Metadata\R1TypeInfoMetadataSource.cpp">
+      <Filter>Source files\DataEngine\Metadata</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterHandler.cpp">
+      <Filter>Source files\DataEngine\Passdown</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1FilterResult.cpp">
+      <Filter>Source files\DataEngine\Passdown</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Passdown\R1OperationHandlerFactory.cpp">
+      <Filter>Source files\DataEngine\Passdown</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1ProcedureFactory.cpp">
+      <Filter>Source files\DataEngine\Procedures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\DataEngine\Procedures\R1UnloadProcedure.cpp">
+      <Filter>Source files\DataEngine\Procedures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1Catalog.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1CSVResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1JSONResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1RAWResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1Util.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1XMLResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\odbcd\Source\Main_Unix.cpp" />
+    <ClCompile Include="..\..\..\src\odbcd\Source\Ryft1\R1PCAPResult.cpp">
+      <Filter>Source files\Ryft1</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\odbcd\Makefiles\Makedepend\ryft1_odbcd.depend">
+      <Filter>Makefiles\Makedepend</Filter>
+    </None>
+    <None Include="..\..\..\src\odbcd\Makefiles\ryft1_odbcd.mak">
+      <Filter>Makefiles</Filter>
+    </None>
+    <None Include="..\..\..\src\odbcd\Source\Makefile" />
+    <None Include="..\..\..\src\odbcd\Source\Makefile_FLAGS.mak" />
+    <None Include="..\..\..\src\odbcd\Source\Makefile_SRCS.mak" />
+    <None Include="..\..\..\src\odbcd\Source\exports_Linux.map" />
+  </ItemGroup>
+</Project>

@@ -32,6 +32,7 @@ using namespace std;
 #include "R1XMLResult.h"
 #include "R1CSVResult.h"
 #include "R1RAWResult.h"
+#include "R1PCAPResult.h"
 #include "R1Catalog.h"
 
 #define AUTH_NONE   0
@@ -80,6 +81,8 @@ private:
 
     vector<__catalog_entry__> __catalog;
 
+    struct stat __settings_fstat;
+
     int __authType;
     string __ldapServer;
     string __ldapUser;
@@ -94,7 +97,11 @@ private:
     string __restPath;
     string __rootPath;
 
+    string __geoipPath;
+    string __manufPath;
+
     int __lruMaxDepth;
+    long __maxMatchCount;
 
     // Reference to the ILogger. (NOT OWN)
     ILogger* __log;

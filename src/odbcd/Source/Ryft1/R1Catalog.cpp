@@ -27,6 +27,12 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
     GError *error = NULL;
     gchar *authType = NULL;
 
+    int fd = open(SERVER_LINUX_BRANDING, O_RDONLY);
+    if (fd != -1) {
+        fstat(fd, &__settings_fstat);
+        close(fd);
+    }
+
     if(g_key_file_load_from_file(keyfile, SERVER_LINUX_BRANDING, flags, &error)) {
         // auth
         authType = g_key_file_get_string(keyfile, "Auth", "Type", &error);
@@ -116,6 +122,15 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
         if(error != NULL)
             g_clear_error(&error);
 
+        __restPath = s_R1Root;
+        restString = g_key_file_get_string(keyfile, "REST", "RESTPath", &error);
+        if (restString) {
+            __restPath = restString;
+            free(restString);
+        }
+        if (error != NULL)
+            g_clear_error(&error);
+
         // ODBC root path
         __rootPath = s_R1Root;
         gchar *rootString;
@@ -140,6 +155,37 @@ RyftOne_Database::RyftOne_Database(ILogger *log) : __authType( AUTH_NONE ), __lo
         if(cacheString) 
             free(cacheString);
         if(error != NULL)
+            g_clear_error(&error);
+
+        // max unrestricted select match count
+        __maxMatchCount = 0;
+        gchar *maxMatchCount;
+        maxMatchCount = g_key_file_get_string(keyfile, "Server", "MaxMatchCount", &error);
+        if (maxMatchCount) {
+            __maxMatchCount = atol(maxMatchCount);
+            free(maxMatchCount);
+        }
+        if (error != NULL)
+            g_clear_error(&error);
+
+        // GeoIP database path
+        gchar *geoipString;
+        geoipString = g_key_file_get_string(keyfile, "PCAP", "GeoIP", &error);
+        if (geoipString) {
+            __geoipPath = geoipString;
+            free(geoipString);
+        }
+        if (error != NULL)
+            g_clear_error(&error);
+
+        // manuf file path
+        gchar *manufString;
+        manufString = g_key_file_get_string(keyfile, "PCAP", "manuf", &error);
+        if (manufString) {
+            __manufPath = manufString;
+            free(manufString);
+        }
+        if (error != NULL)
             g_clear_error(&error);
     }
     if(error != NULL)
@@ -300,11 +346,15 @@ IQueryResult *RyftOne_Database::OpenTable(string& in_table)
         case dataType_CSV:
             result = new RyftOne_CSVResult(__log);
             break;
+        case dataType_PCAP:
+            result = new RyftOne_PCAPResult(__log, __geoipPath, __manufPath);
+            break;
         default:
             result = new RyftOne_RAWResult(__log);
             break;
         }
-        result->OpenQuery(in_table, itr, __restServer, auth, __restPath, __rootPath, __lruMaxDepth);
+        result->OpenQuery(in_table, itr, __restServer, auth, __restPath, __rootPath, __lruMaxDepth, 
+            __maxMatchCount, &__settings_fstat);
     }
     return result;
 }
@@ -429,8 +479,6 @@ size_t token_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata
 
 bool RyftOne_Database::__logonToREST()
 {
-    __restPath = __rootPath;
-
     // if no user specified run without authenticating
     if(__restUser.empty())
         return true;

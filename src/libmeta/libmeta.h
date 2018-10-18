@@ -23,7 +23,8 @@ enum DataType {
     dataType_None = 0,
     dataType_XML,
     dataType_JSON,
-    dataType_CSV
+    dataType_CSV,
+    dataType_PCAP
 };
 
 class __meta_config__ {
@@ -55,6 +56,7 @@ public:
     string delimiter;
     vector<__meta_col__> columns;
     vector<__meta_view__> views;
+
     struct stat metafile_stat;
     
     // version 1
@@ -70,6 +72,20 @@ public:
     // CSV
     string record_delimiter;
     string field_delimiter;
+    // PCAP
+    #define FILTER_EQ           0
+    #define FILTER_NE           1
+    #define FILTER_LIKE         2
+    #define FILTER_NOT_LIKE     3
+    class __meta_filter__ {
+    public:
+        string id;
+        string filter_name;
+        string eq;
+        string ne;
+    };
+
+    vector<__meta_filter__> filters;
 
     void write_meta_config(string path);
 
