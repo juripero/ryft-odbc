@@ -485,6 +485,9 @@ bool RyftOne_PCAPResult::__internalFetch()
                 }
                 break;
             case VLAN_LEN:
+            case VLAN_PADDING:
+            case VLAN_TRAILER:
+                // fixme: should support these at some point
                 break;
             case VLAN_ETYPE:
                 if (isVLAN) {
