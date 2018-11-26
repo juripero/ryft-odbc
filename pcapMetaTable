@@ -42,6 +42,7 @@ columns = {
     ipv6_src = ( "ipv6_src", "VARCHAR(80)", "ipv6.src" ),
     ipv6_dst = ( "ipv6_dst", "VARCHAR(80)", "ipv6.dst" ),
     payload = ( "payload", "VARCHAR(1024)", "payload" ),
+    tcp_payload = ( "tcp_payload", "VARCHAR(1024)", "tcp.payload" ),
     icmp_type = ( "icmp_type", "INTEGER", "icmp.type" ),
     icmp_code = ( "icmp_code", "INTEGER", "icmp.code" ),
     icmp_checksum = ( "icmp_checksum", "INTEGER", "icmp.checksum" ),

@@ -191,6 +191,9 @@ bool RyftOne_PCAPResult::OpenIndexedResult()
         else if (!colAlias.compare("tcp.flags.fin")) {
             colQuantity |= TCP_FLAGS_FIN;
         }
+		else if (!colAlias.compare("tcp.payload")) {
+			colQuantity |= TCP_PAYLOAD;
+		}
         else if (!colAlias.compare("udp.srcport")) {
             colQuantity |= UDP_SRCPORT;
         }
@@ -660,9 +663,15 @@ bool RyftOne_PCAPResult::__internalFetch()
                     snprintf(ptr, len, "%d", us);
                 }
                 break;
+			case TCP_PAYLOAD:
+				if (!isTCP)
+				{
+					// If it's not TCP it won't have TCP Payload
+					break;
+				}
             case ICMP_DATA:
             case ICMPV6_DATA:
-                // fallthrough to payload case
+            // fallthrough to payload case
             case PAYLOAD: {
                 if (payloadLen) {
                     string payload(payloadLen, '.');

@@ -849,7 +849,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     int edit = 0;
     int width = 0;
     bool line = false;
-    bool limit = 0;
+    int limit = 0;
     char distance[10];
     char surrounding[10];
     bool case_sensitive = 1;
@@ -1027,7 +1027,7 @@ void R1FilterHandler::GetOptions(simba_wstring& in_exprValue)
     const wchar_t *pfilter;
     const wchar_t *pOpt = NULL;
     size_t idx1, idx2;
-    bool limit = 0;
+    int limit = 0;
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();
     for (pfilter = in_filter.c_str(); *pfilter; pfilter++) {

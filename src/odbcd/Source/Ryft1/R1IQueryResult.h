@@ -800,8 +800,11 @@ protected:
                     "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d&backend-option=-vv", limit);
                 url += max_count;
             }
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
+			DEBUG_LOG(__log, "RyftOne", "RyftOne_Result", "__execute", "Full URL = %s", url.c_str());
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+			
             char resultsPath[PATH_MAX];
             __odbcRoot(resultsPath);
             strcat(resultsPath, s_R1Results);

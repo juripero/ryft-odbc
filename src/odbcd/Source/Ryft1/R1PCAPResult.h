@@ -167,6 +167,7 @@ struct mpls_label {
 #define TCP_FLAGS_RESET         DOMAIN_TCP | 6
 #define TCP_FLAGS_SYN           DOMAIN_TCP | 7
 #define TCP_FLAGS_FIN           DOMAIN_TCP | 8
+#define TCP_PAYLOAD				DOMAIN_TCP | 9
 
 #define UDP_SRCPORT             DOMAIN_UDP | 1
 #define UDP_DSTPORT             DOMAIN_UDP | 2
