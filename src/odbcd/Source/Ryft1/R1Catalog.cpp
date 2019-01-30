@@ -293,7 +293,7 @@ RyftOne_Tables RyftOne_Database::GetTables(string in_search, string in_type)
     return tables;
 }
 
-string RyftOne_Database::GetDelimiter(string& in_search)
+string RyftOne_Database::GetFieldDelimiter(string& in_search)
 {
 	/*
 	for (itr = __catalog.begin(); itr != __catalog.end(); itr++) {
@@ -306,7 +306,7 @@ string RyftOne_Database::GetDelimiter(string& in_search)
 	vector<__catalog_entry__>::iterator itr = __findTable(in_search);
 	if(itr != __catalog.end())
 	{
-		return itr->meta_config.delimiter;
+		return itr->meta_config.field_delimiter;
 	}
 	return NULL;
 }

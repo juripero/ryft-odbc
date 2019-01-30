@@ -107,7 +107,7 @@ namespace RyftOne
 		/// @brief Get the delimiter for the file.
 		///
 		/// @param out_delimiter   The Delimiter String (Character). CAN BE NULL/EMPTY
-		virtual void GetDelimiter(simba_wstring& out_delimiter);
+		virtual void GetFieldDelimiter(simba_wstring& out_delimiter);
 
         /// @brief Indicate that the current row is finished having data written to it.
         virtual void OnFinishRowUpdate();

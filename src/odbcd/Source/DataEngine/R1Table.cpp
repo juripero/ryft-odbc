@@ -123,12 +123,12 @@ void R1Table::GetTableName(simba_wstring& out_tableName)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void R1Table::GetDelimiter(simba_wstring& out_delimiter)
+void R1Table::GetFieldDelimiter(simba_wstring& out_delimiter)
 {
 //	ENTRANCE_LOG(m_log, "RyftOne", "R1Table", "GetDelimiter");
 //	out_delimiter= m_delimiter;
 	string tablename = m_tableName.GetAsPlatformString();
-	 out_delimiter = m_ryft1->GetDelimiter(tablename);
+	 out_delimiter = m_ryft1->GetFieldDelimiter(tablename);
 	
 }
 

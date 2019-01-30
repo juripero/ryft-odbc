@@ -1018,7 +1018,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
 
 	if (m_table->IsStructuredType()) {
 		simba_wstring rawDelimiter;
-		m_table->GetDelimiter(rawDelimiter);
+		m_table->GetFieldDelimiter(rawDelimiter);
 
 		if (!rawDelimiter.IsEmpty())
 		{
@@ -1191,7 +1191,7 @@ void R1FilterHandler::ConstructDateComparisonFilter(
 
 	if (m_table->IsStructuredType()) {
 		simba_wstring rawDelimiter;
-		m_table->GetDelimiter(rawDelimiter);
+		m_table->GetFieldDelimiter(rawDelimiter);
 		if (!rawDelimiter.IsEmpty())
 		{
 			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
@@ -1294,7 +1294,7 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
     m_query += outtime;
 	if (m_table->IsStructuredType()) {
 		simba_wstring rawDelimiter;
-		m_table->GetDelimiter(rawDelimiter);
+		m_table->GetFieldDelimiter(rawDelimiter);
 		if (!rawDelimiter.IsEmpty())
 		{
 			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
@@ -1310,7 +1310,7 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
 
 		if (m_table->IsStructuredType()) {
 			simba_wstring rawDelimiter;
-			m_table->GetDelimiter(rawDelimiter);
+			m_table->GetFieldDelimiter(rawDelimiter);
 			if (!rawDelimiter.IsEmpty())
 			{
 				simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
@@ -1369,7 +1369,7 @@ void R1FilterHandler::ConstructNumberComparisonFilter(
 
 	if (m_table->IsStructuredType()) {
 		simba_wstring rawDelimiter;
-		m_table->GetDelimiter(rawDelimiter);
+		m_table->GetFieldDelimiter(rawDelimiter);
 		if (!rawDelimiter.IsEmpty())
 		{
 			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
@@ -1428,7 +1428,7 @@ void R1FilterHandler::ConstructCurrencyComparisonFilter(
 
 	if (m_table->IsStructuredType()) {
 		simba_wstring rawDelimiter;
-		m_table->GetDelimiter(rawDelimiter);
+		m_table->GetFieldDelimiter(rawDelimiter);
 		if (!rawDelimiter.IsEmpty())
 		{
 			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
