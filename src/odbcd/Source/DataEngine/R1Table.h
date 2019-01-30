@@ -104,6 +104,11 @@ namespace RyftOne
         /// @param out_tableName    The name of the table.
         virtual void GetTableName(simba_wstring& out_tableName);
 
+		/// @brief Get the delimiter for the file.
+		///
+		/// @param out_delimiter   The Delimiter String (Character). CAN BE NULL/EMPTY
+		virtual void GetDelimiter(simba_wstring& out_delimiter);
+
         /// @brief Indicate that the current row is finished having data written to it.
         virtual void OnFinishRowUpdate();
 

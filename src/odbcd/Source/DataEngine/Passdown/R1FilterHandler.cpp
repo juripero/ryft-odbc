@@ -1016,6 +1016,18 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     if(line)
         m_query += ",LINE=\"TRUE\"";
 
+	if (m_table->IsStructuredType()) {
+		simba_wstring rawDelimiter;
+		m_table->GetDelimiter(rawDelimiter);
+
+		if (!rawDelimiter.IsEmpty())
+		{
+			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
+			m_query += ",FIELD_DELIMITER=\"" + cleanedDelim + "\"";
+		}
+	}
+
+
     m_query += "))";
     if(limit > m_limit)
         m_limit = limit;
@@ -1176,6 +1188,17 @@ void R1FilterHandler::ConstructDateComparisonFilter(
     }
 
     m_query += outdate;
+
+	if (m_table->IsStructuredType()) {
+		simba_wstring rawDelimiter;
+		m_table->GetDelimiter(rawDelimiter);
+		if (!rawDelimiter.IsEmpty())
+		{
+			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
+			m_query += ",FIELD_DELIMITER=\"" + cleanedDelim + "\"";
+		}
+	}
+
     m_query += "))";
 }
 
@@ -1269,12 +1292,33 @@ void R1FilterHandler::ConstructTimeComparisonFilter(
     }
 
     m_query += outtime;
+	if (m_table->IsStructuredType()) {
+		simba_wstring rawDelimiter;
+		m_table->GetDelimiter(rawDelimiter);
+		if (!rawDelimiter.IsEmpty())
+		{
+			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
+			m_query += ",FIELD_DELIMITER=\"" + cleanedDelim + "\"";
+		}
+	}
     m_query += "))";
 
     if(in_typeCustom == TIME_12MMSS) {
         m_query += " AND (RECORD." + in_columnName + " CONTAINS \"";
         m_query += (hour < 12) ? "AM" : "PM";
-        m_query += "\"))";
+        m_query += "\"";
+
+		if (m_table->IsStructuredType()) {
+			simba_wstring rawDelimiter;
+			m_table->GetDelimiter(rawDelimiter);
+			if (!rawDelimiter.IsEmpty())
+			{
+				simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
+				m_query += ",FIELD_DELIMITER=\"" + cleanedDelim + "\"";
+			}
+		}
+
+    	m_query += "))";
     }
 }
 
@@ -1322,6 +1366,17 @@ void R1FilterHandler::ConstructNumberComparisonFilter(
     m_query += "\"" + numLiteral + "\", ";
     m_query += "\"" + in_formatCustom.substr(0,1) + "\", ";
     m_query += "\"" + in_formatCustom.substr(1,1) + "\"";
+
+	if (m_table->IsStructuredType()) {
+		simba_wstring rawDelimiter;
+		m_table->GetDelimiter(rawDelimiter);
+		if (!rawDelimiter.IsEmpty())
+		{
+			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
+			m_query += ",FIELD_DELIMITER=\"" + cleanedDelim + "\"";
+		}
+	}
+
     m_query += "))";
 }
 
@@ -1370,6 +1425,17 @@ void R1FilterHandler::ConstructCurrencyComparisonFilter(
     m_query += "\"" + in_formatCustom.substr(0,1) + "\", ";
     m_query += "\"" + in_formatCustom.substr(1,1) + "\", ";
     m_query += "\"" + in_formatCustom.substr(2,1) + "\"";
+
+	if (m_table->IsStructuredType()) {
+		simba_wstring rawDelimiter;
+		m_table->GetDelimiter(rawDelimiter);
+		if (!rawDelimiter.IsEmpty())
+		{
+			simba_wstring cleanedDelim = rawDelimiter.RegexReplace(" ", "", NULL);
+			m_query += ",FIELD_DELIMITER=\"" + cleanedDelim + "\"";
+		}
+	}
+
     m_query += "))";
 }
 
