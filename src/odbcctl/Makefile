@@ -24,7 +24,12 @@ error:
 endif
 
 SOURCEFILES := ryft1_odbcctl.cpp
-EXTERNAL_LIBS := ../libmeta/$(BINARYDIR)/libmeta.a
+WHICHPLATFORM := $(shell cat /etc/os-release|grep -io centos|head -1|tr '[A-Z]' '[a-z]')
+ifeq ($(WHICHPLATFORM),centos)
+EXTERNAL_LIBS := ../libmeta/$(BINARYDIR)/libmeta.a /usr/lib64/libjson-c.so.2
+else
+EXTERNAL_LIBS := ../libmeta/$(BINARYDIR)/libmeta.a 
+endif
 EXTERNAL_LIBS_COPIED := $(foreach lib, $(EXTERNAL_LIBS),$(BINARYDIR)/$(notdir $(lib)))
 
 CFLAGS += $(COMMONFLAGS)

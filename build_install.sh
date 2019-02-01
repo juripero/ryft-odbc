@@ -79,7 +79,13 @@ mkdir ${directory}/lib/x8664
 cp -P ${SIMBAENGINE_THIRDPARTY_DIR}/icu/53.1/centos5/gcc4_4/release64/lib/{libicudata_sb64*,libicui18n_sb64*,libicuuc_sb64*} ${directory}/lib/x8664
 
 cp -r files/server/errormessages ${directory}
- 
-tar -zcvf ryft1_odbc_server_linux_64-${version}-${build}.tar.gz ${directory}
+WHICHPLATFORM=`cat /etc/os-release|grep -io centos|head -1|tr '[A-Z]' '[a-z]'`
+if [ "${WHICHPLATFORM}" == "centos" ]
+then
+	cp -P ${SIMBAENGINE_THIRDPARTY_DIR}/openssl/1.0.1/centos5/gcc4_4/release64/lib/{libcrypto*,libssl*} ${directory}/lib/x8664
+	tar -zcvf ryft1_odbc_server_linux_64-${version}-${build}_${WHICHPLATFORM}.tar.gz ${directory}
+else
+	tar -zcvf ryft1_odbc_server_linux_64-${version}-${build}.tar.gz ${directory}
+fi
 
 rm -r ${directory}

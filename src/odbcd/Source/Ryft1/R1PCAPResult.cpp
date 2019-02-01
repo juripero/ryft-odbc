@@ -355,7 +355,11 @@ bool RyftOne_PCAPResult::__internalFetch()
         bool isUDP = (isIP && (ipHeader->ip_p == IPPROTO_UDP)) || (isIPv6 && (ipv6Header->ip6_nxt == IPPROTO_UDP));
         if (isTCP) {
             tcpHeader = (tcphdr *)(pkt + traverse);
+#ifdef WHICHPLATFORM_centos
+            traverse += tcpHeader->doff * 4; // number of 32bit words in the TCP header
+#else
             traverse += tcpHeader->th_off * 4; // number of 32bit words in the TCP header
+#endif
             payloadLen = hdr.len - traverse;
             payloadData = (u_char *)(pkt + traverse);
         }
