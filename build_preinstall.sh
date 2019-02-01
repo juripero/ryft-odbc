@@ -5,8 +5,11 @@
 
 # 0/1
 cloneODBC=0
-osInstalls=0
+osInstalls=1
 simbaInstall=0
+
+WHICHPLATFORM=`cat /etc/os-release|grep -io centos|head -1|tr '[A-Z]' '[a-z]'`
+echo "WHICHPLATFORM=${WHICHPLATFORM}"
 
 if [ "$cloneODBC" == 1 ]
 then
@@ -22,7 +25,14 @@ then
 	then
 		function centosInstall() {
 			sudo yum install $1 -y
-			[ $? != 0 ] && echo; echo "*** $1 problem ***"; echo
+			x=$?
+			#echo "yum return code=$x"
+			if [ $x != 0 ]
+			then
+				echo
+				echo "*** problem - yum install $1 - returnCode $x ***"; 
+				echo
+			fi
 		}
 	
 		centosInstall json-c-devel
@@ -37,18 +47,28 @@ then
 		centosInstall dos2unix
 	else
 		function ubuntuInstall() {
-			sudo yum install $1 -y
-			[ $? != 0 ] && echo; echo "*** $1 problem ***"; echo
+			sudo apt-get --assume-yes install $1 
+			x=$?
+			#echo "apt-get return code=$x"
+			if [ $x != 0 ]
+			then
+				echo
+				echo "*** problem - apt-get install $1 - returnCode $x ***"; 
+				echo
+			fi
 		}
 	
 		#
-		centosInstall libjson0
-		centosInstall libjson0-dev 
+		ubuntuInstall libjson0
+		ubuntuInstall libjson0-dev 
 		ubuntuInstall uuid-dev 
 		ubuntuInstall libuuid1
 		ubuntuInstall libcurl4-gnutls-dev
-		#? ubuntuInstall GeoIP-devel
-		#? ubuntuInstall openldap-devel
+		# following libs... less-certain
+		ubuntuInstall geoip-dev
+		ubuntuInstall geoip-database
+		ubuntuInstall openldap2-dev
+                ubuntuInstall openldap-2.4-2
 		ubuntuInstall libglib2.0-dev
 		ubuntuInstall libconfig-dev
 		ubuntuInstall dos2unix
@@ -61,5 +81,6 @@ if [ "$simbaInstall" == 1 ]
 then
 	scp bigdata@172.16.10.84:/usr/local/simba/SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz .
 	sudo mkdir /usr/local/simba
-	sudo cd /usr/local/simba; tar -xvf ~ryftuser/ryft-odbc/Simba*.gz
+	cd /usr/local/simba
+	sudo tar -xvf ~ryftuser/ryft-odbc/Simba*.gz
 fi
