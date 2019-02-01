@@ -19,3 +19,14 @@ export SIMBAENGINE_THIRDPARTY_DIR=/usr/local/simba/SimbaEngineSDK/10.0/DataAcces
 
 Run build_install.sh from the ryft-odbc root to build and package the installer.
 
+
+CentOS build example after installing RyftX
+```
+cd
+git clone https://github.com/getryft/ryft-odbc
+cd ryft-odbc
+./build_preinstall.sh
+. build_environment.sh
+./build_install.sh
+```
+
