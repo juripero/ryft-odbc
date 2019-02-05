@@ -1,5 +1,6 @@
 
 cd ~/ryft-odbc
+sudo chcon -Rt svirt_sandbox_file_t  .
 echo "###################################### centos.7"
 docker run -v `pwd`:/opt/ryft-odbc -v /usr/local/simba:/usr/local/simba --user `id -u`:`id -g` -it centos.7:b1 /opt/ryft-odbc/buildit.sh
 
