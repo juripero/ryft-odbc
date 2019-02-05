@@ -189,4 +189,9 @@ FakesAssemblies/
 /src/server/Lib/*
 SourceCache.dat
 vs2012/ryft1_linuxclient/example/*
-#*.o
+
+pcapMetaTable
+
+*.db-shm
+
+*.db-wal

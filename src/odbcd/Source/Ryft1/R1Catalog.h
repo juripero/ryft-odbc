@@ -60,6 +60,7 @@ public:
 
     RyftOne_Tables GetTables(string in_search, string in_type);
     RyftOne_Columns GetColumns(string& in_table);
+	string GetFieldDelimiter(string& in_search);
 
     IQueryResult *OpenTable(string& in_table);
 

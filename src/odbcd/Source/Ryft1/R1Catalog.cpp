@@ -293,6 +293,25 @@ RyftOne_Tables RyftOne_Database::GetTables(string in_search, string in_type)
     return tables;
 }
 
+string RyftOne_Database::GetFieldDelimiter(string& in_search)
+{
+	/*
+	for (itr = __catalog.begin(); itr != __catalog.end(); itr++) {
+		if (__matches(in_search, itr->meta_config.table_name)) {
+			return itr->meta_config.delimiter;
+		}
+	}
+	*/
+
+	vector<__catalog_entry__>::iterator itr = __findTable(in_search);
+	if(itr != __catalog.end())
+	{
+		return itr->meta_config.field_delimiter;
+	}
+	return NULL;
+}
+
+
 RyftOne_Columns RyftOne_Database::GetColumns(string& in_table)
 {
     RyftOne_Column col;
