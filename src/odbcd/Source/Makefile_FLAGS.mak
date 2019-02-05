@@ -8,6 +8,14 @@
 ##--------------------------------------------------------------------------------------------------
 ## Common CFLAGS.
 ##--------------------------------------------------------------------------------------------------
+
+WHICHPLATFORM = $(shell cat /etc/os-release|grep -io centos|head -1|tr '[A-Z]' '[a-z]')
+ifeq ($(WHICHPLATFORM),centos)
+GLIB2_DIRECTORY = /usr/lib64/glib-2.0/include
+else
+GLIB2_DIRECTORY = /usr/lib/x86_64-linux-gnu/glib-2.0/include 
+endif
+
 COMMON_CFLAGS = $(DMFLAGS) \
 -I. \
 -I./Core \
@@ -32,8 +40,9 @@ COMMON_CFLAGS = $(DMFLAGS) \
 -I$(SIMBAENGINE_DIR)/Include/Server \
 -I$(SIMBAENGINE_THIRDPARTY_DIR)/Expat/2.0.1 \
 -I/usr/include/glib-2.0 \
--I/usr/lib/x86_64-linux-gnu/glib-2.0/include \
--DHAVE_MEMMOVE
+-I$(GLIB2_DIRECTORY) \
+-DHAVE_MEMMOVE \
+-DWHICHPLATFORM_$(WHICHPLATFORM)
 
 ifeq ($(BUILDSERVER),exe)
 CFLAGS = $(COMMON_CFLAGS) -I$(SIMBAENGINE_DIR)/Include/Server -DSERVERTARGET
@@ -176,6 +185,8 @@ COMMON_LDFLAGS += -L$(OPENSSLLIB_PATH) $(OPENSSL_LIBS)
 endif
 
 ifeq ($(BUILDSERVER),exe)
+
+ifneq ($(WHICHPLATFORM),centos)
 BIN_LDFLAGS = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive $(COMMON_LDFLAGS) \
               -Wl,--no-whole-archive,../../libmeta/Release/libmeta.a \
               -Wl,--no-whole-archive,../../libsqlite/Release/libsqlite.a -ldl
@@ -183,6 +194,17 @@ BIN_LDFLAGS_DEBUG = -Wl,--whole-archive,$(SIMBA_LIBS_DEBUG) -Wl,--no-whole-archi
                     -Wl,--no-whole-archive,../../libmeta/Debug/libmeta.a \
                     -Wl,--no-whole-archive,../../libsqlite/Debug/libsqlite.a -ldl
 else
+# add the libjson
+BIN_LDFLAGS = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive $(COMMON_LDFLAGS) \
+              -Wl,--no-whole-archive,../../libmeta/Release/libmeta.a \
+              -Wl,--no-whole-archive,../../libsqlite/Release/libsqlite.a \
+	      -Wl,--no-whole-archive,/usr/lib64/libjson-c.so.2 -ldl
+BIN_LDFLAGS_DEBUG = -Wl,--whole-archive,$(SIMBA_LIBS_DEBUG) -Wl,--no-whole-archive $(COMMON_LDFLAGS) \
+                    -Wl,--no-whole-archive,../../libmeta/Debug/libmeta.a \
+                    -Wl,--no-whole-archive,../../libsqlite/Debug/libsqlite.a \
+	            -Wl,--no-whole-archive,/usr/lib64/libjson-c.so.2 -ldl
+endif
+
 SO_LDFLAGS       = -Wl,--whole-archive,$(SIMBA_LIBS_RELEASE) -Wl,--no-whole-archive \
                  -Wl,--soname=$(SONAME_RELEASE) \
                  $(COMMON_LDFLAGS) 
