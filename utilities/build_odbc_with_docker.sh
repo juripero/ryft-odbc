@@ -34,4 +34,7 @@ fi
 echo "***********************************************************************************"
 echo "* build_odbc_with_docker.sh ${1} using container=${containerId}"
 echo "***********************************************************************************"
-docker run --rm -v `pwd`:/opt/ryft-odbc -v /usr/local/simba:/usr/local/simba --user `id -u`:`id -g` -it ${containerId} /opt/ryft-odbc/buildit.sh
+# xterm
+#docker run --rm -v `pwd`:/opt/ryft-odbc -v /usr/local/simba:/usr/local/simba --user `id -u`:`id -g` -it ${containerId} /opt/ryft-odbc/buildit.sh
+# jenkins
+docker run --rm -v `pwd`:/opt/ryft-odbc -v /usr/local/simba:/usr/local/simba --user `id -u`:`id -g` -t ${containerId} /opt/ryft-odbc/buildit.sh
