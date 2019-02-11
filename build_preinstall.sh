@@ -2,7 +2,7 @@
 
 # 0/1
 cloneODBC=0
-simbaInstall=0
+simbaSDKInstall=1
 
 # project setup
 if [ "$cloneODBC" == 1 ]
@@ -12,8 +12,8 @@ then
 	cd ryft-odbc
 fi
 
-# simba install
-if [ "$simbaInstall" == 1 ]
+# simba SDK install
+if [ "$simbaSDKInstall" == 1 ]
 then
 	scp bigdata@172.16.10.84:/usr/local/simba/SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz .
 	sudo mkdir /usr/local/simba
