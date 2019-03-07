@@ -12,4 +12,4 @@ scriptDir=`getScriptDir`
 cd ${scriptDir}
 
 . ./build_environment.sh
-bash -x ./build_install.sh
+bash -x ./build_install_orig.sh
