@@ -72,6 +72,8 @@ public:
     // CSV
     string record_delimiter;
     string field_delimiter;
+	// version 3 - adds PIP capability
+	string pip_format;
     // PCAP
     #define FILTER_EQ           0
     #define FILTER_NE           1

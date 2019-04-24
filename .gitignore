@@ -59,6 +59,10 @@ dlldata.c
 *.svclog
 *.scc
 
+# docker build components
+*.cpp.o
+*.gz
+
 # Chutzpah Test files
 _Chutzpah*
 

@@ -122,6 +122,14 @@ void R1Table::GetTableName(simba_wstring& out_tableName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+void R1Table::GetPIPFormat(simba_wstring& out_pip_format)
+{
+    ENTRANCE_LOG(m_log, "RyftOne", "R1Table", "GetPIPFormat");
+	string tablename = m_tableName.GetAsPlatformString();
+	out_pip_format = m_ryft1->GetPIPFormat(tablename);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void R1Table::GetFieldDelimiter(simba_wstring& out_delimiter)
 {

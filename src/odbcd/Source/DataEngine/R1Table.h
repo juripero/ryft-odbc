@@ -109,6 +109,11 @@ namespace RyftOne
 		/// @param out_delimiter   The Delimiter String (Character). CAN BE NULL/EMPTY
 		virtual void GetFieldDelimiter(simba_wstring& out_delimiter);
 
+		/// @brief Get the PIP Location for the file.
+		///
+		/// @param out_pip_format  The PIP format String (Character). CAN BE NULL/EMPTY
+		virtual void GetPIPFormat(simba_wstring& out_delimiter);
+
         /// @brief Indicate that the current row is finished having data written to it.
         virtual void OnFinishRowUpdate();
 
