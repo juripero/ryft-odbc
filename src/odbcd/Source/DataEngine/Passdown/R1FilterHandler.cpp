@@ -846,6 +846,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     size_t idx1, idx2;
     bool regex = false;
     bool pipCmd = false;
+	bool structuredUsesRaw = false;
     int hamming = 0;
     int edit = 0;
     int width = 0;
@@ -861,6 +862,14 @@ void R1FilterHandler::ConstructStringComparisonFilter(
         case L'-':
             pOpt = pfilter;
             pfilter++;
+			if (*pfilter == L'a' || *pfilter == L'A')
+			{
+    			if(m_table->IsStructuredType()) {
+				// MNB should check for JSON or CSV
+					structuredUsesRaw = true;
+				}
+				pfilter++;
+			}
             switch(*pfilter) {
             case L'r':
             case L'R': {
@@ -1010,6 +1019,9 @@ void R1FilterHandler::ConstructStringComparisonFilter(
 			}
 			out_filter = out_filter + L"," + pipFormat.GetAsPlatformWString();
 		}
+		else if (structuredUsesRaw) {
+        	m_query += "(RAW_TEXT";
+		}
 		else {
         	m_query += "(RECORD." + in_columnName;
 		}
@@ -1047,7 +1059,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
         sprintf(surrounding, "%d", width);
         m_query += ",WIDTH=\"" + string(surrounding) + "\"";
     }
-    if(line)
+    if(line || structuredUsesRaw)
         m_query += ",LINE=\"TRUE\"";
 
 	if (m_table->IsStructuredType()) {
