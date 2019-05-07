@@ -16,7 +16,6 @@ fi
 if [ "$simbaSDKInstall" == 1 ]
 then
 	scp bigdata@172.16.10.84:/usr/local/simba/SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz .
-	sudo mkdir /usr/local/simba
-	cd /usr/local/simba
-	sudo tar -xvf ~ryftuser/ryft-odbc/Simba*.gz
+	sudo mkdir -p /usr/local/simba
+	sudo tar -xvf Simba*.gz -C /usr/local/simba
 fi

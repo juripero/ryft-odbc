@@ -796,8 +796,16 @@ protected:
                 int limit = __limit;
                 if (useLimit)
                     limit = __maxMatchCount;
-                snprintf(max_count, sizeof(max_count),
+            		if (isPCAP) {
+					    // If PCAP, no need to specify backend processor
+                		snprintf(max_count, sizeof(max_count),
+                    "&backend-option=--rx-max-count&backend-option=%d&backend-option=-vv", limit);
+					}
+					else {
+					    // backend=ryftx because limit not supported in ryftprim
+                		snprintf(max_count, sizeof(max_count),
                     "&backend=ryftx&backend-option=--rx-max-count&backend-option=%d&backend-option=-vv", limit);
+					}
                 url += max_count;
             }
 

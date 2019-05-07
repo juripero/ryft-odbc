@@ -845,6 +845,8 @@ void R1FilterHandler::ConstructStringComparisonFilter(
     const wchar_t *pOpt = NULL;
     size_t idx1, idx2;
     bool regex = false;
+    bool pipCmd = false;
+	bool structuredUsesRaw = false;
     int hamming = 0;
     int edit = 0;
     int width = 0;
@@ -860,6 +862,14 @@ void R1FilterHandler::ConstructStringComparisonFilter(
         case L'-':
             pOpt = pfilter;
             pfilter++;
+			if (*pfilter == L'a' || *pfilter == L'A')
+			{
+    			if(m_table->IsStructuredType()) {
+				// MNB should check for JSON or CSV
+					structuredUsesRaw = true;
+				}
+				pfilter++;
+			}
             switch(*pfilter) {
             case L'r':
             case L'R': {
@@ -874,6 +884,21 @@ void R1FilterHandler::ConstructStringComparisonFilter(
                 }
                 break;
                 }
+			case L'p':
+			case L'P': {
+			    // PIP command has no expression and list of options
+				wstring inside = pfilter;
+				idx1 = inside.find_first_of(L"(");
+				idx2 = inside.find_last_of(L")");
+				if(idx1 != string::npos && idx2 != string::npos) {
+					wstring search_string = inside.substr(idx1+1, idx2-idx1-1);
+					// ignore leading quote by overwriting out_filter 
+					out_filter = search_string;
+					pfilter += idx2;
+					pipCmd = true;
+				}
+				break;
+				}
             case L'h': // format -hddd(term)
             case L'H': {
                 wstring num_hamming;
@@ -979,10 +1004,27 @@ void R1FilterHandler::ConstructStringComparisonFilter(
             break;
         }
     }
-    out_filter += L"\"";
+	if (!pipCmd) {
+    	out_filter += L"\"";
+	}
 
     if(m_table->IsStructuredType()) {
-        m_query += "(RECORD." + in_columnName;
+	    if(pipCmd) {
+			simba_wstring pipFormat;
+			m_table->GetPIPFormat(pipFormat);
+			if (pipFormat.Find("LAT_COORD", 0) != SIMBA_NPOS) {
+        		m_query += "(RECORD";
+			} else {
+        		m_query += "(RECORD." + in_columnName;
+			}
+			out_filter = out_filter + L"," + pipFormat.GetAsPlatformWString();
+		}
+		else if (structuredUsesRaw) {
+        	m_query += "(RAW_TEXT";
+		}
+		else {
+        	m_query += "(RECORD." + in_columnName;
+		}
     }
     else 
         m_query += "(RAW_TEXT";
@@ -995,6 +1037,10 @@ void R1FilterHandler::ConstructStringComparisonFilter(
         m_query += "PCRE2(";
         m_query += out_filter.c_str();
     }
+	else if(pipCmd) {
+        m_query += "PIP(";
+        m_query += out_filter.c_str();
+	}
     else {
         if(edit) {
             m_query += "EDIT_DISTANCE(";
@@ -1013,7 +1059,7 @@ void R1FilterHandler::ConstructStringComparisonFilter(
         sprintf(surrounding, "%d", width);
         m_query += ",WIDTH=\"" + string(surrounding) + "\"";
     }
-    if(line)
+    if(line || structuredUsesRaw)
         m_query += ",LINE=\"TRUE\"";
 
 	if (m_table->IsStructuredType()) {
@@ -1038,7 +1084,7 @@ void R1FilterHandler::GetOptions(simba_wstring& in_exprValue)
     wstring out_filter;
     const wchar_t *pfilter;
     const wchar_t *pOpt = NULL;
-    size_t idx1, idx2;
+    size_t idx1;
     int limit = 0;
 
     wstring in_filter = in_exprValue.GetAsPlatformWString();

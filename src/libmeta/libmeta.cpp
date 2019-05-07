@@ -151,7 +151,14 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                 }
                 break;
             }
-            break;
+        	// Add PIP configuration to meta table
+            if(CONFIG_TRUE == config_lookup_string(&tableMeta, "pip_format", &result)) {
+			    pip_format = result;
+			}
+			else {
+				pip_format = "None";
+			}
+			break;
         }
         
         viewList = config_lookup(&tableMeta, "views");
@@ -246,6 +253,8 @@ void __meta_config__::write_meta_config(string path)
     config_setting_set_string(cs_table_remarks, table_remarks.c_str());
     config_setting_t *cs_table_rdf = config_setting_add(root, "rdf", CONFIG_TYPE_STRING);
     config_setting_set_string(cs_table_rdf, rdf_path.c_str());
+    config_setting_t *cs_pip_format = config_setting_add(root, "pip_format", CONFIG_TYPE_STRING);
+    config_setting_set_string(cs_pip_format, pip_format.c_str());
 
     config_setting_t *colListEntry;
     config_setting_t *colList = config_setting_add(root, "columns", CONFIG_TYPE_GROUP);
