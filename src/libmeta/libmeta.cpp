@@ -109,7 +109,6 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
             break;
         }
         case 2:
-        case 3: // Added PIP configuration to meta table
             if(CONFIG_TRUE == config_lookup_string(&tableMeta, "data_type", &result)) {
                 if(!strcasecmp(result, "JSON")) {
                     data_type = dataType_JSON;
@@ -152,6 +151,7 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                 }
                 break;
             }
+        	// Add PIP configuration to meta table
             if(CONFIG_TRUE == config_lookup_string(&tableMeta, "pip_format", &result)) {
 			    pip_format = result;
 			}
