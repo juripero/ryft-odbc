@@ -3,13 +3,13 @@
 <Include>
 
   <?define MajorMinorVersion = "2.1"?>
-  <?define RevisionBuildVersion = "19.0"?>
+  <?define RevisionBuildVersion = "20.0"?>
 
   <!-- The long manufacturer name. -->
-  <?define Manufacturer = "Ryft"?>
+  <?define Manufacturer = "BlackLynx"?>
 
   <!-- The short manufacturer name, used in the registry .-->
-  <?define ShortVendorName = "Ryft"?>
+  <?define ShortVendorName = "BlackLynx"?>
 
   <!-- The name of registry keys associated with the driver. -->
   <?define DriverRegistryName = "ODBC Driver"?>
@@ -25,10 +25,10 @@
   <?endif ?>
 
   <!-- The name of the web url shortcut. -->
-  <?define WebLinkName = "Ryft on the Web"?>
+  <?define WebLinkName = "BlackLynx on the Web"?>
 
   <!-- The target of the web url shortcut. -->
-  <?define WebLinkTarget = "http://www.ryft.com"?>
+  <?define WebLinkTarget = "http://www.blacklynx.tech"?>
 
   <!-- The version of the software -->
   <?define Version = "$(var.MajorMinorVersion).$(var.RevisionBuildVersion)"?>
@@ -79,9 +79,9 @@
 
   <!-- The path to branded installer images and the EULA. The EULA must be a RTF file. -->
   <?define EULAPath = "$(var.ProductDirectory)\EULA\EULA.rtf" ?>
-  <?define TopBannerPath = "$(var.ProductDirectory)\Images\banner.bmp" ?>
-  <?define WelcomeBgPath = "$(var.ProductDirectory)\Images\left_bg.bmp" ?>
+  <?define TopBannerPath = "$(var.ProductDirectory)\Images\BLbanner.bmp" ?>
+  <?define WelcomeBgPath = "$(var.ProductDirectory)\Images\BLleft_bg.bmp" ?>
 
   <!-- The path to the Tableau TDC file -->
-  <?define TableauTDC = "$(sys.CURRENTDIR)..\..\..\files\winclient\RyftOne.tdc"?>
+  <?define TableauTDC = "$(sys.CURRENTDIR)..\..\..\files\winclient\BlackLynx.tdc"?>
 </Include>
