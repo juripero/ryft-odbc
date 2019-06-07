@@ -78,10 +78,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="..\..\..\src\winclient\config\Resources\icon.ico">
+    <Image Include="..\..\..\src\winclient\config\Resources\BLicon.ico">
       <Filter>Resources</Filter>
     </Image>
-    <Image Include="..\..\..\src\winclient\config\Resources\ryft_logo%402x.png">
+    <Image Include="..\..\..\src\winclient\config\Resources\blacklynx_logo%402x.png">
       <Filter>Resources</Filter>
     </Image>
   </ItemGroup>
