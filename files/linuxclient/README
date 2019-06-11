@@ -1,23 +1,23 @@
-This directory contains the installation of the Ryft ODBC driver.
+This directory contains the installation of the BlackLynx ODBC driver.
 
 /bin/x8664 - contains the binary.
 
-/lib/x8664 - contains all of the libraries referenced by the Ryft ODBC 
+/lib/x8664 - contains all of the libraries referenced by the BlackLynx ODBC 
         driver components.
 
 /errormessages - contains the XML error message source for all error 
-        messages issued by the Ryft ODBC driver.
+        messages issued by the BlackLynx ODBC driver.
 
 1. Run 'sudo apt-get install unixodbc-dev unixodbc-bin unixodbc' to install 
 the unixODBC components if you have not already done so.
 
 2. Untar the Ryft ODBC Linux Client tarball using 
-'tar -xzf ryft1_odbc_client_linux-x.x-x.x.tar.gz'
+'tar -xzf blacklynx_odbc_client_linux-x.x-x.x.tar.gz'
 
-3. Navigate to the ryft1_odbc_client_64 directory and run './install.sh' 
-or optionally 'sudo ./install.sh'. If install is run as root, the Ryft ODBC
+3. Navigate to the blacklynx_odbc_client_64 directory and run './install.sh' 
+or optionally 'sudo ./install.sh'. If install is run as root, the BlackLynx ODBC
 Linux Client files will be installed in the /usr/local/ryft directory. If
-you are not running as root at the time of the install, the Ryft ODBC Linux
+you are not running as root at the time of the install, the BlackLynx ODBC Linux
 Client files will instead be installed in the ~/ryft directory. If you did
 not run ./install.sh as root, you will have to update LD_LIBRARY_PATH to
 include the [INSTALL_DIR]/lib/x8664 directory.
@@ -35,5 +35,5 @@ NOTE: This installation assumes that OpenSSL components are already installed
 in your Linux distribution. If the OpenSSL libraries are not installed in your 
 distribution, run 'sudo apt-get install libssl1.0.0'. 
 
-Refer to the "Ryft Connectors: Installation and User Guide" for more 
-information on installing and configuring your RyftOne ODBC driver.
+Refer to the "BlackLynx Installation and User Guide" for more 
+information on installing and configuring your BlackLynx ODBC driver.
