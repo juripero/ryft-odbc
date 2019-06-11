@@ -4,7 +4,7 @@ if [ -x /usr/bin/clear ]; then
     /usr/bin/clear
 fi
 cat <<EOF
-Installing Ryft Linux ODBC Client Driver
+Installing BlackLynx Linux ODBC Client Driver
 EOF
 
 if [ "$(id -u)" == "0" ]; then
@@ -26,13 +26,13 @@ if [ ! -d "$fullpath" ]; then
     mkdir $fullpath
 fi
 
-echo -n "What is the IP address of the Ryft ODBC Server [127.0.0.1]? "
+echo -n "What is the IP address of the ODBC Server [127.0.0.1]? "
 read ipaddr
 if [ "$ipaddr" == "" ]; then
     ipaddr="127.0.0.1"
 fi
 
-echo -n "What is the IP port of the Ryft ODBC Server [7409]? "
+echo -n "What is the IP port of the ODBC Server [7409]? "
 read port
 if [ "$port" == "" ]; then
     port="7409"
