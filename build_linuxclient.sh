@@ -22,6 +22,8 @@ cp -av ~/development/ryft-odbc/files/linuxclient/odbcinst.template $RELDIR
 chmod 666 $RELDIR/odbcinst.template
 cp -av ~/development/ryft-odbc/files/linuxclient/simbaclient.template $RELDIR
 chmod 666 $RELDIR/simbaclient.template
+cp -av ~/development/ryft-odbc/files/linuxclient/r.ld.so.conf.template $RELDIR
+chmod 666 $RELDIR/r.ld.so.conf.template
 cp -av ~/development/ryft-odbc/files/linuxclient/README $RELDIR
 chmod 666 $RELDIR/README
 cp -av ~/development/ryft-odbc/files/linuxclient/VERSION $RELDIR
