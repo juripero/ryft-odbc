@@ -46,7 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\src\winclient\config\Resources\icon.ico" />
-    <Image Include="..\..\..\src\winclient\config\Resources\ryft_logo%402x.png" />
+    <Image Include="..\..\..\src\winclient\config\Resources\blacklynx_logo%402x.png" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\src\winclient\config\Resources\Ryft.rc" />
@@ -58,7 +58,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{793F0432-1F24-4CFB-89BA-C3E4AE1126D2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>ryft1_winconfig</RootNamespace>
+    <RootNamespace>blacklynx_winconfig</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -107,13 +107,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
-    <TargetName>ryft1_wconfig64</TargetName>
+    <TargetName>blacklynx_wconfig64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
-    <TargetName>ryft1_wconfig64</TargetName>
+    <TargetName>blacklynx_wconfig64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -122,7 +122,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
-    <TargetName>ryft1_wconfig64</TargetName>
+    <TargetName>blacklynx_wconfig64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

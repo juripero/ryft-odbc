@@ -25,7 +25,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDD_DIALOG_DSN_CONFIG DIALOGEX 0, 0, 229, 196
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configure Ryft"
+CAPTION "Configure BlackLynx"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     GROUPBOX        "Data Source",IDC_STATIC,7,7,214,70
@@ -34,7 +34,7 @@ BEGIN
     RTEXT           "Description:",IDC_STATIC,14,40,44,8
     EDITTEXT        IDC_EDIT_DESC,63,38,150,14,ES_AUTOHSCROLL
     PUSHBUTTON      "Logging Options...",IDC_BUTTON_LOGGING,119,56,94,14
-    GROUPBOX        "Ryft Login",IDC_STATIC,7,80,214,90
+    GROUPBOX        "BlackLynx Login",IDC_STATIC,7,80,214,90
     RTEXT           "User:",IDC_STATIC,14,98,44,8
     EDITTEXT        IDC_EDIT_USER,63,95,150,14,ES_AUTOHSCROLL
     RTEXT           "Password:",IDC_STATIC,14,116,44,8
@@ -51,10 +51,10 @@ END
 
 IDD_DIALOG_CONNECT DIALOGEX 0, 0, 229, 124
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Connect to Ryft"
+CAPTION "Connect to BlackLynx"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Ryft Login",-1,7,7,214,91
+    GROUPBOX        "BlackLynx Login",-1,7,7,214,91
     RTEXT           "User:",-1,14,25,44,8
     EDITTEXT        IDC_EDIT_USER,63,22,150,14,ES_AUTOHSCROLL
     RTEXT           "Password:",-1,14,43,44,8
@@ -127,13 +127,13 @@ END
 
 IDD_ABOUT DIALOGEX 0, 0, 207, 102
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About Ryft"
+CAPTION "About BlackLynx"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "<a>www.ryft.com</a>",IDC_SYSLINK_RYFT,
+    CONTROL         "<a>www.blacklynx.tech</a>",IDC_SYSLINK_RYFT,
                     "SysLink",LWS_RIGHT,109,7,90,8
     CONTROL         "",IDC_LOGO,"Static",SS_BITMAP | SS_CENTERIMAGE,7,19,193,57
-    LTEXT           "Copyright (c) 2015 Ryft, Inc. and its licensors.\nAll rights reserved.",IDC_STATIC,7,80,193,20
+    LTEXT           "Copyright (c) 2019 BlackLynx, Inc. and its licensors.\nAll rights reserved.",IDC_STATIC,7,80,193,20
     LTEXT           "Version %d.%d.%d (%d-bit)",IDC_STATIC_VERSION,7,7,100,8
 END
 
@@ -159,7 +159,7 @@ END
 // RCDATA
 //
 
-IDB_LOGO                RCDATA                  "ryft_logo@2x.png"
+IDB_LOGO                RCDATA                  "blacklynx_logo@2x.png"
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -193,7 +193,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON1               ICON                    "icon.ico"
+IDI_ICON1               ICON                    "BLicon.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -220,16 +220,16 @@ BEGIN
     IDS_ERROR_REGISTRY_WRITE 
                             "Error writing changes to registry, ensure proper permissions have been granted."
     IDS_ERROR_NOCONNECT     "Could not connect to host. Please verify that server address and port are valid."
-    IDS_ERROR_CAPTION       "Ryft Driver Error"
+    IDS_ERROR_CAPTION       "BlackLynx Driver Error"
     IDS_ERROR_BADAUTH       "Invalid username or password."
     IDS_PICK_A_FOLDER       "Pick a folder location"
     IDS_CONNECT_TEST        "Connection Test"
-    IDS_CONNECT_SUCCESS     "Connected successfully to Ryft database!"
+    IDS_CONNECT_SUCCESS     "Connected successfully to BlackLynx server!"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_RYFT_URL          "http://www.ryft.com"
+    IDS_RYFT_URL          "http://www.blacklynx.tech"
 END
 
 #endif    // English (Canada) resources

@@ -1,3 +1,10 @@
+[BlackLynxODBCDriver]
+APILevel=1
+ConnectFunctions=YYY
+Description=BlackLynx ODBC Client Driver
+Driver=_INSTALLDIR_/bin/x8664/libSimbaClient.so
+DriverODBCVer=03.80
+SQLLevel=1
 
 [RyftODBCDriver]
 APILevel=1

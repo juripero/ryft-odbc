@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<connection-customization class='genericodbc' enabled='true' version='7.8'>
+<vendor name='RyftOne' />
+<driver name='BlackLynx ODBC Driver' />
+<customizations>
+<customization name='CAP_CREATE_TEMP_TABLES' value='no' />
+<customization name='CAP_QUERY_BOOLEXPR_TO_INTEXPR' value='yes' />
+<customization name='CAP_QUERY_GROUP_BY_ALIAS' value='no' />
+<customization name='CAP_QUERY_GROUP_BY_DEGREE' value='no' />
+<customization name='CAP_QUERY_JOIN_ACROSS_SCHEMAS' value='no' />
+<customization name='CAP_QUERY_JOIN_REQUIRES_SCOPE' value='no' />
+<customization name='CAP_QUERY_SUBQUERIES' value='yes' />
+<customization name='CAP_QUERY_SUBQUERIES_WITH_TOP' value='yes' />
+<customization name='CAP_SELECT_INTO' value='no' />
+<customization name='CAP_SELECT_TOP_INTO' value='no' />
+<customization name='CAP_ODBC_METADATA_SUPPRESS_SELECT_STAR' value='yes' />
+<customization name='CAP_QUERY_TOP_N' value='yes' />
+<customization name='CAP_QUERY_TOPSTYLE_LIMIT' value='yes' />
+<customization name='CAP_QUERY_TOPSTYLE_TOP' value='no' />
+<customization name='CAP_QUERY_TOPSTYLE_ROWNUM' value='no' />
+<customization name='SQL_CATALOG_USAGE' value='0' />
+<customization name='CAP_SUPPRESS_DISPLAY_LIMITATIONS' value='yes' />
+</customizations>
+</connection-customization>

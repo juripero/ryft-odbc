@@ -1,4 +1,12 @@
 
+[BlackLynxODBC]
+Description=BlackLynx 64-bit ODBC Driver
+Driver=_INSTALLDIR_/bin/x8664/libSimbaClient.so
+Locale=en-US
+SSLCertFile=
+UseSsl=0
+ServerList=_IPADDR_ _PORT_
+
 [RyftODBC]
 Description=Ryft 64-bit ODBC Driver
 Driver=_INSTALLDIR_/bin/x8664/libSimbaClient.so
