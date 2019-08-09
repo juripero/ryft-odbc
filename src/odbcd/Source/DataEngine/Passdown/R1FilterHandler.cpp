@@ -673,6 +673,11 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
         unsigned ltypeSpecial = TYPE_NONE;
         m_table->GetTypeFormatSpecifier(in_column.m_colIndex, &ltypeSpecial, lformatSpecial);
 
+        simba_wstring relationalOp;
+        if (m_negate)
+            relationalOp = "NOT_";
+        relationalOp += "CONTAINS";
+
         if(table) {
             string tableAsString = table;
             IQueryResult *result = m_ryft1->OpenTable(tableAsString);
@@ -693,8 +698,12 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
             string subquery;
             bool bFetch = result->FetchFirst();
             for (; bFetch; bFetch = result->FetchNext()) {
-                if(literalIdx++) 
-                    m_query += " OR ";
+                if (literalIdx++)
+                    if (m_negate) {
+                        m_query += " AND ";
+                    }
+                    else
+                        m_query += " OR ";
 
                 char dateLiteral[11];
                 char timeLiteral[11];
@@ -704,7 +713,7 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
                     struct tm tmDate = result->GetDateValue(colIdx);
                     snprintf(dateLiteral, sizeof(dateLiteral), "%04d-%02d-%02d", tmDate.tm_year, tmDate.tm_mon, tmDate.tm_mday);
                     literalVal.SetFromUTF8(dateLiteral);
-                    ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                    ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
                 }
                 else if(((colItr->m_dataType == SQL_TYPE_TIME) || (colItr->m_dataType == SQL_TIME)) &&
                     ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME))) 
@@ -712,7 +721,7 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
                     struct tm tmTime = result->GetTimeValue(colIdx);
                     snprintf(dateLiteral, sizeof(timeLiteral), "%04d:%02d:%02d", tmTime.tm_hour, tmTime.tm_min, tmTime.tm_sec);
                     literalVal.SetFromUTF8(dateLiteral);
-                    ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                    ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
                 }
                 else if(((colItr->m_dataType == SQL_TYPE_TIMESTAMP) || (colItr->m_dataType == SQL_TIMESTAMP)) &&
                     ((columnSqlType == SQL_TYPE_TIMESTAMP) || (columnSqlType == SQL_TIMESTAMP))) 
@@ -722,25 +731,25 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
 
                     snprintf(dateLiteral, sizeof(dateLiteral), "%04d-%02d-%02d", tmDatetime.tm_year, tmDatetime.tm_mon, tmDatetime.tm_mday);
                     literalVal.SetFromUTF8(dateLiteral);
-                    ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                    ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
 
                     m_query += " AND ";
 
                     snprintf(dateLiteral, sizeof(timeLiteral), "%04d:%02d:%02d", tmDatetime.tm_hour, tmDatetime.tm_min, tmDatetime.tm_sec);
                     literalVal.SetFromUTF8(dateLiteral);
-                    ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                    ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
 
                     m_query += ")";
                 }
                 else if((ltypeSpecial == TYPE_NUMBER) && (rtypeSpecial == TYPE_NUMBER)) 
                 {
                     literalVal.SetFromUTF8(result->GetStringValue(colIdx));
-                    ConstructNumberComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                    ConstructNumberComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
                 }
                 else if((ltypeSpecial == TYPE_CURRENCY) && (rtypeSpecial == TYPE_CURRENCY)) 
                 {
                     literalVal.SetFromUTF8(result->GetStringValue(colIdx));
-                    ConstructCurrencyComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                    ConstructCurrencyComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
                 }
                 else 
                 {
@@ -750,15 +759,19 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
                     literalVal.SetFromUTF8(subquery);
 
                     // Construct the filter string for input to Ryft.
-                    ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, "CONTAINS");
+                    ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, relationalOp);
                 }
             }
             delete result;
             delete literal_first;
         }
         else {
-            if(literalIdx++)
-                m_query += " OR ";
+            if (literalIdx++)
+                if (m_negate) {
+                    m_query += " AND ";
+                }
+                else
+                    m_query += " OR ";
 
             // Get the literal type of RHS of comparison expression.
             PSLiteralType exprLiteralType = literalItr->first->GetLiteralType();
@@ -767,22 +780,22 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
                 ((columnSqlType == SQL_TYPE_DATE) || (columnSqlType == SQL_DATE) ||
                     (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
             {
-                ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
             }
             else if((exprLiteralType == PS_LITERAL_TIME) && 
                 ((columnSqlType == SQL_TYPE_TIME) || (columnSqlType == SQL_TIME) || 
                     (columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
             {
-                ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
             }
             else if((exprLiteralType == PS_LITERAL_TIMESTAMP) && 
                 ((columnSqlType == SQL_TIMESTAMP) || (columnSqlType == SQL_TYPE_TIMESTAMP)))
             {
                 m_query += "( ";
-                ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                ConstructDateComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
                 m_query += " AND ";
                 literalVal.Remove(0,11);
-                ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                ConstructTimeComparisonFilter(columnName, ltypeSpecial, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
                 m_query += " )";
             }
             else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
@@ -792,7 +805,7 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
                     literalVal = "-" + literalItr->first->GetLiteralValue();
 
                 // Construct the filter string for input to Ryft.
-                ConstructNumberComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                ConstructNumberComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
             }
             else if(((exprLiteralType == PS_LITERAL_APPROXNUM) || (exprLiteralType == PS_LITERAL_USINT) || (exprLiteralType == PS_LITERAL_DECIMAL)) &&
                 (ltypeSpecial == TYPE_CURRENCY))
@@ -801,10 +814,10 @@ bool R1FilterHandler::PassdownSimpleInPredicate(
                     literalVal = "-" + literalItr->first->GetLiteralValue();
 
                 // Construct the filter string for input to Ryft.
-                ConstructCurrencyComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, "CONTAINS");
+                ConstructCurrencyComparisonFilter(columnName, lformatSpecial, literalVal, SE_COMP_EQ, relationalOp);
             }
             else
-                ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, "CONTAINS");
+                ConstructStringComparisonFilter(columnName, columnSqlType, literalVal, relationalOp);
         }
     }
 
