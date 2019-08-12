@@ -7,7 +7,7 @@ Steps to install libraries required for server build:
 4. sudo apt-get install libglib2.0-dev
 5. sudo apt-get install libconfig-dev
 6. sudo apt-get install dos2unix
-7. unzip latest Simba SDK (currently build with SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz)
+7. unzip latest Simba SDK (currently build with SimbaEngineSDK_Release_Linux-x86_10.0.7.1028.tar.gz) Note: ryft-odbc/build_preinstall.sh will load and install Simba SDK.
 
 Set environment variables for LANG, SIMBAENGINE_DIR and SIMBAENGINE_THIRDPARTY_DIR, e.g.:
 
@@ -26,7 +26,7 @@ cd
 git clone https://github.com/getryft/ryft-odbc
 cd ryft-odbc
 ./build_preinstall.sh
-. build_environment.sh
+. ./build_environment.sh
 ./build_install.sh
 ```
 

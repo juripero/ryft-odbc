@@ -151,14 +151,13 @@ __meta_config__::__meta_config__(string& in_dir) : data_type(dataType_None)
                 }
                 break;
             }
-        	// Add PIP configuration to meta table
+            // Add PIP configuration to meta table
             if(CONFIG_TRUE == config_lookup_string(&tableMeta, "pip_format", &result)) {
-			    pip_format = result;
-			}
-			else {
-				pip_format = "None";
-			}
-			break;
+                pip_format = result;
+            }
+            else {
+                pip_format = "None";
+            }
         }
         
         viewList = config_lookup(&tableMeta, "views");
