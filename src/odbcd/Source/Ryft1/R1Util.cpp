@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include "R1Util.h"
+#include "R1Catalog.h"
 #include "TypeDefines.h"
 
 void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, unsigned *out_charCols, 
@@ -20,6 +21,8 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
     char subitizer;
     char decimal;
     char currency;
+    char numType[20];
+    int  cnt;
 
     *out_typeCustom = TYPE_NONE;
 
@@ -202,8 +205,27 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         *out_sqlType = SQL_VARCHAR;
         *out_typeCustom = TYPE_NUMBER;
         const char * paren = strchr(in_typeName.c_str(), '(');
-        if(paren)
-            sscanf(paren, "(%d,%c,%c)", &charCols, &subitizer, &decimal);
+        if(paren) {
+            cnt = sscanf(paren, "(%d,%c,%c,%s)", &charCols, &subitizer, &decimal, &numType[0]);
+	        switch (cnt) {
+            case 3:
+                strcpy(numType,"double");
+                // Intentional fall thru
+                // Note: 0, 1, 2 were previous errors, so ignored for these changes
+	        case 4:
+                if ( !strncasecmp(numType, "double", strlen("double")) || 
+                     !strncasecmp(numType, "float", strlen("float"))) { 
+                    *out_sqlType = SQL_DOUBLE;
+                }
+                else if (!strncasecmp(numType, "integer", strlen("integer"))) {
+                    *out_sqlType = SQL_INTEGER;
+                }
+                else if (!strncasecmp(numType, "bigint", strlen("bigint"))) {
+                    *out_sqlType = SQL_BIGINT;
+                }
+                break;
+            }
+        }
         bufLength = charCols;
         sprintf(formatSpec, "%c%c", subitizer, decimal);
         out_formatCustom = formatSpec;
@@ -212,8 +234,22 @@ void RyftOne_Util::RyftToSqlType(string& in_typeName, unsigned *out_sqlType, uns
         *out_sqlType = SQL_VARCHAR;
         *out_typeCustom = TYPE_CURRENCY;
         const char * paren = strchr(in_typeName.c_str(), '(');
-        if(paren)
-            sscanf(paren, "(%d,%c,%c,%c)", &charCols, &currency, &subitizer, &decimal);
+        if(paren) {
+            cnt = sscanf(paren, "(%d,%c,%c,%c)", &charCols, &currency, &subitizer, &decimal);
+//			// If a numeric type is added, try to convert currency to number on output
+//			if (cnt > 4) {
+//               if ( !strncasecmp(numType, "double", strlen("double")) || 
+//                     !strncasecmp(numType, "float", strlen("float"))) { 
+//                    *out_sqlType = SQL_DOUBLE;
+//                }
+//                else if (!strncasecmp(numType, "integer", strlen("integer"))) {
+//                    *out_sqlType = SQL_INTEGER;
+//                }
+//                else if (!strncasecmp(numType, "bigint", strlen("bigint"))) {
+//                    *out_sqlType = SQL_BIGINT;
+//                }
+//			}	
+        }	
         bufLength = charCols;
         sprintf(formatSpec, "%c%c%c", currency, subitizer, decimal);
         out_formatCustom = formatSpec;
